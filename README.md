@@ -24,7 +24,7 @@ If you want access to the full set of delimiters, you can set `g:ruby_extended_d
 
 ## Performance Comparison with [vim-ruby](https://github.com/vim-ruby/vim-ruby)
 
-Comparisons made between the respective HEAD's of each plugin as of this writing (2020-11-17), using `test.rb` as the test file:
+Comparisons made between the respective HEAD's of each plugin as of this writing (2020-11-17), using `test.rb` as the test file. I'm currently running NeoVim 0.5.0.
 
 ### Syntax
 
