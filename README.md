@@ -18,9 +18,9 @@ I may come up with a solution for this someday, but it seems to be an extremely 
 
 ## Configuration
 
-For `%`-style literals, this plugin only provides the following delimiters by default: `()`, `[]`, `{}`, and `<>`. This is because covering the entire range of possible delimiters -- which includes ```~`!@#$%^&*_-+=|\:;"',.?/``` -- is expensive and most of them are never used.
+For `%`-style literals, this plugin only supports the following delimiters by default: `()`, `[]`, `{}`, and `<>`. This is because covering the entire range of possible delimiters -- which includes ```~`!@#$%^&*_-+=|\:;"',.?/``` -- is expensive and most of them are never used.
 
-If you want access to the full set of delimiters, you can set `g:ruby_extended_delimiters` to `1` in your vimrc or elsewhere.
+If you want support for the full set of delimiters, you can set `g:ruby_extended_delimiters` to `1` in your vimrc or elsewhere.
 
 ## Performance Comparison with [vim-ruby](https://github.com/vim-ruby/vim-ruby)
 
