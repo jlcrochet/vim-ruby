@@ -245,7 +245,7 @@ local function get_msl(lnum)
   else
     set_pos(lnum, 0)
 
-    local last_char, syngroup = get_last_char()
+    local last_char, syngroup, prev_lnum = get_last_char()
 
     if last_char == "," or last_char == "\\" or syngroup == "rubyOperator" then
       return get_msl(prev_lnum)
