@@ -265,6 +265,12 @@ return function()
   local lnum = get_pos()
 
   -- Current line {{{1
+  -- If the current line is inside of an ignorable multiline region,
+  -- do nothing.
+  if multiline_regions[syngroup_at(lnum, 0)] then
+    return -1
+  end
+
   -- If the first character is `=` and it is followed by `begin` or
   -- `end`, return 0.
   local line = nvim_get_current_line()
@@ -277,12 +283,6 @@ return function()
       if word == "begin" or word == "end" then
         return 0
       end
-    end
-
-    -- If the current line is inside of an ignorable multiline region,
-    -- do nothing.
-    if multiline_regions[syngroup_at(lnum, 0)] then
-      return -1
     end
 
     -- If the first character of the current line is a leading dot, add

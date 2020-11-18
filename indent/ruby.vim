@@ -179,6 +179,12 @@ endfunction
 
 function! GetRubyIndent(lnum) abort
   " Current line {{{1
+  " If the current line is inside of an ignorable multiline region, do
+  " nothing.
+  if get(g:ruby#multiline_regions, synID(a:lnum, 1, 0))
+    return -1
+  endif
+
   let line = getline(a:lnum)
   let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
 
@@ -187,12 +193,6 @@ function! GetRubyIndent(lnum) abort
     " `end`, return 0.
     if first_char == "=" && match(line, '^\%(begin\|end\)\>', second_idx) > -1
       return 0
-    endif
-
-    " If the current line is inside of an ignorable multiline region, do
-    " nothing.
-    if get(g:ruby#multiline_regions, synID(a:lnum, 1, 0))
-      return -1
     endif
 
     " If the first character of the current line is a leading dot, add an
