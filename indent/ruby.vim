@@ -85,7 +85,7 @@ function! s:get_last_char() abort
 
   let synid = synID(lnum, col, 0)
 
-  while synid == g:ruby#comment
+  while synid == g:ruby#comment || synid == g:ruby#comment_delimiter
     let [lnum, col] = searchpos('\S\_s*\%(#\|=begin\>\)', "bW")
 
     if !lnum

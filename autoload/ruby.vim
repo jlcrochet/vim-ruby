@@ -22,3 +22,4 @@ endfor
 const g:ruby#keyword = hlID("rubyKeyword")
 const g:ruby#operator = hlID("rubyOperator")
 const g:ruby#delimiter = hlID("rubyDelimiter")
+const g:ruby#comment_delimiter = hlID("rubyCommentDelimiter")

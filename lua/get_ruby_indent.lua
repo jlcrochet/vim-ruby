@@ -87,8 +87,8 @@ local function get_last_char()
 
   local syngroup = syngroup_at(lnum, col - 1)
 
-  while syngroup == "rubyComment" do
-    lnum, col = unpack(searchpos("\\S\\_s*#", "bW"))
+  while syngroup == "rubyComment" or syngroup == "rubyCommentDelimiter" do
+    lnum, col = unpack(searchpos("\\S\\_s*\\%(#\\|=begin\\>\\)", "bW"))
 
     if lnum == 0 then
       return
