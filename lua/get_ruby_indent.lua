@@ -263,11 +263,6 @@ end
 
 return function()
   local lnum = get_pos()
-  local prev_lnum = prevnonblank(lnum - 1)
-
-  if prev_lnum == 0 then
-    return 0
-  end
 
   -- Current line {{{1
   -- If the first character is `=` and it is followed by `begin` or
@@ -275,96 +270,102 @@ return function()
   local line = nvim_get_current_line()
   local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
 
-  if first_char == "=" then
-    local word = match(line, "^%l%w*", first_col + 1)
+  if first_col then
+    if first_char == "=" then
+      local word = match(line, "^%l%w*", first_col + 1)
 
-    if word == "begin" or word == "end" then
-      return 0
+      if word == "begin" or word == "end" then
+        return 0
+      end
     end
-  end
 
-  -- If the current line is inside of an ignorable multiline region, do
-  -- nothing.
-  if multiline_regions[syngroup_at(lnum, 0)] then
-    return -1
-  end
+    -- If the current line is inside of an ignorable multiline region,
+    -- do nothing.
+    if multiline_regions[syngroup_at(lnum, 0)] then
+      return -1
+    end
 
-  -- If the first character of the current line is a leading dot, add an
-  -- indent unless the previous logical line also started with a leading
-  -- dot.
-  if (first_char == "." and second_char ~= ".") or (first_char == "&" and second_char == ".") then
-    local prev_lnum = prev_non_multiline(prev_lnum)
-    local prev_line = getline(prev_lnum)
-    local first_col, _, first_char, second_char = find(prev_line, "(%S)(%S?)")
-
+    -- If the first character of the current line is a leading dot, add
+    -- an indent unless the previous logical line also started with
+    -- a leading dot.
     if (first_char == "." and second_char ~= ".") or (first_char == "&" and second_char == ".") then
-      return first_col - 1
-    else
-      return first_col - 1 + shiftwidth()
+      local prev_lnum = prev_non_multiline(prevnonblank(lnum - 1))
+      local prev_line = getline(prev_lnum)
+      local first_col, _, first_char, second_char = find(prev_line, "(%S)(%S?)")
+
+      if (first_char == "." and second_char ~= ".") or (first_char == "&" and second_char == ".") then
+        return first_col - 1
+      else
+        return first_col - 1 + shiftwidth()
+      end
     end
-  end
 
-  -- If the first character is a closing bracket, align with the line
-  -- that contains the opening bracket.
-  if first_char == ")" then
-    local found = searchpair_back("(", nil, ")", skip_char)
-    return indent(found)
-  elseif first_char == "]" then
-    local found = searchpair_back("\\[", nil, "]", skip_char)
-    return indent(found)
-  elseif first_char == "}" then
-    local found = searchpair_back("{", nil, "}", skip_char)
-    return indent(found)
-  end
-
-  -- If the first word is a deindenting keyword, align with the nearest
-  -- indenting keyword.
-  local first_word = match(line, "^%l%w*", first_col)
-
-  set_pos(lnum, 0)
-
-  if first_word == "end" then
-    local lnum, idx = searchpair_back(start_re, middle_re, "\\<end\\>", skip_word_postfix)
-    local word = expand("<cword>")
-
-    if word == "if" or word == "unless" or word == "begin" or word == "case" then
-      return idx
-    else
-      return indent(lnum)
+    -- If the first character is a closing bracket, align with the line
+    -- that contains the opening bracket.
+    if first_char == ")" then
+      local found = searchpair_back("(", nil, ")", skip_char)
+      return indent(found)
+    elseif first_char == "]" then
+      local found = searchpair_back("\\[", nil, "]", skip_char)
+      return indent(found)
+    elseif first_char == "}" then
+      local found = searchpair_back("{", nil, "}", skip_char)
+      return indent(found)
     end
-  elseif first_word == "else" then
-    local _, idx = searchpair_back(hanging_re, middle_re, "\\<end\\>", skip_word_postfix)
-    return idx
-  elseif first_word == "elsif" then
-    local _, idx = searchpair_back("\\<\\%(if\\|unless\\)\\>", "\\<elsif\\>", "\\<end\\>", skip_word_postfix)
-    return idx
-  elseif first_word == "when" then
-    local _, idx = searchpair_back("\\<case\\>", "\\<when\\>", "\\<end\\>", skip_word)
-    return idx
-  elseif first_word == "in" then
-    local _, idx = searchpair_back("\\<case\\>", "\\<in\\>", "\\<end\\>", skip_word)
-    return idx
-  elseif first_word == "rescue" then
-    local lnum, idx = searchpair_back(exception_re, "\\<rescue\\>", "\\<end\\>", skip_word)
 
-    if expand("<cword>") == "begin" then
-      return idx
-    else
-      return indent(lnum)
-    end
-  elseif first_word == "ensure" then
-    local lnum, idx = searchpair_back(exception_re, "\\<\\%(rescue\\|else\\)\\>", "\\<end\\>", skip_word)
+    -- If the first word is a deindenting keyword, align with the
+    -- nearest indenting keyword.
+    local first_word = match(line, "^%l%w*", first_col)
 
-    if expand("<cword>") == "begin" then
+    set_pos(lnum, 0)
+
+    if first_word == "end" then
+      local lnum, idx = searchpair_back(start_re, middle_re, "\\<end\\>", skip_word_postfix)
+      local word = expand("<cword>")
+
+      if word == "if" or word == "unless" or word == "begin" or word == "case" then
+        return idx
+      else
+        return indent(lnum)
+      end
+    elseif first_word == "else" then
+      local _, idx = searchpair_back(hanging_re, middle_re, "\\<end\\>", skip_word_postfix)
       return idx
-    else
-      return indent(lnum)
+    elseif first_word == "elsif" then
+      local _, idx = searchpair_back("\\<\\%(if\\|unless\\)\\>", "\\<elsif\\>", "\\<end\\>", skip_word_postfix)
+      return idx
+    elseif first_word == "when" then
+      local _, idx = searchpair_back("\\<case\\>", "\\<when\\>", "\\<end\\>", skip_word)
+      return idx
+    elseif first_word == "in" then
+      local _, idx = searchpair_back("\\<case\\>", "\\<in\\>", "\\<end\\>", skip_word)
+      return idx
+    elseif first_word == "rescue" then
+      local lnum, idx = searchpair_back(exception_re, "\\<rescue\\>", "\\<end\\>", skip_word)
+
+      if expand("<cword>") == "begin" then
+        return idx
+      else
+        return indent(lnum)
+      end
+    elseif first_word == "ensure" then
+      local lnum, idx = searchpair_back(exception_re, "\\<\\%(rescue\\|else\\)\\>", "\\<end\\>", skip_word)
+
+      if expand("<cword>") == "begin" then
+        return idx
+      else
+        return indent(lnum)
+      end
     end
   end
 
   -- Previous line {{{1
   -- Begin by finding the previous non-comment character in the file.
   local last_char, syngroup, prev_lnum, last_idx = get_last_char()
+
+  if not last_char then
+    return 0
+  end
 
   -- The only characters we care about for indentation are operators and
   -- delimiters.
@@ -452,6 +453,10 @@ return function()
 
       set_pos(prev_lnum, 0)
       local last_char, syngroup = get_last_char()
+
+      if not last_char then
+        return indent(prev_lnum) + shiftwidth()
+      end
 
       if find(last_char, "[,([{]") then
         return indent(prev_lnum)

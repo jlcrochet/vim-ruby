@@ -178,104 +178,104 @@ function! s:get_msl(lnum) abort
 endfunction
 
 function! GetRubyIndent(lnum) abort
-  let prev_lnum = prevnonblank(a:lnum - 1)
-
-  if !prev_lnum
-    return 0
-  endif
-
   " Current line {{{1
-  " If the first character is `=` and it is followed by `begin` or
-  " `end`, return 0.
   let line = getline(a:lnum)
   let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
 
-  if first_char == "=" && match(line, '^\%(begin\|end\)\>', second_idx) > -1
-    return 0
-  endif
+  if first_idx > -1
+    " If the first character is `=` and it is followed by `begin` or
+    " `end`, return 0.
+    if first_char == "=" && match(line, '^\%(begin\|end\)\>', second_idx) > -1
+      return 0
+    endif
 
-  " If the current line is inside of an ignorable multiline region, do
-  " nothing.
-  if get(g:ruby#multiline_regions, synID(a:lnum, 1, 0))
-    return -1
-  endif
+    " If the current line is inside of an ignorable multiline region, do
+    " nothing.
+    if get(g:ruby#multiline_regions, synID(a:lnum, 1, 0))
+      return -1
+    endif
 
-  " If the first character of the current line is a leading dot, add an
-  " indent unless the previous logical line also started with a leading
-  " dot.
-  let second_char = line[second_idx]
-
-  if (first_char == "." && second_char != ".") || (first_char == "&" && second_char == ".")
-    let prev_lnum = s:prev_non_multiline(prev_lnum)
-    let prev_line = getline(prev_lnum)
-    let [first_char, first_idx, second_idx] = matchstrpos(prev_line, '\S')
+    " If the first character of the current line is a leading dot, add an
+    " indent unless the previous logical line also started with a leading
+    " dot.
     let second_char = line[second_idx]
 
     if (first_char == "." && second_char != ".") || (first_char == "&" && second_char == ".")
-      return first_idx
-    else
-      return first_idx + shiftwidth()
+      let prev_lnum = s:prev_non_multiline(prevnonblank(a:lnum - 1))
+      let prev_line = getline(prev_lnum)
+      let [first_char, first_idx, second_idx] = matchstrpos(prev_line, '\S')
+      let second_char = line[second_idx]
+
+      if (first_char == "." && second_char != ".") || (first_char == "&" && second_char == ".")
+        return first_idx
+      else
+        return first_idx + shiftwidth()
+      endif
     endif
-  endif
 
-  " If the first character is a closing bracket, align with the line
-  " that contains the opening bracket.
-  if first_char == ")"
-    return indent(searchpair("(", "", ")", "bW", s:skip_char))
-  elseif first_char == "]"
-    return indent(searchpair("\\[", "", "]", "bW", s:skip_char))
-  elseif first_char == "}"
-    return indent(searchpair("{", "", "}", "bW", s:skip_char))
-  endif
-
-  " If the first word is a deindenting keyword, align with the nearest
-  " indenting keyword.
-  let first_word = matchstr(line, '^\l\w*', first_idx)
-
-  call cursor(a:lnum, 1)
-
-  if first_word ==# "end"
-    let [lnum, col] = searchpairpos(s:start_re, s:middle_re, '\<end\>', "bW", s:skip_word_postfix)
-    let word = expand("<cword>")
-
-    if word =~# s:hanging_re
-      return col - 1
-    else
-      return indent(lnum)
+    " If the first character is a closing bracket, align with the line
+    " that contains the opening bracket.
+    if first_char == ")"
+      return indent(searchpair("(", "", ")", "bW", s:skip_char))
+    elseif first_char == "]"
+      return indent(searchpair("\\[", "", "]", "bW", s:skip_char))
+    elseif first_char == "}"
+      return indent(searchpair("{", "", "}", "bW", s:skip_char))
     endif
-  elseif first_word ==# "else"
-    let [_, col] = searchpairpos(s:hanging_re, s:middle_re, '\<end\>', "bW", s:skip_word_postfix)
-    return col - 1
-  elseif first_word ==# "elsif"
-    let [_, col] = searchpairpos('\v<%(if|unless)', '\<elsif\>', '\<end\>', "bW", s:skip_word_postfix)
-    return col - 1
-  elseif first_word ==# "when"
-    let [_, col] = searchpairpos('\<case\>', '\<when\>', '\<end\>', "bW", s:skip_word)
-    return col - 1
-  elseif first_word ==# "in"
-    let [_, col] = searchpairpos('\<case\>', '\<in\>', '\<end\>', "bW", s:skip_word)
-    return col - 1
-  elseif first_word ==# "rescue"
-    let [lnum, col] = searchpairpos(s:exception_re, '\<rescue\>', '\<end\>', "bW", s:skip_word)
 
-    if expand("<cword>") ==# "begin"
-      return col - 1
-    else
-      return indent(lnum)
-    endif
-  elseif first_word ==# "ensure"
-    let [lnum, col] = searchpairpos(s:exception_re, '\v<%(rescue|else)>', '\<end\>', "bW", s:skip_word)
+    " If the first word is a deindenting keyword, align with the nearest
+    " indenting keyword.
+    let first_word = matchstr(line, '^\l\w*', first_idx)
 
-    if expand("<cword>") ==# "begin"
+    call cursor(a:lnum, 1)
+
+    if first_word ==# "end"
+      let [lnum, col] = searchpairpos(s:start_re, s:middle_re, '\<end\>', "bW", s:skip_word_postfix)
+      let word = expand("<cword>")
+
+      if word =~# s:hanging_re
+        return col - 1
+      else
+        return indent(lnum)
+      endif
+    elseif first_word ==# "else"
+      let [_, col] = searchpairpos(s:hanging_re, s:middle_re, '\<end\>', "bW", s:skip_word_postfix)
       return col - 1
-    else
-      return indent(lnum)
+    elseif first_word ==# "elsif"
+      let [_, col] = searchpairpos('\v<%(if|unless)', '\<elsif\>', '\<end\>', "bW", s:skip_word_postfix)
+      return col - 1
+    elseif first_word ==# "when"
+      let [_, col] = searchpairpos('\<case\>', '\<when\>', '\<end\>', "bW", s:skip_word)
+      return col - 1
+    elseif first_word ==# "in"
+      let [_, col] = searchpairpos('\<case\>', '\<in\>', '\<end\>', "bW", s:skip_word)
+      return col - 1
+    elseif first_word ==# "rescue"
+      let [lnum, col] = searchpairpos(s:exception_re, '\<rescue\>', '\<end\>', "bW", s:skip_word)
+
+      if expand("<cword>") ==# "begin"
+        return col - 1
+      else
+        return indent(lnum)
+      endif
+    elseif first_word ==# "ensure"
+      let [lnum, col] = searchpairpos(s:exception_re, '\v<%(rescue|else)>', '\<end\>', "bW", s:skip_word)
+
+      if expand("<cword>") ==# "begin"
+        return col - 1
+      else
+        return indent(lnum)
+      endif
     endif
   endif
 
   " Previous line {{{1
   " Begin by finding the previous non-comment character in the file.
   let [last_char, synid, prev_lnum, last_col] = s:get_last_char()
+
+  if last_char is 0
+    return 0
+  endif
 
   " The only characters we care about for indentation are operators and
   " delimiters.
@@ -364,6 +364,10 @@ function! GetRubyIndent(lnum) abort
 
       call cursor(prev_lnum, 1)
       let [last_char, synid, _, _] = s:get_last_char()
+
+      if last_char is 0
+        return indent(prev_lnum) + shiftwidth()
+      endif
 
       if last_char =~ '[,([{]' && synid == g:ruby#delimiter
         return indent(prev_lnum)
