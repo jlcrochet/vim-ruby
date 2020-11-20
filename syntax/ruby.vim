@@ -52,40 +52,40 @@ syn match rubyOperator /\%#=1||\==\=/ display contained
 syn match rubyOperator /\%#=1\^=\=/ display contained
 
 syn match rubyOperator /\%#=1&\=\./ display nextgroup=rubyVariableOrMethod,rubyOperatorMethod skipwhite
-execute 'syn match rubyOperatorMethod /\%#=1'.s:overloadable_operators.'/ display contained nextgroup=rubyOperator,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHashKey skipwhite'
+execute 'syn match rubyOperatorMethod /\%#=1'.s:overloadable_operators.'/ display contained nextgroup=rubyOperator,rubyRangeOperator,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHashKey skipwhite'
 
-syn match rubyOperator /\%#=1\.\.\.\=/ display contained nextgroup=rubyOperator skipwhite
+syn match rubyRangeOperator /\%#=1\.\.\.\=/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 syn match rubyNamespaceOperator /\%#=1::/ display
 
 " Delimiters {{{2
 syn match rubyDelimiter /\%#=1(/ display nextgroup=rubyHashKey skipwhite skipnl
-syn match rubyDelimiter /\%#=1)/ display nextgroup=rubyOperator skipwhite
+syn match rubyDelimiter /\%#=1)/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 syn match rubyDelimiter /\%#=1\[/ display
-syn match rubyDelimiter /\%#=1]/ display nextgroup=rubyOperator skipwhite
+syn match rubyDelimiter /\%#=1]/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 syn match rubyDelimiter /\%#=1{/ display nextgroup=rubyHashKey,rubyBlockParameters skipwhite skipnl
-syn match rubyDelimiter /\%#=1}/ display nextgroup=rubyOperator skipwhite
+syn match rubyDelimiter /\%#=1}/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 syn match rubyDelimiter /\%#=1,/ display nextgroup=rubyHashKey skipwhite skipnl
 
 syn match rubyDelimiter /\%#=1\\/ display
 
 " Identifiers {{{2
-syn match rubyInstanceVariable /\%#=1@\h\w*/ display nextgroup=rubyOperator skipwhite
-syn match rubyClassVariable /\%#=1@@\h\w*/ display nextgroup=rubyOperator skipwhite
-syn match rubyGlobalVariable /\%#=1\$\%(\h\w*\|[!@~&`'+=/\\,;.<>_*$?]\|-[ailp]\|0\|[1-9]\d*\)/ display nextgroup=rubyOperator skipwhite
+syn match rubyInstanceVariable /\%#=1@\h\w*/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn match rubyClassVariable /\%#=1@@\h\w*/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn match rubyGlobalVariable /\%#=1\$\%(\h\w*\|[!@~&`'+=/\\,;.<>_*$?]\|-[ailp]\|0\|[1-9]\d*\)/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
-syn match rubyConstant /\%#=1\u\w*/ display nextgroup=rubyOperator,rubyNamespaceOperator skipwhite
-syn match rubyVariableOrMethod /\%#=1[_[:lower:]]\w*[=?!]\=/ display nextgroup=rubyOperator,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHashKey skipwhite
+syn match rubyConstant /\%#=1\u\w*/ display nextgroup=rubyOperator,rubyRangeOperator,rubyNamespaceOperator skipwhite
+syn match rubyVariableOrMethod /\%#=1[_[:lower:]]\w*[=?!]\=/ display nextgroup=rubyOperator,rubyRangeOperator,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHashKey skipwhite
 
 syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/he=e-1 display contained
 
 " Literals {{{2
-syn keyword rubyNil nil nextgroup=rubyOperator skipwhite
-syn keyword rubyBoolean true false nextgroup=rubyOperator skipwhite
-syn keyword rubySelf self nextgroup=rubyOperator skipwhite
+syn keyword rubyNil nil nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn keyword rubyBoolean true false nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn keyword rubySelf self nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 " Numbers {{{3
 function s:or(...)
@@ -114,7 +114,7 @@ let s:zero_re = '0' . s:or(
       \ '[xX]\x\+\%(_\x\+\)*r\=i\=',
       \ ) . '\='
 
-let s:syn_match_template = 'syn match rubyNumber /\%%#=1%s/ display nextgroup=rubyOperator skipwhite'
+let s:syn_match_template = 'syn match rubyNumber /\%%#=1%s/ display nextgroup=rubyOperator,rubyRangeOperator skipwhite'
 
 execute printf(s:syn_match_template, s:nonzero_re)
 execute printf(s:syn_match_template, s:zero_re)
@@ -125,97 +125,97 @@ delfunction s:optional
 unlet s:exponent_suffix s:fraction s:nonzero_re s:zero_re s:syn_match_template
 
 " Strings {{{3
-syn match rubyCharacter /\%#=1?\%(\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)\|.\)/ display contains=rubyStringEscape nextgroup=rubyOperator skipwhite
+syn match rubyCharacter /\%#=1?\%(\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)\|.\)/ display contains=rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1"/ end=/\%#=1"/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1"/ end=/\%#=1"/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn match rubyStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}\%(\s\x\{1,6}\)*}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)/ display contained
 syn region rubyStringInterpolation matchgroup=rubyStringInterpolationDelimiter start=/\%#=1#{/ end=/\%#=1}/ display contained contains=@rubyTop,rubyNestedBraces
 syn region rubyStringInterpolation matchgroup=rubyStringInterpolationDelimiter start=/\%#=1#\%(\$\|@@\=\)\@=/ end=/\%#=1\>/ display oneline contained contains=rubyInstanceVariable,rubyClassVariable,rubyGlobalVariable
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\=(/ end=/\%#=1)/ display contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\=(/ end=/\%#=1)/ display contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringParentheses matchgroup=rubyString start=/\%#=1(/ end=/\%#=1)/ display transparent contained contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\=\[/ end=/\%#=1]/ display contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\=\[/ end=/\%#=1]/ display contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringSquareBrackets matchgroup=rubyString start=/\%#=1\[/ end=/\%#=1]/ display transparent contained contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\={/ end=/\%#=1}/ display contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\={/ end=/\%#=1}/ display contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringCurlyBraces matchgroup=rubyString start=/\%#=1{/ end=/\%#=1}/ display transparent contained contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\=</ end=/\%#=1>/ display contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%Q\=</ end=/\%#=1>/ display contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringAngleBrackets matchgroup=rubyString start=/\%#=1</ end=/\%#=1>/ display transparent contained contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1'/ end=/\%#=1'/ display contains=rubyQuoteEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1'/ end=/\%#=1'/ display contains=rubyQuoteEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn match rubyQuoteEscape /\%#=1\\[\\']/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q(/ end=/\%#=1)/ display contains=rubyRawStringParentheses,rubyParenthesisEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q(/ end=/\%#=1)/ display contains=rubyRawStringParentheses,rubyParenthesisEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyRawStringParentheses matchgroup=rubyString start=/\%#=1(/ end=/\%#=1)/ display transparent contained contains=rubyRawStringParentheses,rubyParenthesisEscape
 syn match rubyParenthesisEscape /\%#=1\\[\\()]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q\[/ end=/\%#=1]/ display contains=rubyRawStringSquareBrackets,rubySquareBracketEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q\[/ end=/\%#=1]/ display contains=rubyRawStringSquareBrackets,rubySquareBracketEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyRawStringSquareBrackets matchgroup=rubyString start=/\%#=1\[/ end=/\%#=1]/ display transparent contained contains=rubyRawStringSquareBrackets,rubySquareBracketEscape
 syn match rubySquareBracketEscape /\%#=1\\[\\[\]]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q{/ end=/\%#=1}/ display contains=rubyRawStringCurlyBraces,rubyCurlyBraceEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q{/ end=/\%#=1}/ display contains=rubyRawStringCurlyBraces,rubyCurlyBraceEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyRawStringCurlyBraces matchgroup=rubyString start=/\%#=1{/ end=/\%#=1}/ display transparent contained contains=rubyRawStringCurlyBraces,rubyCurlyBraceEscape
 syn match rubyCurlyBraceEscape /\%#=1\\[\\{}]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q</ end=/\%#=1>/ skip=/\%#=1<.\{-}>/ display contains=rubyRawStringAngleBrackets,rubyAngleBracketEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%q</ end=/\%#=1>/ skip=/\%#=1<.\{-}>/ display contains=rubyRawStringAngleBrackets,rubyAngleBracketEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyRawStringAngleBrackets matchgroup=rubyString start=/\%#=1</ end=/\%#=1>/ display transparent contained contains=rubyRawStringAngleBrackets,rubyAngleBracketEscape
 syn match rubyAngleBracketEscape /\%#=1\\[\\<>]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w(/ end=/\%#=1)/ display contains=rubyStringArrayParentheses,rubyArrayParenthesisEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w(/ end=/\%#=1)/ display contains=rubyStringArrayParentheses,rubyArrayParenthesisEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringArrayParentheses matchgroup=rubyString start=/\%#=1(/ end=/\%#=1)/ display transparent contained contains=rubyStringArrayParentheses,rubyArrayParenthesisEscape
 syn match rubyArrayParenthesisEscape /\%#=1\\[()[:space:]]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w\[/ end=/\%#=1]/ display contains=rubyStringArraySquareBrackets,rubyArraySquareBracketEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w\[/ end=/\%#=1]/ display contains=rubyStringArraySquareBrackets,rubyArraySquareBracketEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringArraySquareBrackets matchgroup=rubyString start=/\%#=1\[/ end=/\%#=1]/ display transparent contained contains=rubyStringArraySquareBrackets,rubyArraySquareBracketEscape
 syn match rubyArraySquareBracketEscape /\%#=1\\[[\][:space:]]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w{/ end=/\%#=1}/ display contains=rubyStringArrayCurlyBraces,rubyArrayCurlyBraceEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w{/ end=/\%#=1}/ display contains=rubyStringArrayCurlyBraces,rubyArrayCurlyBraceEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringArrayCurlyBraces matchgroup=rubyString start=/\%#=1{/ end=/\%#=1}/ display transparent contained contains=rubyStringArrayCurlyBraces,rubyArrayCurlyBraceEscape
 syn match rubyArrayCurlyBraceEscape /\%#=1\\[{}[:space:]]/ display contained
 
-syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w</ end=/\%#=1>/ display contains=rubyStringArrayAngleBrackets,rubyArrayAngleBracketEscape nextgroup=rubyOperator skipwhite
+syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1%w</ end=/\%#=1>/ display contains=rubyStringArrayAngleBrackets,rubyArrayAngleBracketEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyStringArrayAngleBrackets matchgroup=rubyString start=/\%#=1</ end=/\%#=1>/ display transparent contained contains=rubyStringArrayAngleBrackets,rubyArrayAngleBracketEscape
 syn match rubyArrayAngleBracketEscape /\%#=1\\[<>[:space:]]/ display contained
 
 " Here Documents {{{3
-syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ end=/\%#=1\_^\s*\z1\>/ display transparent contains=@rubyTop,rubyHeredocLine nextgroup=rubyOperator skipwhite
+syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ end=/\%#=1\_^\s*\z1\>/ display transparent contains=@rubyTop,rubyHeredocLine nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyHeredocLine start=/\%#=1\_^/ end=/\%#=1\_$/ display oneline contained contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyHeredocLine skipempty
 
-syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\='\z(\w\+\)'/ end=/\%#=1\_^\s*\z1\>/ display transparent contains=@rubyTop,rubyHeredocLineRaw nextgroup=rubyOperator skipwhite
+syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\='\z(\w\+\)'/ end=/\%#=1\_^\s*\z1\>/ display transparent contains=@rubyTop,rubyHeredocLineRaw nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyHeredocLineRaw start=/\%#=1\_^/ end=/\%#=1\_$/ display oneline contained nextgroup=rubyHeredocLineRaw skipempty
 
 " Symbols {{{3
-syn match rubySymbol /\%#=1:\h\w*[=?!]\=/ display contains=rubySymbolDelimiter nextgroup=rubyOperator skipwhite
-execute 'syn match rubySymbol /\%#=1:'.s:overloadable_operators.'/ display contains=rubySymbolDelimiter nextgroup=rubyOperator skipwhite'
+syn match rubySymbol /\%#=1:\h\w*[=?!]\=/ display contains=rubySymbolDelimiter nextgroup=rubyOperator,rubyRangeOperator skipwhite
+execute 'syn match rubySymbol /\%#=1:'.s:overloadable_operators.'/ display contains=rubySymbolDelimiter nextgroup=rubyOperator,rubyRangeOperator skipwhite'
 
 syn match rubySymbolDelimiter /\%#=1:/ display contained
 
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1:"/ end=/\%#=1"/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1:'/ end=/\%#=1'/ display contains=rubyQuoteEscape nextgroup=rubyOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1:"/ end=/\%#=1"/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1:'/ end=/\%#=1'/ display contains=rubyQuoteEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%s(/  end=/\%#=1)/ display contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i\[/ end=/\%#=1]/ display contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i{/  end=/\%#=1}/ display contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i</  end=/\%#=1>/ display contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%s(/  end=/\%#=1)/ display contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i\[/ end=/\%#=1]/ display contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i{/  end=/\%#=1}/ display contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i</  end=/\%#=1>/ display contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i(/  end=/\%#=1)/ display contains=rubyStringArrayParentheses,rubyArrayParenthesisEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i\[/ end=/\%#=1]/ display contains=rubyStringArraySquareBrackets,rubyArraySquareBracketEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i{/  end=/\%#=1}/ display contains=rubyStringArrayCurlyBraces,rubyArrayCurlyBraceEscape nextgroup=rubyOperator skipwhite
-syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i</  end=/\%#=1>/ display contains=rubyStringArrayAngleBrackets,rubyArrayAngleBracketEscape nextgroup=rubyOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i(/  end=/\%#=1)/ display contains=rubyStringArrayParentheses,rubyArrayParenthesisEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i\[/ end=/\%#=1]/ display contains=rubyStringArraySquareBrackets,rubyArraySquareBracketEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i{/  end=/\%#=1}/ display contains=rubyStringArrayCurlyBraces,rubyArrayCurlyBraceEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i</  end=/\%#=1>/ display contains=rubyStringArrayAngleBrackets,rubyArrayAngleBracketEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 " Regular Expressions {{{3
-syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1\// end=/\%#=1\/[imx]*/ display oneline contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator skipwhite
+syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1\// end=/\%#=1\/[imx]*/ display oneline contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 " NOTE: This is defined here in order to take precedence over /-style
 " regexes
 syn match rubyOperator /\%#=1\/=/ display contained
 
-syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r(/  end=/\%#=1)/ skip=/\%#=1(.\{-})/  display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator skipwhite
-syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r\[/ end=/\%#=1]/ skip=/\%#=1\[.\{-}]/ display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator skipwhite
-syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r{/  end=/\%#=1}/ skip=/\%#=1{.\{-}}/  display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator skipwhite
-syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r</  end=/\%#=1>/ skip=/\%#=1<.\{-}>/  display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator skipwhite
+syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r(/  end=/\%#=1)/ skip=/\%#=1(.\{-})/  display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r\[/ end=/\%#=1]/ skip=/\%#=1\[.\{-}]/ display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r{/  end=/\%#=1}/ skip=/\%#=1{.\{-}}/  display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r</  end=/\%#=1>/ skip=/\%#=1<.\{-}>/  display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 syn match rubyRegexMetacharacter /\%#=1[.^$|]/ display contained
 syn match rubyRegexQuantifier /\%#=1[*+?]/ display contained
@@ -233,13 +233,13 @@ syn cluster rubyRegexSpecial contains=
       \ rubyRegexEscape,rubyRegexCapturedGroup,rubyRegexQuantifier
 
 " Commands {{{3
-syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1`/ end=/\%#=1`/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1`/ end=/\%#=1`/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
-syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x(/  end=/\%#=1)/ display contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x\[/ end=/\%#=1]/ display contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x{/  end=/\%#=1}/ display contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x</  end=/\%#=1>/ display contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
-syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%r|/  end=/\%#=1|/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite
+syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x(/  end=/\%#=1)/ display contains=rubyStringParentheses,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x\[/ end=/\%#=1]/ display contains=rubyStringSquareBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x{/  end=/\%#=1}/ display contains=rubyStringCurlyBraces,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x</  end=/\%#=1>/ display contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%r|/  end=/\%#=1|/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite
 
 " Additional % Literals {{{3
 if get(g:, "ruby_extended_delimiters")
@@ -270,13 +270,13 @@ if get(g:, "ruby_extended_delimiters")
         \ '\/': "Slash"
         \ }
 
-  let s:string_template = 'syn region rubyString matchgroup=rubyStringDelimiter start=/\%%#=1%%Q\=%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite'
-  let s:raw_string_template = 'syn region rubyString matchgroup=rubyStringDelimiter start=/\%%#=1%%q%s/ end=/\%%#=1%s/ display contains=ruby%sEscape nextgroup=rubyOperator skipwhite'
-  let s:string_array_template = 'syn region rubyString matchgroup=rubyStringDelimiter start=/\%%#=1%%w%s/ end=/\%%#=1%s/ display contains=rubyArray%sEscape nextgroup=rubyOperator skipwhite'
-  let s:symbol_template = 'syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%%#=1%%s%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite'
-  let s:symbol_array_template = 'syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%%#=1%%i%s/ end=/\%%#=1%s/ display contains=rubyArray%sEscape nextgroup=rubyOperator skipwhite'
-  let s:regex_template = 'syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%%#=1%%r%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator skipwhite'
-  let s:command_template = 'syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%%#=1%%x%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator skipwhite'
+  let s:string_template = 'syn region rubyString matchgroup=rubyStringDelimiter start=/\%%#=1%%Q\=%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite'
+  let s:raw_string_template = 'syn region rubyString matchgroup=rubyStringDelimiter start=/\%%#=1%%q%s/ end=/\%%#=1%s/ display contains=ruby%sEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite'
+  let s:string_array_template = 'syn region rubyString matchgroup=rubyStringDelimiter start=/\%%#=1%%w%s/ end=/\%%#=1%s/ display contains=rubyArray%sEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite'
+  let s:symbol_template = 'syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%%#=1%%s%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite'
+  let s:symbol_array_template = 'syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%%#=1%%i%s/ end=/\%%#=1%s/ display contains=rubyArray%sEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite'
+  let s:regex_template = 'syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%%#=1%%r%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape,@rubyRegexSpecial nextgroup=rubyOperator,rubyRangeOperator skipwhite'
+  let s:command_template = 'syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%%#=1%%x%s/ end=/\%%#=1%s/ display contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyOperator,rubyRangeOperator skipwhite'
 
   let s:escape_template = 'syn match ruby%sEscape /\%%#=1\\[\\%s]/ display contained'
   let s:array_escape_template = 'syn match rubyArray%sEscape /\%%#=1\\[\\%s[:space:]]/ display contained'
@@ -344,6 +344,7 @@ hi def link rubyCommentDelimiter rubyComment
 hi def link rubyTodo Todo
 hi def link rubyShebang Special
 hi def link rubyOperator Operator
+hi def link rubyRangeOperator rubyOperator
 hi def link rubyNamespaceOperator rubyOperator
 hi def link rubyDelimiter Delimiter
 hi def link rubyInstanceVariable Identifier

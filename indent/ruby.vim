@@ -31,13 +31,14 @@ const s:skip_word = "synID(line('.'), col('.'), 0) != g:ruby#keyword"
 const s:hanging_re = '\v<%(if|unless|begin|case)>'
 const s:postfix_re = '\v<%(if|unless|while|until|rescue)>'
 const s:exception_re = '\v<%(begin|do|def)>'
+const s:list_re = '\v<%(begin|do|if|unless)>'
 
 const s:start_re = s:hanging_re.'|<%(while|until|for|do|def|class|module)>'
 const s:middle_re = '\v<%(else|elsif|when|rescue|ensure)>'
 
 " Similar to the `skip_word` expression above, but includes logic for
 " skipping postfix `if` and `unless`.
-function! s:skip_word_temp() abort
+function! s:skip_word_postfix_temp() abort
   let lnum = line(".")
   let col = col(".")
 
@@ -62,7 +63,7 @@ function! s:skip_word_temp() abort
   return 0
 endfunction
 
-const s:skip_word_postfix = function("s:skip_word_temp")
+const s:skip_word_postfix = function("s:skip_word_postfix_temp")
 
 " Find the nearest line up to and including the given line that does not
 " begin with a multiline region.
@@ -105,7 +106,7 @@ function! s:get_msl(lnum) abort
   let lnum = s:prev_non_multiline(a:lnum)
 
   let line = getline(lnum)
-  let [first_char, first_idx, _] = matchstrpos(line, '\S')
+  let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
 
   " This line is *not* the MSL if:
   " 1. It starts with a leading dot
@@ -113,7 +114,7 @@ function! s:get_msl(lnum) abort
   " 3. It starts with `end` or `=end`
   " 4. The previous line ended with a comma or hanging operator
 
-  if first_char == "."
+  if first_char == "." && line[second_idx] != "."
     return s:get_msl(prevnonblank(lnum - 1))
   elseif first_char == ")"
     call cursor(lnum, 1)
@@ -133,7 +134,7 @@ function! s:get_msl(lnum) abort
     let found = searchpair("{", "", "}", "bW", s:skip_char)
 
     return s:get_msl(found)
-  elseif first_char ==# "e" && match(line, '^nd\>', first_idx + 1) > -1
+  elseif first_char ==# "e" && match(line, '^nd\>', second_idx) > -1
     " As an optimization, we are not doing the search if the `end` has
     " no whitespace before it, indicating that there is no possibility
     " for a hanging indent.
@@ -151,7 +152,7 @@ function! s:get_msl(lnum) abort
     else
       return found
     endif
-  elseif first_char == "=" && match(line, '^end\>', first_idx + 1) > -1
+  elseif first_char == "=" && match(line, '^end\>', second_idx) > -1
     call cursor(lnum, 1)
 
     let found = search('\_^=begin\>', "bW")
@@ -169,6 +170,75 @@ function! s:get_msl(lnum) abort
 
       if word ==# "or" || word ==# "and"
         return s:get_msl(prev_lnum)
+      endif
+    endif
+  endif
+
+  " If none of the above are true, this line is the MSL.
+  return lnum
+endfunction
+
+" Modified version of the above that does not consider commas to be
+" continuation starters; this is specifically for use inside of
+" multiline list-like regions where we do not want to traverse all the
+" way back to the beginning of the list to determine the indentation for
+" an item.
+function! s:get_list_msl(lnum) abort
+  let lnum = s:prev_non_multiline(a:lnum)
+
+  let line = getline(lnum)
+  let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
+
+  " This line is *not* the MSL if:
+  " 1. It starts with a leading dot
+  " 2. It starts with a closing bracket
+  " 3. It starts with `end` or `=end`
+  " 4. The previous line ended with a comma or hanging operator
+
+  if first_char == "." && line[second_idx] != "."
+    return s:get_list_msl(prevnonblank(lnum - 1))
+  elseif first_char == ")"
+    call cursor(lnum, 1)
+
+    let found = searchpair("(", "", ")", "bW", s:skip_char)
+
+    return s:get_list_msl(found)
+  elseif first_char == "]"
+    call cursor(lnum, 1)
+
+    let found = searchpair('\[', "", "]", "bW", s:skip_char)
+
+    return s:get_list_msl(found)
+  elseif first_char == "}"
+    call cursor(lnum, 1)
+
+    let found = searchpair("{", "", "}", "bW", s:skip_char)
+
+    return s:get_list_msl(found)
+  elseif first_char ==# "e" && match(line, '^nd\>', second_idx) > -1
+    call cursor(lnum, 1)
+
+    let found = searchpair(s:list_re, "", '\<end\>', "bW", s:skip_word_postfix)
+
+    return s:get_list_msl(found)
+  elseif first_char == "=" && match(line, '^end\>', second_idx) > -1
+    call cursor(lnum, 1)
+
+    let found = search('\_^=begin\>', "bW")
+
+    return s:get_list_msl(found - 1)
+  else
+    call cursor(lnum, 1)
+
+    let [last_char, synid, prev_lnum, _] = s:get_last_char()
+
+    if last_char == '\' || synid == g:ruby#operator
+      return s:get_list_msl(prev_lnum)
+    elseif synid == g:ruby#keyword
+      let word = expand("<cword>")
+
+      if word ==# "or" || word ==# "and"
+        return s:get_list_msl(prev_lnum)
       endif
     endif
   endif
@@ -373,11 +443,7 @@ function! GetRubyIndent(lnum) abort
         return indent(prev_lnum)
       endif
 
-      if synid == g:ruby#operator
-        return indent(prev_lnum) + shiftwidth()
-      endif
-
-      let msl = s:get_msl(prev_lnum)
+      let msl = s:get_list_msl(prev_lnum)
 
       if msl != prev_lnum
         return indent(msl)

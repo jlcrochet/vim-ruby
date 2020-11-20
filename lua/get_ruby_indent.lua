@@ -32,6 +32,7 @@ local multiline_regions = {
 
 local hanging_re = "\\<\\%(if\\|unless\\|begin\\|case\\)\\>"
 local exception_re = "\\<\\%(begin\\|do\\|def\\)\\>"
+local list_re = "\\<\\%(begin\\|do\\|if\\|unless\\)\\>"
 
 local start_re = "\\<\\%(if\\|unless\\|begin\\|case\\|while\\|until\\|for\\|do\\|def\\|class\\|module\\)\\>"
 local middle_re = "\\<\\%(else\\|elsif\\|when\\|rescue\\|ensure\\)\\>"
@@ -48,9 +49,13 @@ local function skip_word(lnum, idx)
   return syngroup_at(lnum, idx) ~= "rubyKeyword"
 end
 
-local function skip_word_postfix(lnum, idx)
+local function skip_word_postfix(lnum, idx, p)
   if syngroup_at(lnum, idx) ~= "rubyKeyword" then
     return true
+  end
+
+  if p ~= 2 then
+    return false
   end
 
   local word = expand("<cword>")
@@ -193,9 +198,9 @@ local function get_msl(lnum)
   lnum = prev_non_multiline(lnum)
 
   local line = getline(lnum)
-  local first_col, _, first_char = find(line, "(%S)")
+  local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
 
-  if first_char == "." then
+  if first_char == "." and second_char ~= "." then
     return get_msl(prevnonblank(lnum - 1))
   elseif first_char == ")" then
     set_pos(lnum, 0)
@@ -215,7 +220,7 @@ local function get_msl(lnum)
     local found = searchpair_back("{", nil, "}", skip_char)
 
     return get_msl(found)
-  elseif first_char == "e" and find(line, "^nd", first_col + 1) and syngroup_at(lnum, first_col - 1) == "rubyKeyword" then
+  elseif first_char == "e" and second_char == "n" and sub(line, first_col + 2, first_col + 2) == "d" and syngroup_at(lnum, first_col - 1) == "rubyKeyword" then
     if first_col == 1 then
       return lnum
     end
@@ -248,6 +253,63 @@ local function get_msl(lnum)
 
       if word == "or" or word == "and" then
         return get_msl(prev_lnum)
+      end
+    end
+  end
+
+  return lnum
+end
+
+local function get_list_msl(lnum)
+  lnum = prev_non_multiline(lnum)
+
+  local line = getline(lnum)
+  local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
+
+  if first_char == "." and second_char ~= "." then
+    return get_list_msl(prevnonblank(lnum - 1))
+  elseif first_char == ")" then
+    set_pos(lnum, 0)
+
+    local found = searchpair_back("(", nil, ")", skip_char)
+
+    return get_list_msl(found)
+  elseif first_char == "]" then
+    set_pos(lnum, 0)
+
+    local found = searchpair_back("\\[", nil, "]", skip_char)
+
+    return get_list_msl(found)
+  elseif first_char == "}" then
+    set_pos(lnum, 0)
+
+    local found = searchpair_back("{", nil, "}", skip_char)
+
+    return get_list_msl(found)
+  elseif first_char == "e" and second_char == "n" and sub(line, first_col + 2, first_col + 2) == "d" and syngroup_at(lnum, first_col - 1) == "rubyKeyword" then
+    set_pos(lnum, 0)
+
+    local found = searchpair_back(list_re, nil, "\\<end\\>", skip_word_postfix)
+
+    return get_list_msl(found)
+  elseif first_char == "=" and find(line, "^end", first_col + 1) and syngroup_at(lnum, first_col) == "rubyCommentDelimiter" then
+    set_pos(lnum, 0)
+
+    local found = search("\\_^=begin\\>", "bW")
+
+    return get_list_msl(found - 1)
+  else
+    set_pos(lnum, 0)
+
+    local last_char, syngroup, prev_lnum = get_last_char()
+
+    if last_char == "\\" or syngroup == "rubyOperator" then
+      return get_list_msl(prev_lnum)
+    elseif syngroup == "rubyKeyword" then
+      local word = expand("<cword>")
+
+      if word == "or" or word == "and" then
+        return get_list_msl(prev_lnum)
       end
     end
   end
@@ -456,11 +518,7 @@ return function()
         return indent(prev_lnum)
       end
 
-      if syngroup == "rubyOperator" then
-        return indent(prev_lnum) + shiftwidth()
-      end
-
-      local msl = get_msl(prev_lnum)
+      local msl = get_list_msl(prev_lnum)
 
       if msl ~= prev_lnum then
         return indent(msl)
