@@ -514,7 +514,7 @@ return function()
         return indent(prev_lnum) + shiftwidth()
       end
 
-      if find(last_char, "[,([{]") then
+      if syngroup == "rubyDelimiter" and find(last_char, "[,([{]") then
         return indent(prev_lnum)
       end
 

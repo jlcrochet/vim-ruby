@@ -439,7 +439,7 @@ function! GetRubyIndent(lnum) abort
         return indent(prev_lnum) + shiftwidth()
       endif
 
-      if last_char =~ '[,([{]' && synid == g:ruby#delimiter
+      if synid == g:ruby#delimiter && last_char =~ '[,([{]'
         return indent(prev_lnum)
       endif
 
