@@ -415,18 +415,10 @@ function! GetRubyIndent(lnum) abort
       endif
 
       return indent(msl)
-    elseif word =~# '\v<%(begin|case|ensure|else|elsif|when)>'
+    elseif word =~# '\v<%(begin|case|ensure|else|elsif|when|then)>'
       return col - 1 + shiftwidth()
     elseif word =~# '\v<%(do|def|class|module)>'
       return indent(msl) + shiftwidth()
-    elseif word ==# "then"
-      let found = search('\<')
-
-      if found == lnum
-        return indent(msl)
-      else
-        return indent(msl) + shiftwidth()
-      endif
     elseif word ==# "in"
       " `in` is a bit of a weird case:
       "
