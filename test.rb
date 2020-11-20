@@ -84,6 +84,10 @@
 ?]
 ?{
 
+foo..
+bar
+..baz
+
 expected_result = <<HEREDOC
 This would contain specially formatted text.
 
