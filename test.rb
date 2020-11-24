@@ -156,30 +156,14 @@ class Foo # or at the end of the line
   end
 end
 
-=begin
-This is
-  commented out
-=end
-
 class Foo
   def foo
     jklsdfjklsdf
-=begin
-jklsdflkjsdf
-=end
     jksldfksjldf
   end
 end
 
-=begin some_tag
-  jksldfskdf
-this works, too
-=end
-
 class Foo
-=begin
-  Will not work
-=end
   jklsdf
 end
 

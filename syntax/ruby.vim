@@ -180,10 +180,10 @@ syn region rubyStringArrayAngleBrackets matchgroup=rubyString start=/\%#=1</ end
 syn match rubyArrayAngleBracketEscape /\%#=1\\[<>[:space:]]/ contained
 
 " Here Documents {{{3
-syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ end=/\%#=1\_^\s*\z1\>/ transparent contains=@rubyTop,rubyHeredocLine nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ end=/\%#=1\_^\s*\z1\>/ keepend transparent contains=@rubyTop,rubyHeredocLine nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyHeredocLine start=/\%#=1\_^/ end=/\%#=1\_$/ oneline contained contains=rubyStringInterpolation,rubyStringEscape nextgroup=rubyHeredocLine skipempty
 
-syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\='\z(\w\+\)'/ end=/\%#=1\_^\s*\z1\>/ transparent contains=@rubyTop,rubyHeredocLineRaw nextgroup=rubyOperator,rubyRangeOperator skipwhite
+syn region rubyHeredoc matchgroup=rubyHeredocDelimiter start=/\%#=1<<[-~]\='\z(\w\+\)'/ end=/\%#=1\_^\s*\z1\>/ keepend transparent contains=@rubyTop,rubyHeredocLineRaw nextgroup=rubyOperator,rubyRangeOperator skipwhite
 syn region rubyHeredocLineRaw start=/\%#=1\_^/ end=/\%#=1\_$/ oneline contained nextgroup=rubyHeredocLineRaw skipempty
 
 " Symbols {{{3
@@ -339,8 +339,6 @@ syn region rubyNestedBraces start=/\%#=1{/ matchgroup=rubyDelimiter end=/\%#=1}/
 unlet s:overloadable_operators
 
 " Synchronization {{{1
-syn sync match rubySync grouphere rubyHeredocLine /\%#=1<<[-~]\=\(`\=\)\w\+\1/
-syn sync match rubySync grouphere rubyHeredocLineRaw /\%#=1<<[-~]\='\w\+'/
 syn sync match rubySync grouphere rubyComment /\%#=1\_^=begin\>/
 
 " Highlighting {{{1
