@@ -338,6 +338,11 @@ syn region rubyNestedBraces start=/\%#=1{/ matchgroup=rubyDelimiter end=/\%#=1}/
 
 unlet s:overloadable_operators
 
+" Synchronization {{{1
+syn sync match rubySync grouphere rubyHeredocLine /\%#=1<<[-~]\=\(`\=\)\w\+\1/
+syn sync match rubySync grouphere rubyHeredocLineRaw /\%#=1<<[-~]\='\w\+'/
+syn sync match rubySync grouphere rubyComment /\%#=1\_^=begin\>/
+
 " Highlighting {{{1
 hi def link rubyComment Comment
 hi def link rubyCommentDelimiter rubyComment
