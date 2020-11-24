@@ -251,7 +251,16 @@ function! GetRubyIndent(lnum) abort
   " Current line {{{1
   " If the current line is inside of an ignorable multiline region, do
   " nothing.
-  if get(g:ruby#multiline_regions, synID(a:lnum, 1, 0))
+  let synid = synID(a:lnum, 1, 0)
+
+  if get(g:ruby#multiline_regions, synid)
+    if synid == g:ruby#comment
+      " Check for `=end`
+      if getline(a:lnum) =~# '^\s*=end\>'
+        return 0
+      endif
+    endif
+
     return -1
   endif
 

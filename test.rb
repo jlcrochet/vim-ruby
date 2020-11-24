@@ -152,18 +152,41 @@ class Foo # or at the end of the line
   # can be indented
   def bar
     jksdlf
+=begin
+  jksdfjsldf
+    sjdkflsdf
+    sjdkfl
+=end
     jklsdf
   end
 end
 
-class Foo
-  def foo
-    jklsdfjklsdf
-    jksldfksjldf
-  end
-end
+=begin
+jksldfjklasdjfa
+sdf
+asdfa
+sd
+asdf
+sdf
+fasd
+as
+
+asdf
+  jklsdf
+=end
 
 class Foo
+=begin
+  jkalsdfjklasdf
+  asdjkflasdjf
+
+  jaksldfjlkasdf
+  jkasldfjalsdf
+    kjlasdjfklasdf
+    jaksdlfjasdf
+
+        jklasdjfkalskdfj
+=end
   jklsdf
 end
 

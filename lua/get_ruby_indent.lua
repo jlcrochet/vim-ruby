@@ -323,7 +323,23 @@ return function()
   -- Current line {{{1
   -- If the current line is inside of an ignorable multiline region,
   -- do nothing.
-  if multiline_regions[syngroup_at(lnum, 0)] then
+  local syngroup = syngroup_at(lnum, 0)
+
+  if multiline_regions[syngroup] then
+    if syngroup == "rubyComment" then
+      -- Check for `=end`
+      local line = nvim_get_current_line()
+      local first_col, _, first_char = find(line, "(%S)")
+
+      if first_char == "=" then
+        local word = match(line, "^%l%w*", first_col + 1)
+
+        if word == "end" then
+          return 0
+        end
+      end
+    end
+
     return -1
   end
 
@@ -333,6 +349,7 @@ return function()
   local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
 
   if first_col then
+    -- Check for `=begin` or `=end`
     if first_char == "=" then
       local word = match(line, "^%l%w*", first_col + 1)
 
