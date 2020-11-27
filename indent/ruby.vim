@@ -490,9 +490,9 @@ function! GetRubyIndent(lnum) abort
       endif
 
       return indent(msl)
-    elseif word =~# '\v<%(begin|case|ensure|else|elsif|when|then)>'
+    elseif word =~# '\v<%(begin|case|ensure|else|elsif|when)>'
       return col - 1 + shiftwidth()
-    elseif word =~# '\v<%(do|def|class|module)>'
+    elseif word =~# '\v<%(do|then|def|class|module)>'
       return indent(msl) + shiftwidth()
     elseif word ==# "in"
       " `in` is a bit of a weird case:

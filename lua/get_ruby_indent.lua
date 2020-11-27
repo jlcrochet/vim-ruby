@@ -571,9 +571,9 @@ return function()
     end
 
     return indent(msl)
-  elseif word == "begin" or word == "case" or word == "ensure" or word == "else" or word == "elsif" or word == "when" or word == "then" then
+  elseif word == "begin" or word == "case" or word == "ensure" or word == "else" or word == "elsif" or word == "when" then
     return idx + shiftwidth()
-  elseif word == "do" or word == "def" or word == "class" or word == "module" then
+  elseif word == "do" or word == "then" or word == "def" or word == "class" or word == "module" then
     return indent(msl) + shiftwidth()
   elseif word == "in" then
     local found_lnum, found_col = unpack(searchpos("\\<for\\>", "b", msl))
