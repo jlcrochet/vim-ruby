@@ -6,9 +6,11 @@
 " Caching important syntax ID's for use in indentation logic
 const g:ruby#multiline_regions = {}
 
-for id in ["rubyString", "rubySymbol", "rubyRegex", "rubyCommand", "rubyComment", "rubyHeredocLine", "rubyHeredocLine", "rubyHeredocDelimiter"]
-  let g:ruby#multiline_regions[hlID(id)] = 1
+for s:id in ["rubyString", "rubySymbol", "rubyRegex", "rubyCommand", "rubyComment", "rubyHeredocLine", "rubyHeredocLine", "rubyHeredocDelimiter"]
+  let g:ruby#multiline_regions[hlID(s:id)] = 1
 endfor
+
+unlet s:id
 
 const g:ruby#keyword = hlID("rubyKeyword")
 const g:ruby#operator = hlID("rubyOperator")
