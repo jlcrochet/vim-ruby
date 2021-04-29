@@ -10,8 +10,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentkeys=0),0],0},.,o,O,!^F
-setlocal indentkeys+=0=else,0=elsif,0=when,0=in,0=rescue,0=ensure
-setlocal indentkeys+==begin,=end
+setlocal indentkeys+==begin,=end,0=else,0=elsif,0=when,0=in,0=rescue,0=ensure
 
 if has("nvim-0.5")
   lua get_ruby_indent = require("get_ruby_indent")
@@ -19,508 +18,785 @@ if has("nvim-0.5")
   finish
 endif
 
-setlocal indentexpr=GetRubyIndent(v:lnum)
+setlocal indentexpr=GetRubyIndent()
 
 if exists("*GetRubyIndent")
   finish
 endif
 
-const s:skip_char = "get(g:ruby#multiline_regions, synID(line('.'), col('.'), 0))"
-const s:skip_word = "synID(line('.'), col('.'), 0) != g:ruby#keyword"
+" Helpers {{{
+let s:kw_start_re = '\C\v<%(def|class|module|if|unless|case|while|until|for|begin|do):@!>'
+let s:kw_middle_re = '\v<%(else|elsif|when|in|rescue|ensure):@!>'
+let s:kw_end_re = '\C\v<end:@!>'
 
-const s:hanging_re = '\v<%(if|unless|begin|case)>'
-const s:postfix_re = '\v<%(if|unless|while|until|rescue)>'
-const s:exception_re = '\v<%(begin|do|def)>'
-const s:list_re = '\v<%(begin|do|if|unless)>'
+let s:start_pair_re = s:kw_start_re . '|[([{]'
+let s:end_pair_re = s:kw_end_re . '|[)\]}]'
 
-const s:start_re = s:hanging_re.'|<%(while|until|for|do|def|class|module)>'
-const s:middle_re = '\v<%(else|elsif|when|rescue|ensure)>'
+let s:pair_re = '\C\v<%((def|class|module)|(if|unless|case|while|until|for|begin|do)|(else|rescue|ensure)|(elsif|when|in)):@!>|(<end:@!>)|([([{])|([)\]}])'
 
-" Similar to the `skip_word` expression above, but includes logic for
-" skipping postfix `if` and `unless`.
-function! s:skip_word_postfix_temp() abort
-  let lnum = line(".")
-  let col = col(".")
+let s:floating_re = '\C\v<%((begin|case|for|if|unless|until|while)|(else|elsif|ensure|in|rescue|when)|(class|def|module)|(do)|(end)):@!>|([([{])|([)\]}])|(\|)'
 
-  if synID(lnum, col, 0) != g:ruby#keyword
-    return 1
-  endif
+if get(g:, "ruby_simple_indent")
+  let s:skip_keyword_expr = 'synID(line("."), col("."), 0) != g:ruby#indent#keyword'
+else
+  function s:skip_keyword()
+    let synid = synID(line("."), col("."), 0)
+    return synid != g:ruby#indent#keyword && synid != g:ruby#indent#define && synid != g:ruby#indent#block_control && synid != g:ruby#indent#define_block_control
+  endfunction
 
-  let word = expand("<cword>")
+  function s:skip_pair()
+    let synid = synID(line("."), col("."), 0)
+    return synid != g:ruby#indent#keyword && synid != g:ruby#indent#define && synid != g:ruby#indent#block_control && synid != g:ruby#indent#define_block_control && synid != g:ruby#indent#delimiter
+  endfunction
 
-  if word =~# s:postfix_re
-    let [_, col] = searchpos('\S', "b", lnum)
+  let s:skip_keyword_expr = function("s:skip_keyword")
+  let s:skip_pair_expr = function("s:skip_pair")
+endif
 
-    if !col
-      return 0
-    endif
-
-    if synID(lnum, col, 0) != g:ruby#operator
-      return 1
-    endif
-  endif
-
-  return 0
-endfunction
-
-const s:skip_word_postfix = function("s:skip_word_postfix_temp")
-
-" Find the nearest line up to and including the given line that does not
-" begin with a multiline region.
-function! s:prev_non_multiline(lnum) abort
+function s:prev_non_multiline(lnum)
   let lnum = a:lnum
 
-  while get(g:ruby#multiline_regions, synID(lnum, 1, 0))
-    let lnum = prevnonblank(lnum - 1)
+  while get(g:ruby#indent#multiline_regions, synID(lnum, 1, 0))
+    let lnum -= 1
   endwhile
 
   return lnum
 endfunction
 
-function! s:get_last_char() abort
-  let [lnum, col] = searchpos('\S', "bW")
-
-  if !lnum
-    return
+function s:is_hanging_operator(char, lnum, col)
+  if a:char =~# '[%&+\-*/?:<=>^|~]'
+    return synID(a:lnum, a:col, 0) == g:ruby#indent#operator
+  elseif a:char ==# '\'
+    return synID(a:lnum, a:col, 0) == g:ruby#indent#backslash
   endif
+endfunction
 
-  let synid = synID(lnum, col, 0)
+function s:is_hanging_keyword_operator(char, line, lnum, col)
+  if a:char ==# "d"
+    if a:line[a:col - 4 : a:col - 2] =~# '\<an$'
+      return synID(a:lnum, a:col - 2, 0) == g:ruby#indent#keyword
+    endif
+  elseif a:char ==# "r"
+    if a:line[a:col - 3 : a:col - 2] =~# '\<o$'
+      return synID(a:lnum, a:col - 1, 0) == g:ruby#indent#keyword
+    endif
+  elseif a:char ==# "t"
+    if a:line[a:col - 4 : a:col - 2] =~# '\<no$'
+      return synID(a:lnum, a:col - 2, 0) == g:ruby#indent#keyword
+    endif
+  endif
+endfunction
 
-  while synid == g:ruby#comment || synid == g:ruby#comment_delimiter
-    let [lnum, col] = searchpos('\S\_s*\%(#\|=begin\>\)', "bW")
+function s:is_hanging_bracket(char, lnum, col)
+  if a:char =~# '[([{|]'
+    return synID(a:lnum, a:col, 0) == g:ruby#indent#delimiter
+  endif
+endfunction
 
-    if !lnum
-      return
+function s:is_hanging_comma(char, lnum, col)
+  if a:char ==# ","
+    return synID(a:lnum, a:col, 0) == g:ruby#indent#comma
+  endif
+endfunction
+
+function s:get_last_char(lnum, line)
+  " First, try to find a comment delimiter: if one is found, the
+  " non-whitespace character immediately before it is the last
+  " character; else, simply find the last non-whitespace character in
+  " the line.
+  let found = -1
+
+  while 1
+    let found = stridx(a:line, "#", found + 1)
+
+    if found == -1
+      let [char, pos, _] = matchstrpos(a:line, '\S\ze\s*$')
+      return [char, pos]
+    elseif found == 0
+      return ["", -1]
     endif
 
-    let synid = synID(lnum, col, 0)
+    if synID(a:lnum, found + 1, 0) == g:ruby#indent#comment_delimiter
+      break
+    endif
   endwhile
 
-  let line = getline(lnum)
-  let char = line[col - 1]
-
-  return [char, synid, lnum, col]
+  let [char, pos, _] = matchstrpos(a:line[:found - 1], '\S\ze\s*$')
+  return [char, pos]
 endfunction
 
-function! s:get_msl(lnum) abort
-  let lnum = s:prev_non_multiline(a:lnum)
+function s:find_floating_index(lnum, i, j)
+  call cursor(a:lnum, a:j + 1)
 
-  let line = getline(lnum)
-  let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
+  let pairs = 0
+  let [_, col, p] = searchpos(s:floating_re, "bcp", a:lnum)
+
+  while col >= a:i + 1
+    if p == 2  " begin case for if unless until while
+      if synID(a:lnum, col, 0) == g:ruby#indent#keyword
+        if pairs == 0
+          return col - 1
+        else
+          let pairs += 1
+        endif
+      endif
+    elseif p == 3  " else elsif ensure in rescue when
+      if pairs == 0
+        let synid = synID(a:lnum, col, 0)
+
+        if synid == g:ruby#indent#keyword || synid == g:ruby#indent#block_control || synid == g:ruby#indent#define_block_control
+          return a:i
+        endif
+      endif
+    elseif p == 4  " class def module
+      if synID(a:lnum, col, 0) == g:ruby#indent#define
+        if pairs == 0
+          return a:i
+        else
+          let pairs += 1
+        endif
+      endif
+    elseif p == 5  " do
+      if synID(a:lnum, col, 0) == g:ruby#indent#keyword
+        if pairs == 0
+          return a:i
+        else
+          let pairs += 1
+        endif
+      endif
+    elseif p == 6  " end
+      let synid = synID(a:lnum, col, 0)
+
+      if synid == g:ruby#indent#keyword || synid == g:ruby#indent#define
+        let pairs -= 1
+      endif
+    elseif p == 7  " ( [ {
+      if synID(a:lnum, col, 0) == g:ruby#indent#delimiter
+        if pairs == 0
+          let [_, col2] = searchpos('\S', "z", a:lnum)
+
+          if col2
+            return col2 - 1
+          else
+            return a:i
+          endif
+        else
+          let pairs += 1
+        endif
+      endif
+    elseif p == 8  " ) ] }
+      if synID(a:lnum, col, 0) == g:ruby#indent#delimiter
+        let pairs -= 1
+      endif
+    elseif p == 9  " |
+      if pairs == 0
+        if synID(a:lnum, col, 0) == g:ruby#indent#delimiter
+          return a:i
+        endif
+      endif
+    endif
+
+    let [_, col, p] = searchpos(s:floating_re, "bp", a:lnum)
+  endwhile
+
+  return -1
+endfunction
+
+function s:find_msl(skip_commas, pairs)
+  let [lnum, col] = searchpos('\S', "czW")
+  let prev_lnum = prevnonblank(lnum - 1)
+
+  if prev_lnum == 0
+    return [lnum, col - 1, 0]
+  endif
 
   " This line is *not* the MSL if:
-  " 1. It starts with a leading dot
-  " 2. It starts with a closing bracket
-  " 3. It starts with `end` or `=end`
-  " 4. The previous line ended with a comma or hanging operator
 
-  if first_char == "." && line[second_idx] != "."
-    return s:get_msl(prevnonblank(lnum - 1))
-  elseif first_char == ")"
-    call cursor(lnum, 1)
+  " It is part of a multiline region.
+  let synid = synID(lnum, 1, 0)
 
-    let found = searchpair("(", "", ")", "bW", s:skip_char)
+  if synid == g:ruby#indent#comment || get(g:ruby#indent#multiline_regions, synid)
+    call cursor(prev_lnum, 1)
+    return s:find_msl(a:skip_commas, v:null)
+  endif
 
-    return s:get_msl(found)
-  elseif first_char == "]"
-    call cursor(lnum, 1)
+  " It starts with `=end`.
+  let line = getline(lnum)
 
-    let found = searchpair('\[', "", "]", "bW", s:skip_char)
+  if line =~# '^=end\>'
+    let lnum = search('^=begin\>', "bWz")
 
-    return s:get_msl(found)
-  elseif first_char == "}"
-    call cursor(lnum, 1)
+    while synID(lnum, 1, 0) != g:ruby#indent#comment_delimiter
+      let lnum = search('^=begin\>', "bWz")
+    endwhile
 
-    let found = searchpair("{", "", "}", "bW", s:skip_char)
+    let prev_lnum = prevnonblank(lnum - 1)
+    call cursor(prev_lnum, 1)
+    return s:find_msl(a:skip_commas, v:null)
+  endif
 
-    return s:get_msl(found)
-  elseif first_char ==# "e" && match(line, '^nd\>', second_idx) > -1
-    " As an optimization, we are not doing the search if the `end` has
-    " no whitespace before it, indicating that there is no possibility
-    " for a hanging indent.
-    if first_idx == 0
-      return lnum
-    endif
+  " It starts with a leading dot.
+  if match(line, '^\.\.\@!', col - 1) != -1
+    call cursor(prev_lnum, 1)
+    return s:find_msl(a:skip_commas, v:null)
+  endif
 
-    call cursor(lnum, 1)
+  " It contains a positive number of unpaired closing brackets or
+  " keywords; find the corresponding starting line...
+  "
+  " *unless* the line starts with an `end` that is part of a definition.
+  if a:pairs is v:null
+    let pairs = 0
 
-    let found = searchpair(s:start_re, "", '\<end\>', "bW", s:skip_word_postfix)
-    let word = expand("<cword>")
-
-    if word ==# "do" || word =~# s:hanging_re
-      return s:get_msl(found)
-    else
-      return found
-    endif
-  elseif first_char == "=" && match(line, '^end\>', second_idx) > -1
-    call cursor(lnum, 1)
-
-    let found = search('\_^=begin\>', "bW")
-
-    return s:get_msl(found - 1)
-  else
-    call cursor(lnum, 1)
-
-    let [last_char, synid, prev_lnum, _] = s:get_last_char()
-
-    if last_char == "," || last_char == '\' || synid == g:ruby#operator
-      return s:get_msl(prev_lnum)
-    elseif synid == g:ruby#keyword
-      let word = expand("<cword>")
-
-      if word ==# "or" || word ==# "and"
-        return s:get_msl(prev_lnum)
+    if match(line, '^end:\@!\>', col - 1) != -1
+      if col == 1
+        return [lnum, col - 1, 0]
       endif
+
+      if synID(lnum, col, 0) == g:ruby#indent#define
+        return [lnum, col - 1, 0]
+      endif
+
+      let pairs = -1
+
+      call cursor(0, col + 3)
+    endif
+
+    let [_, col2, p] = searchpos(s:pair_re, "czp", lnum)
+
+    while p
+      let synid = synID(lnum, col2, 0)
+
+      if p == 2  " def class module
+        if synid == g:ruby#indent#define
+          let pairs += 1
+        endif
+      elseif p == 3  " if unless case while until for begin do
+        if synid == g:ruby#indent#keyword
+          let pairs += 1
+        endif
+      elseif p == 4  " else rescue ensure
+        if pairs == 0
+          if synid == g:ruby#indent#block_control || synid == g:ruby#indent#define_block_control
+            let pairs += 1
+          endif
+        endif
+      elseif p == 5  " elsif when in
+        if pairs == 0
+          if synid == g:ruby#indent#keyword
+            let pairs += 1
+          endif
+        endif
+      elseif p == 6  " end
+        if synid == g:ruby#indent#define || synid == g:ruby#indent#keyword
+          let pairs -= 1
+        endif
+      elseif p == 7  " ( [ {
+        if synid == g:ruby#indent#delimiter
+          let pairs += 1
+        endif
+      elseif p == 8  " ) ] }
+        if synid == g:ruby#indent#delimiter
+          let pairs -= 1
+        endif
+      endif
+
+      let [_, col2, p] = searchpos(s:pair_re, "zp", lnum)
+    endwhile
+
+    if pairs < 0
+      call cursor(0, 1)
+
+      while pairs < 0
+        let lnum = searchpair(s:start_pair_re, "", s:end_pair_re, "bW", s:skip_pair_expr)
+        let pairs += 1
+      endwhile
+
+      let pairs += searchpair(s:start_pair_re, "", s:end_pair_re, "bmr", s:skip_pair_expr, lnum)
+
+      call cursor(0, 1)
+      return s:find_msl(a:skip_commas, pairs)
+    endif
+  else
+    let pairs = a:pairs
+  endif
+
+  " The previous line ends with a comma, backslash, or hanging operator.
+  let prev_line = getline(prev_lnum)
+  let [last_char, last_idx] = s:get_last_char(prev_lnum, prev_line)
+
+  if last_idx != -1
+    if s:is_hanging_comma(last_char, prev_lnum, last_idx + 1)
+      if !a:skip_commas
+        call cursor(prev_lnum, 1)
+        return s:find_msl(0, v:null)
+      endif
+    elseif s:is_hanging_operator(last_char, prev_lnum, last_idx + 1) || s:is_hanging_keyword_operator(last_char, prev_line, prev_lnum, last_idx + 1)
+      call cursor(prev_lnum, 1)
+      return s:find_msl(a:skip_commas, v:null)
     endif
   endif
 
-  " If none of the above are true, this line is the MSL.
-  return lnum
+  " Else, this line is the MSL.
+  return [lnum, col - 1, pairs > 0]
 endfunction
+" }}}
 
-" Modified version of the above that does not consider commas to be
-" continuation starters; this is specifically for use inside of
-" multiline list-like regions where we do not want to traverse all the
-" way back to the beginning of the list to determine the indentation for
-" an item.
-function! s:get_list_msl(lnum) abort
-  let lnum = s:prev_non_multiline(a:lnum)
+" GetRubyIndent {{{
+if get(g:, "ruby_simple_indent")
+  " Simple {{{
+  function GetRubyIndent() abort
+    " If the current line is inside of a multiline region, do nothing.
+    let synid = synID(v:lnum, 1, 0)
 
-  let line = getline(lnum)
-  let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
-
-  " This line is *not* the MSL if:
-  " 1. It starts with a leading dot
-  " 2. It starts with a closing bracket
-  " 3. It starts with `end` or `=end`
-  " 4. The previous line ended with a comma or hanging operator
-
-  if first_char == "." && line[second_idx] != "."
-    return s:get_list_msl(prevnonblank(lnum - 1))
-  elseif first_char == ")"
-    call cursor(lnum, 1)
-
-    let found = searchpair("(", "", ")", "bW", s:skip_char)
-
-    return s:get_list_msl(found)
-  elseif first_char == "]"
-    call cursor(lnum, 1)
-
-    let found = searchpair('\[', "", "]", "bW", s:skip_char)
-
-    return s:get_list_msl(found)
-  elseif first_char == "}"
-    call cursor(lnum, 1)
-
-    let found = searchpair("{", "", "}", "bW", s:skip_char)
-
-    return s:get_list_msl(found)
-  elseif first_char ==# "e" && match(line, '^nd\>', second_idx) > -1
-    call cursor(lnum, 1)
-
-    let found = searchpair(s:list_re, "", '\<end\>', "bW", s:skip_word_postfix)
-
-    return s:get_list_msl(found)
-  elseif first_char == "=" && match(line, '^end\>', second_idx) > -1
-    call cursor(lnum, 1)
-
-    let found = search('\_^=begin\>', "bW")
-
-    return s:get_list_msl(found - 1)
-  else
-    call cursor(lnum, 1)
-
-    let [last_char, synid, prev_lnum, _] = s:get_last_char()
-
-    if last_char == '\' || synid == g:ruby#operator
-      return s:get_list_msl(prev_lnum)
-    elseif synid == g:ruby#keyword
-      let word = expand("<cword>")
-
-      if word ==# "or" || word ==# "and"
-        return s:get_list_msl(prev_lnum)
-      endif
+    if get(g:ruby#indent#multiline_regions, synid)
+      return -1
     endif
-  endif
 
-  " If none of the above are true, this line is the MSL.
-  return lnum
-endfunction
-
-function! GetRubyIndent(lnum) abort
-  " Current line {{{1
-  " If the current line is inside of an ignorable multiline region, do
-  " nothing.
-  let synid = synID(a:lnum, 1, 0)
-
-  if get(g:ruby#multiline_regions, synid)
-    if synid == g:ruby#comment
-      " Check for `=end`
-      if getline(a:lnum) =~# '^\s*=end\>'
+    " Special case for the above:
+    "
+    " If the current line is inside of a multiline comment, check to see
+    " if it begins with `=end`.
+    if synid == g:ruby#indent#comment
+      if getline(v:lnum) =~# '^\s*=end\>'
         return 0
+      else
+        return -1
       endif
     endif
 
-    return -1
-  endif
+    let prev_lnum = prevnonblank(v:lnum - 1)
 
-  let line = getline(a:lnum)
-  let [first_char, first_idx, second_idx] = matchstrpos(line, '\S')
-
-  if first_idx > -1
-    " If the first character is `=` and it is followed by `begin` or
-    " `end`, return 0.
-    if first_char == "=" && match(line, '^\%(begin\|end\)\>', second_idx) > -1
+    if prev_lnum == 0
       return 0
     endif
 
-    " If the first character of the current line is a leading dot, add an
-    " indent unless the previous logical line also started with a leading
-    " dot.
-    let second_char = line[second_idx]
+    " Retrieve indentation info for the previous line.
+    let prev_line = getline(prev_lnum)
 
-    if (first_char == "." && second_char != ".") || (first_char == "&" && second_char == ".")
-      let prev_lnum = s:prev_non_multiline(prevnonblank(a:lnum - 1))
+    if prev_line =~# '^=end\>'
+      call cursor(prev_lnum, 1)
+
+      let lnum = search('^=begin\>', "bWz")
+
+      while synID(lnum, 1, 0) != g:ruby#indent#comment_delimiter
+        let lnum = search('^=begin\>', "bWz")
+      endwhile
+
+      let prev_lnum = prevnonblank(lnum - 1)
       let prev_line = getline(prev_lnum)
-      let [first_char, first_idx, second_idx] = matchstrpos(prev_line, '\S')
-      let second_char = line[second_idx]
+    endif
 
-      if (first_char == "." && second_char != ".") || (first_char == "&" && second_char == ".")
+    let [last_char, last_idx] = s:get_last_char(prev_lnum, prev_line)
+
+    " This variable tells whether or not the previous line is
+    " a continuation of another line.
+    " 0 -> no continuation
+    " 1 -> continuation caused by a backslash or hanging operator
+    " 2 -> continuation caused by a comma (list continuation)
+    " 3 -> continuation caused by an opening bracket
+    let continuation = 0
+
+    if last_idx != -1
+      " If the previous line begins in a multiline region, find the line
+      " that began that region.
+
+      if get(g:ruby#indent#multiline_regions, synID(prev_lnum, 1, 0))
+        let start_lnum = s:prev_non_multiline(prevnonblank(prev_lnum - 1))
+        let start_line = getline(start_lnum)
+      else
+        let start_lnum = prev_lnum
+        let start_line = prev_line
+      endif
+
+      " Find the first column and first character of the line.
+      let [first_char, first_idx, _] = matchstrpos(start_line, '\S')
+
+      " Determine whether or not the line is a continuation.
+      if first_char ==# "."
+        if start_line[first_idx + 1] !=# "."
+          let continuation = 1
+        endif
+      elseif first_char !~# '[)\]}]'
+        let lnum = prevnonblank(start_lnum - 1)
+
+        if lnum
+          let line = getline(lnum)
+          let [char, idx] = s:get_last_char(lnum, line)
+
+          if idx != -1
+            if s:is_hanging_operator(char, lnum, idx + 1) || s:is_hanging_keyword_operator(char, line, lnum, idx + 1)
+              let continuation = 1
+            elseif s:is_hanging_comma(char, lnum, idx + 1)
+              let continuation = 2
+            elseif s:is_hanging_bracket(char, lnum, idx + 1)
+              let continuation = 3
+            endif
+          endif
+        endif
+      endif
+    else
+      " The previous line is a comment line.
+      let first_idx = stridx(prev_line, "#")
+      let start_lnum = prev_lnum
+      let start_line = prev_line
+    endif
+
+    " Find the first character in the current line.
+    let line = getline(v:lnum)
+
+    let [char, idx, _] = matchstrpos(line, '\S')
+
+    if char ==# "."
+      " If the current line begins with a leading dot, add a shift unless
+      " the previous line was a line continuation.
+
+      if line[idx + 1] !=# "."
+        if continuation == 1
+          return first_idx
+        else
+          return first_idx + shiftwidth()
+        endif
+      endif
+    elseif char ==# ")"
+      " If the current line begins with a closing bracket, subtract
+      " a shift unless the previous character was the corresponding
+      " bracket; subtract an additional shift if the previous line was
+      " a continuation.
+
+      let shift = 1
+
+      if last_char ==# "(" && synID(prev_lnum, last_idx + 1, 0) == g:ruby#indent#delimiter
+        let shift = 0
+      endif
+
+      if continuation == 1
+        let shift += 1
+      endif
+
+      return first_idx - shift * shiftwidth()
+    elseif char ==# "]"
+      let shift = 1
+
+      if last_char ==# "[" && synID(prev_lnum, last_idx + 1, 0) == g:ruby#indent#delimiter
+        let shift = 0
+      endif
+
+      if continuation == 1
+        let shift += 1
+      endif
+
+      return first_idx - shift * shiftwidth()
+    elseif char ==# "}"
+      let shift = 1
+
+      if (last_char ==# "{" || last_char ==# "|") && synID(prev_lnum, last_idx + 1, 0) == g:ruby#indent#delimiter
+        let shift = 0
+      endif
+
+      if continuation == 1
+        let shift += 1
+      endif
+
+      return first_idx - shift * shiftwidth()
+    elseif char ==# "="
+      if match(line, '^\%(begin\|end\)\>', idx + 1) != -1
+        return 0
+      endif
+    elseif match(line, '\v^%(end|else|elsif|when|in|rescue|ensure):@!>', idx) != -1
+      let shift = 1
+
+      if continuation == 1
+        let shift += 1
+      endif
+
+      if searchpair(s:kw_start_re, s:kw_middle_re, s:kw_end_re, "b", s:skip_keyword_expr, start_lnum)
+        let shift -= 1
+      endif
+
+      return first_idx - shift * shiftwidth()
+    endif
+
+    " If we can't determine the indent from the current line, examine the
+    " previous line.
+
+    if last_idx == -1
+      return first_idx
+    endif
+
+    if s:is_hanging_comma(last_char, prev_lnum, last_idx + 1)
+      " If the last character was a comma, add a shift unless:
+      "
+      " The previous line begins with a closing bracket or `end`.
+      "
+      " The line before the starting line ended with a comma or
+      " a hanging bracket.
+
+      if prev_lnum == start_lnum
+        if first_char =~# '[)\]}]'
+          return first_idx
+        elseif match(start_line, '^end:\@!\>', first_idx) != -1
+          return first_idx
+        endif
+      endif
+
+      if continuation == 1
+        return first_idx - shiftwidth()
+      elseif continuation == 2 || continuation == 3
+        return first_idx
+      else
+        return first_idx + shiftwidth()
+      endif
+    elseif s:is_hanging_bracket(last_char, prev_lnum, last_idx + 1) || s:is_hanging_operator(last_char, prev_lnum, last_idx + 1) || s:is_hanging_keyword_operator(last_char, prev_line, prev_lnum, last_idx + 1)
+      if continuation == 1
         return first_idx
       else
         return first_idx + shiftwidth()
       endif
     endif
 
-    " If the first character is a closing bracket, align with the line
-    " that contains the opening bracket.
-    if first_char == ")"
-      return indent(searchpair("(", "", ")", "bW", s:skip_char))
-    elseif first_char == "]"
-      return indent(searchpair("\\[", "", "]", "bW", s:skip_char))
-    elseif first_char == "}"
-      return indent(searchpair("{", "", "}", "bW", s:skip_char))
+    if searchpair(s:kw_start_re, s:kw_middle_re, s:kw_end_re, "b", s:skip_keyword_expr, start_lnum)
+      let shift = 1
+    elseif continuation == 1 || continuation == 2
+      let shift = -1
+    else
+      let shift = 0
     endif
 
-    " If the first word is a deindenting keyword, align with the nearest
-    " indenting keyword.
-    let first_word = matchstr(line, '^\l\w*', first_idx)
+    return first_idx + shift * shiftwidth()
+  endfunction
+  " }}}
+else
+  " Default {{{
+  function GetRubyIndent() abort
+    " If the current line is inside of a multiline region, do nothing.
+    let synid = synID(v:lnum, 1, 0)
 
-    call cursor(a:lnum, 1)
-
-    if first_word ==# "end"
-      let [lnum, col] = searchpairpos(s:start_re, s:middle_re, '\<end\>', "bW", s:skip_word_postfix)
-      let word = expand("<cword>")
-
-      if word =~# s:hanging_re
-        return col - 1
-      else
-        return indent(lnum)
-      endif
-    elseif first_word ==# "else"
-      let [_, col] = searchpairpos(s:hanging_re, s:middle_re, '\<end\>', "bW", s:skip_word_postfix)
-      return col - 1
-    elseif first_word ==# "elsif"
-      let [_, col] = searchpairpos('\v<%(if|unless)', '\<elsif\>', '\<end\>', "bW", s:skip_word_postfix)
-      return col - 1
-    elseif first_word ==# "when"
-      let [_, col] = searchpairpos('\<case\>', '\<when\>', '\<end\>', "bW", s:skip_word)
-      return col - 1
-    elseif first_word ==# "in"
-      let [_, col] = searchpairpos('\<case\>', '\<in\>', '\<end\>', "bW", s:skip_word)
-      return col - 1
-    elseif first_word ==# "rescue"
-      let [lnum, col] = searchpairpos(s:exception_re, '\<rescue\>', '\<end\>', "bW", s:skip_word)
-
-      if expand("<cword>") ==# "begin"
-        return col - 1
-      else
-        return indent(lnum)
-      endif
-    elseif first_word ==# "ensure"
-      let [lnum, col] = searchpairpos(s:exception_re, '\v<%(rescue|else)>', '\<end\>', "bW", s:skip_word)
-
-      if expand("<cword>") ==# "begin"
-        return col - 1
-      else
-        return indent(lnum)
-      endif
+    if get(g:ruby#indent#multiline_regions, synid)
+      return -1
     endif
-  endif
 
-  " Previous line {{{1
-  " Begin by finding the previous non-comment character in the file.
-  let [last_char, synid, prev_lnum, last_col] = s:get_last_char()
-
-  if last_char is 0
-    return 0
-  endif
-
-  " The only characters we care about for indentation are operators and
-  " delimiters.
-
-  if synid == g:ruby#operator
-    " If the last character was a hanging operator, add an indent unless
-    " the line before it also ended with a hanging operator.
-    call cursor(s:prev_non_multiline(prev_lnum), 1)
-
-    let [_, synid, _, _] = s:get_last_char()
-
-    if synid == g:ruby#operator
-      return indent(prev_lnum)
-    elseif synid == g:ruby#keyword
-      let word = expand("<cword>")
-
-      if word ==# "or" || word ==# "and"
-        return indent(prev_lnum)
+    " Special case for the above:
+    "
+    " If the current line is inside of a multiline comment, check to see
+    " if it begins with `=end`.
+    if synid == g:ruby#indent#comment
+      if getline(v:lnum) =~# '^\s*=end\>'
+        return 0
+      else
+        return -1
       endif
     endif
 
-    return indent(prev_lnum) + shiftwidth()
-  endif
+    let prev_lnum = prevnonblank(v:lnum - 1)
 
-  if synid == g:ruby#keyword
-    let word = expand("<cword>")
+    if prev_lnum == 0
+      return 0
+    endif
 
-    if word ==# "or" || word ==# "and"
-      " `or` and `and` behave like operators.
-      call cursor(s:prev_non_multiline(prev_lnum), 1)
+    " Retrieve indentation info for the previous line.
+    let prev_line = getline(prev_lnum)
 
-      let [_, synid, _, _] = s:get_last_char()
+    if prev_line =~# '^=end\>'
+      call cursor(prev_lnum, 1)
 
-      if synid == g:ruby#operator
-        return indent(prev_lnum)
-      elseif synid == g:ruby#keyword
-        let word = expand("<cword>")
+      let [lnum, col] = searchpos('^=begin\>', "bWz")
 
-        if word ==# "or" || word ==# "and"
-          return indent(prev_lnum)
+      while synID(lnum, col, 0) != g:ruby#indent#comment_delimiter
+        let [lnum, col] = searchpos('^=begin\>', "bWz")
+      endwhile
+
+      let prev_lnum = prevnonblank(lnum - 1)
+      let prev_line = getline(prev_lnum)
+    endif
+
+    let [last_char, last_idx] = s:get_last_char(prev_lnum, prev_line)
+
+    " Before we proceed, we need to determine which column we will use
+    " as the starting position.
+    "
+    " If there is a floating column somehwere in the previous line, that
+    " is the starting column.
+    "
+    " Else, the first column of the previous line is the starting
+    " position.
+
+    if last_idx == -1
+      " The previous line was a comment line.
+      let first_idx = stridx(prev_line, "#")
+      let floating_idx = -1
+      let start_idx = first_idx
+    else
+      let first_idx = match(prev_line, '\S')
+      let floating_idx = s:find_floating_index(prev_lnum, first_idx, last_idx)
+      let start_idx = floating_idx != -1 ? floating_idx : first_idx
+
+      " Check the last character of the previous line.
+      if s:is_hanging_operator(last_char, prev_lnum, last_idx + 1)
+        " If the previous line ends with a hanging operator or
+        " backslash...
+
+        " Find the next previous line.
+        let prev_prev_lnum = prevnonblank(prev_lnum - 1)
+
+        if prev_prev_lnum
+          let prev_prev_line = getline(prev_prev_lnum)
+          let [prev_last_char, prev_last_idx] = s:get_last_char(prev_prev_lnum, prev_prev_line)
+
+          " If the next previous line also ends with a hanging operator or
+          " backslash...
+          if s:is_hanging_operator(prev_last_char, prev_prev_lnum, prev_last_idx + 1)
+            " Align with the starting column.
+            return start_idx
+          endif
+        endif
+
+        " Else, find the first operator in the previous line.
+        let segment = prev_line[:last_idx - 3]
+        let [char, idx, offset] = matchstrpos(segment, '[%&+\-*/?:<=>^|~]', start_idx + 1)
+
+        while idx != -1
+          if synID(prev_lnum, idx + 1, 0) == g:ruby#indent#operator
+            " Find the first non-whitespace column after the operator that
+            " is not also an operator.
+            let [char, idx, _] = matchstrpos(segment, '[^[:space:]%&+\-*/?:<=>^|~]', offset)
+
+            if idx == -1
+              break
+            endif
+
+            " If one is found, align with it.
+            return idx
+          endif
+
+          let [char, idx, offset] = matchstrpos(segment, '[%&+\-*/?:<=>^|~]', offset)
+        endwhile
+
+        " Otherwise, simply align with the starting position and add
+        " a shift.
+        return start_idx + shiftwidth()
+      elseif s:is_hanging_comma(last_char, prev_lnum, last_idx + 1)
+        " If the previous line ends with a comma...
+
+        " First, find the MSL of the previous line.
+        call cursor(prev_lnum, 1)
+        let [msl, ind, _] = s:find_msl(1, v:null)
+
+        " Find the line prior to the MSL.
+        let prev_prev_lnum = prevnonblank(msl - 1)
+
+        if prev_prev_lnum
+          let prev_prev_line = getline(prev_prev_lnum)
+          let [prev_last_char, prev_last_idx] = s:get_last_char(prev_prev_lnum, prev_prev_line)
+
+          if s:is_hanging_comma(prev_last_char, prev_prev_lnum, prev_last_idx + 1) || s:is_hanging_bracket(prev_last_char, prev_prev_lnum, prev_last_idx + 1)
+            " If the next previous line also ended with a comma or an
+            " opening bracket, align with the MSL, unless the current line
+            " begins with a closing bracket.
+            if getline(v:lnum) =~# '^\s*[)\]}]'
+              return ind - shiftwidth()
+            endif
+
+            return ind
+          elseif s:is_hanging_operator(prev_last_char, prev_prev_lnum, prev_last_idx + 1)
+            " If the next previous line ended with a backslash or hanging
+            " operator, align with the MSL.
+            return ind
+          endif
+        endif
+
+        " Else, align with the previous line and add a shift.
+        if floating_idx != -1
+          return floating_idx
+        else
+          return first_idx + shiftwidth()
+        endif
+      elseif s:is_hanging_bracket(last_char, prev_lnum, last_idx + 1)
+        " If the previous line ends with an opening bracket, align with
+        " the starting column and add a shift unless the current line
+        " begins with a closing bracket or `end`.
+        if getline(v:lnum) =~# '^\s*\%([)\]}]\|end:\@!\>\)'
+          return start_idx
+        else
+          return start_idx + shiftwidth()
+        endif
+      elseif s:is_hanging_keyword_operator(last_char, prev_line, prev_lnum, last_idx + 1)
+        " If the previous line ends with a keyword operator (`and`, `or`,
+        " `not`), align with the starting column; add a shift unless the
+        " next previous line also ended with a keyword operator.
+        let prev_prev_lnum = prevnonblank(prev_lnum - 1)
+
+        if prev_prev_lnum
+          let prev_prev_line = getline(prev_prev_lnum)
+          let [prev_last_char, prev_last_idx] = s:get_last_char(prev_prev_lnum, prev_prev_line)
+
+          if s:is_hanging_keyword_operator(prev_last_char, prev_prev_line, prev_prev_lnum, prev_last_idx + 1)
+            return start_idx
+          endif
+        endif
+
+        return start_idx + shiftwidth()
+      endif
+    endif
+
+    " Next, examine the first character of the current line.
+    let line = getline(v:lnum)
+    let [char, idx, _] = matchstrpos(line, '\S')
+
+    if char ==# "."
+      " If the current line starts with a leading dot:
+      "
+      " Align with the first leading dot in the previous line, if any.
+      "
+      " Else, add a shift.
+      if line[idx + 1] !=# "."
+        let idx = match(prev_line, '\.\.\@!', first_idx)
+
+        if idx != -1
+          return idx
+        else
+          return start_idx + shiftwidth()
         endif
       endif
-
-      return indent(prev_lnum) + shiftwidth()
-    endif
-  endif
-
-  if synid == g:ruby#delimiter
-    " If the last character was an opening bracket or block parameter
-    " delimiter, add an indent.
-    if last_char =~ '[([{|]'
-      return indent(prev_lnum) + shiftwidth()
-    endif
-
-    " If the last character was a backslash, add an indent unless the
-    " line before it also ended with a backslash.
-    if last_char == '\'
-      call cursor(s:prev_non_multiline(prev_lnum), 1)
-
-      let [last_char, synid, _, _] = s:get_last_char()
-
-      if last_char == '\' && synid == g:ruby#delimiter
-        return indent(prev_lnum)
+    elseif char =~# '[)\]}]'
+      " If the current line begins with a closing bracket, subtract
+      " a shift.
+      if floating_idx != -1
+        return floating_idx
       else
-        return indent(prev_lnum) + shiftwidth()
+        call cursor(prev_lnum, 1)
+        let [_, ind, _] = s:find_msl(1, v:null)
+        return ind - shiftwidth()
+      endif
+    elseif char ==# "="
+      if match(line, '^\%(begin\|end\)\>', idx + 1) != -1
+        return 0
+      endif
+    elseif match(line, '\v^%(end|else|elsif|when|in|rescue|ensure):@!>', idx) != -1
+      if floating_idx != -1
+        return floating_idx
+      else
+        call cursor(prev_lnum, 1)
+        let [_, ind, shift] = s:find_msl(0, v:null)
+        return ind + (shift - 1) * shiftwidth()
       endif
     endif
 
-    " If the last character was a comma, check the following:
-    "
-    " 1. If the comma is preceded by an unpaired opening bracket
-    " somewhere in the same line, align with the bracket.
-    " 2. If the next previous line also ended with a comma or it ended
-    " with an opening bracket, align with the beginning of the previous
-    " line.
-    " 3. If the next previous lined ended with a hanging operator, add
-    " an indent.
-    " 4. If the previous line is not its own MSL, align with the MSL.
-    " 5. Else, add an indent.
-    if last_char == ","
-      let [_, col] = searchpairpos('[([{]', "", '[)\]}]', "b", s:skip_char, prev_lnum)
-
-      if col
-        return col
-      endif
-
-      call cursor(prev_lnum, 1)
-      let [last_char, synid, _, _] = s:get_last_char()
-
-      if last_char is 0
-        return indent(prev_lnum) + shiftwidth()
-      endif
-
-      if synid == g:ruby#delimiter && last_char =~ '[,([{]'
-        return indent(prev_lnum)
-      endif
-
-      let msl = s:get_list_msl(prev_lnum)
-
-      if msl != prev_lnum
-        return indent(msl)
-      endif
-
-      return indent(prev_lnum) + shiftwidth()
-    endif
-  endif
-
-  " MSL {{{1
-  let msl = s:get_msl(prev_lnum)
-
-  " Find the last keyword in the previous logical line.
-  call cursor(prev_lnum, last_col)
-
-  while search('\<\l', "b", msl)
-    let lnum = line(".")
-    let col = col(".")
-
-    if synID(lnum, col, 0) != g:ruby#keyword
-      continue
-    endif
-
-    let word = expand("<cword>")
-
-    if word =~# s:postfix_re
-      let [_, prev_col] = searchpos('\S', "b", lnum)
-
-      if !prev_col
-        return col - 1 + shiftwidth()
-      endif
-
-      if synID(lnum, prev_col, 0) == g:ruby#operator
-        return col - 1 + shiftwidth()
-      endif
-
-      return indent(msl)
-    elseif word =~# '\v<%(begin|case|ensure|else|elsif|when)>'
-      return col - 1 + shiftwidth()
-    elseif word =~# '\v<%(do|then|def|class|module)>'
-      return indent(msl) + shiftwidth()
-    elseif word ==# "in"
-      " `in` is a bit of a weird case:
-      "
-      " If it is the first word on the line, add an indent.
-      " If it is preceded by `for`, add an indent.
-      " Else, do nothing.
-      let [found_lnum, found_col] = searchpos('\<for\>', "b", msl)
-
-      if found_lnum && synID(found_lnum, found_col, 0) == g:ruby#keyword
-        return indent(msl) + shiftwidth()
-      endif
-
-      let found = search('\<', "b")
-
-      if found != lnum
-        return indent(msl) + shiftwidth()
-      endif
-
-      return indent(msl)
+    if floating_idx != -1
+      return floating_idx + shiftwidth()
     else
-      return indent(msl)
-    endif
-  endwhile
-  " }}}1
+      call cursor(prev_lnum, 1)
+      let [_, ind, shift] = s:find_msl(0, v:null)
 
-  " Default
-  return indent(msl)
-endfunction
+      if shift
+        let ind += shiftwidth()
+      endif
+
+      return ind
+    endif
+  endfunction
+  " }}}
+endif
+" }}}
 
 " vim:fdm=marker

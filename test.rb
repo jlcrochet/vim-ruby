@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 1234
 1_234
 12.34
@@ -110,6 +112,16 @@ expected_result = <<-'EXPECTED'
 One plus one is #{1 + 1}
 EXPECTED
 
+puts <<ONE, <<TWO, <<THREE
+jksdlfjlksdjf
+jsdklf
+ONE
+jksdlfjskldf
+jskldf
+TWO
+sdjfklsdjfsd
+THREE
+
 p expected_result # prints: "One plus one is \#{1 + 1}\n"
 
 puts <<-`HEREDOC`
@@ -141,6 +153,8 @@ EXPECTED
 /my regular expression/
 /my regular expression/i
 
+%r+jskdlfjlskdf+imx
+
 -> { 1 + 1 }
 ->(v) { 1 + v }
 
@@ -154,6 +168,7 @@ class Foo # or at the end of the line
     jksdlf
 =begin
   jksdfjsldf
+  =begin
     sjdkflsdf
     sjdkfl
 =end
@@ -163,8 +178,9 @@ end
 
 =begin
 jksldfjklasdjfa
-sdf
+  sdf
 asdfa
+=begin
 sd
 asdf
 sdf
@@ -188,6 +204,10 @@ class Foo
         jklasdjfkalskdfj
 =end
   jklsdf
+end
+
+class Foo
+  jksldfjklsdf
 end
 
 1.times do
@@ -616,9 +636,12 @@ end
 :<<
 :==
 :!=
+:!
+:!@
 :===
 :=~
 :!~
+:~@
 :<=>
 :<
 :<=
@@ -1007,6 +1030,8 @@ def ext_each(e)
     y = yield(*vs)
     e.feed y
   end
+rescue
+  jksldf
 end
 
 o = Object.new
@@ -1111,3 +1136,1624 @@ class Stats
       "  Unique:  #{@source.uniq.size}\n"
   end
 end
+
+foo = if true
+        "foo"
+      else
+        "bar"
+      end
+
+foo + if true
+        "foo"
+      else
+        "bar"
+      end
+
+x_to_y_mapping = {
+  'x_one' => %i[
+    y_one
+    y_two
+  ],
+  'x_two' => %i[
+    y_three
+    y_four
+  ]
+}
+
+FOO = "bar"
+result = [].<<FOO
+
+x_to_y_mapping = {
+  'x_one' => [
+    :y_one,
+    :y_two
+  ],
+  'x_two' => [
+    :y_three,
+    :y_four
+  ]
+}
+
+let(:source) do
+  # Empty lines should make no difference.
+  <<~RUBY
+  if #{condition}
+  #{body}
+  end
+  RUBY
+end
+
+if bleh
+  case a
+  when b then [c, <<~STR]
+    the quick brown fox jumped over the lazy dog.
+  STR
+  end
+end
+
+module Test
+  class Test
+    def test
+      [<<~SQL]
+        TEST
+      SQL
+    end
+
+    def other_method
+    end
+  end
+end
+
+def show
+  render json: { headers: data[:headers], just_key: data[:data] }
+end
+
+# Floating indentation samples:
+
+<<-string # => "  hello\n    world"
+                hello
+        world
+                 string
+
+foo = 1 + 5 -
+      10 * 4 /
+      bar
+
+foo =
+  1 + 5 -
+  10 * 4 /
+  bar
+
+foo,
+  bar,
+  jksldf
+
+foo bar: 1,
+  baz: 2,
+  bleh: 3
+
+foo(
+  bar
+  jksldf
+  jksdlf
+)
+
+foo { |foo|
+  foo * 2
+}
+
+foo(bleh: {
+  jksldfjklsdf
+})
+
+if foo
+  bar
+end
+
+x = "if foo bar end"
+
+if foo
+  if bar  # jskdljskldf
+  end
+end
+
+jksldf =
+  begin
+    jksldf
+  rescue bleh
+    jskdlf
+  end
+
+(foo) +
+  bar
+
+foo = [:foo, :bar,
+       "bleh", "bloo",
+       :baz, :qux]
+
+<<-some.upcase # => "hello"
+                 hello
+      some
+
+def upcase(string)
+  string.upcase
+end
+
+def [](regex,
+       x,
+       y,
+       group)
+  match[group] if match
+  jksdlf
+  jskldf
+  jksldfjklsdf
+end
+
+x = [
+  1
+] + [
+  3
+]
+
+x = if y
+      5
+    else
+      10
+    end
+
+x = begin
+      h["foo"]
+    rescue => exception
+      "Not Found"
+    end
+
+x = begin
+      h["foo"]
+    rescue KeyError
+      "Not Found"
+    end
+
+x = case y
+    when :foo
+      5
+    when :bar
+      10
+    else
+      1
+    end
+
+x = y.foo
+     .bar
+     .baz
+
+x = y
+  .foo
+  .bar
+  .baz
+
+method_call one,
+  two {
+    three
+  }
+
+method_call one,
+  two do
+    three
+  end
+
+foo =
+  begin
+    jksldfjsdf
+  end
+
+x = case y
+    when 1
+      "foo"
+    when 2
+      "bar"
+    when 3 then "baz"
+    when 4
+      "bleh"
+      "bloo"
+    when 5 then
+      "jskdlf"
+    else
+      "blerp"
+    end
+
+def foo(x, y = 123, z = 123)
+  jksldfjklsdf
+end
+
+::Kernel.send(name)
+::FOO::BAR
+
+class Foo::Bar::Baz
+  def self.foo
+    "foo"
+  end
+
+  def Baz.bar
+    "bar"
+  end
+end
+
+!foobar
+~foobar
+
+def some_method
+  something_dangerous
+ensure
+  # always execute this
+end
+
+foo if bar
+
+module Ticker
+  def self.on_tick(&callback)
+    boxed_data = Box.box(callback)
+
+    @@box = boxed_data
+
+    LibTicker.on_tick(->(tick, data) {
+      data_as_callback = Box(typeof(callback)).unbox(data)
+      data_as_callback.call(tick)
+    }, boxed_data)
+  end
+end
+
+Ticker.on_tick do |tick|
+  puts tick
+end
+
+%( (\))\)\(\) )
+jkl
+%(\()
+
+%(jkl)
+
+"jksldf'jklsdf" jksdlfjklsdf
+
+%w(foo bar baz)  #
+%w(foo\nbar baz)  #
+%w(foo(bar) baz)  #
+%w(foo\ bar #{baz})  #
+%( foo\ (bar) baz )  #
+
+%r(jkl|jksldfjklsdf #{jklsdf}?)
+
+{ name: "Ruby", year: 2011 }, { "this is a key": 1 }
+
+foo12
+
+input = %w(nail shoe horse rider message battle kingdom)
+
+one = -> do
+  output = []
+
+  input.each_cons_pair do |a, b|
+    output << "For want of a #{a} the #{b} was lost."
+  end
+
+  output << "And all for the want of a #{input.first}."
+
+  return output
+end
+
+foo x: 1, y: 2
+
+def foo(*foo, **x, y = 2)
+  foo x: 1, y: 2
+end
+
+x = { foo: 1, bar: 2, BAR: 12 }
+
+def foo
+  jksldf
+  # jksldf sdf
+end
+
+0.123
+0x123
+0x123f32
+0x123e10
+0.123E-12_432432
+0.012
+0E123
+0xFE012D
+1_000_000
+1_000_000.111_111
+
+:foo
+
+foo.+ bar: 3
+
+"\012jksldfjklsdf"
+
+foo:bar
+{foo:"bar"}
+foo :"bar"
+Foo::Bar
+foo? bar: bleh
+foo ? 123 : bleh
+foo ? 123 : Bleh
+foo ? foo : Bleh
+foo ? foo : Bleh ? Bleh : Bloo
+foo ? foo : Bleh ? ( foo bar: bleh ? :bar : :bleh ) : Bloo
+foo ? foo x: 1, y: 2 : Bleh
+
+"#{foo bar: bleh}"
+
+foo = x ? y : z
+foo = Foo ? Bar : Baz
+
+puts 1 / 2, 3 / 4
+
+foo /= bar / baz
+
+!Foo
+~(foo) + bleh
+jklasdf
+
+$~jkl
+$_jkljkll + :foo + $1 /a/ $2
+$?jkl
+$1jkl
+
+123E12
+
+@jkfldsfd
+@@jkflds fdlks
+
+@jfkdsl
+@@FJKLJKLKK
+[ 1, 2, 3 ]
+
+if foo[0] / jklfds / bjkrlew
+  :bar
+end
+
+if foo[0] / jkflds / sjdkflsdf
+  :bar jskdlf
+end
+
+jksldf = begin
+           jksldf
+         rescue bleh
+           jskdlf
+         end
+
+sjkdflsdf
+
+->(x, y) { x + y }
+
+0.. + ..123
+
+'\''
+
+%w(foo\ bar)  #
+%w(foo\\ bar)  #
+
+%i(foo\ bar)  #
+%i(foo\\ bar)  #
+
+if x / /bar/ / bleh / /boo/
+  boop
+end
+
+if x / bar / bleh / boo
+  beep
+end
+
+def one
+  1
+end
+
+close_door unless door_closed?
+
+proc = ->str.count(Char)
+proc.call
+
+class Person
+  private def say(message)
+    puts message
+  end
+end
+
+def some_method(x, y = 1, z = 2, w = 3)
+  # do something...
+end
+
+some_method 10
+some_method 10, z: 10
+some_method 10, w: 1, y: 2, z: 3
+
+foo *tuple
+
+$? success?
+
+object.[]=(2, 3)
+
+if a = some_expression
+  jksldjflksdf
+end
+
+@a.try do |a|
+  jksldfjksldf
+end
+
+x / y / z
+
+foo.begin
+
+foo?(bar)+:bleh
+foo? bar:(bleh)
+
+foo /fds/, /bar/, x / y
+
+foo = %w(jkl), "foo", %w(foo bar), x % y % z
+
+foo.x & bar.y
+
+foo bar: 1, baz: 2
+
+foo :bleh, :bloo, %w(foo bar baz)
+foo %(jkljkljkl)
+foo /bleh/, /bloo/
+
+foo <<-TEXT
+            jkalsdjfkl
+            TEXT
+
+print(<<-'FIRST', <<-SECOND)
+            hello
+            FIRST
+            World
+            SECOND
+jksldf
+
+print(<<-'FIRST', <<-SECOND, <<-'THIRD')
+            hello
+            FIRST
+            World
+            SECOND
+            jksldf
+            #{jksldf}
+            jskdlfjklsdfj
+            THIRD
+jksdlf
+
+foo "jklasdf", 'j', %w(foo bar baz)
+
+'\u{1234}'
+
+foo BAR::BAZ
+
+:"fo\"o#{jkalsdf, 5} bar"
+
+foo.each do
+  jklasdf
+end
+
+foo ? bar : baz
+
+if foo
+  jkl
+end
+
+foo.each {
+  jklsdfsdf
+}
+
+foo &:bar
+
+foo & bar
+
+bleh BAR: BAR::BAZ, foo: 123, bar: jklsdf do
+  jkl
+end
+
+while true
+  blerp
+end
+
+until false
+  blorp
+end
+
+foo.each do
+  jklasdf
+end
+
+foo.each do |fdjksl, bloo = 123|
+  bleh
+  bloo
+end
+
+get :doo do
+  jklsdf
+end
+
+$1
+$?
+
+:unquoted_symbol
+:"quoted symbol"
+:"a"
+
+:question?
+:exclamation!
+
+foo.each { |bleh|
+  { 1, 2 }
+  jksdlfjksldf
+  jksldf
+  jlksdf
+  { 3, 4 }
+}
+
+foo +
+  bar
+
+foo = /bar/
+
+foo /= x / y
+foo /= x % y
+foo /= /=/ / // / bleh / bloop
+
+foo = /foo|bar/
+
+foo = /h(e+)llo/
+foo =~ /\d+/ / /foo/ / bleh
+foo = /あ/
+
+foo /= jkl / bar
+
+if foo /foo/ =~ bleh
+  /asdf/
+end
+
+def foo(jkalsdfasdf)
+  /asdf/
+end
+
+/\//                  # slash
+/\\/                  # backslash
+/\b/                  # backspace
+/\e/                  # escape
+/\f/                  # form feed
+/\n/                  # newline
+/\r/                  # carriage return
+/\t/                  # tab
+/\v/                  # vertical tab
+/\123/                # octal ASCII character
+/\x12/                # hexadecimal ASCII character
+/\u{1324}/            # hexadecimal unicode character
+/\u{1111 AFFFFF 123}/ # hexadecimal unicode characters
+
+"\u{1234}"
+
+/a(sd)f/.match("_asdf_")                     # => #<Regex::MatchData "asdf" 1:"sd">
+/a(?<grp>sd)f/.match("_asdf_")               # => #<Regex::MatchData "asdf" grp:"sd">
+
+/a\Qjkls\b\\dfjklsdf|jksldf\Ejksl(?imx)dfjlksdf|jksdl#{jksdlf + 123}fjkls{{ foo + 123 }}df/
+/jskldf{,123}\123\g{foo}\g<foo>/
+
+/foo|bar/.match("foo")     # => #<Regex::MatchData "foo">
+/foo|bar/.match("bar")     # => #<Regex::MatchData "bar">
+/_(x|y)_/.match("_x_")     # => #<Regex::MatchData "_x_" 1: "x">
+/_(x|y)_/.match("_y_")     # => #<Regex::MatchData "_y_" 1: "y">
+/_(x|y)_/.match("_(x|y)_") # => nil
+/_(x|y)_/.match("_(x|y)_") # => nil
+/_._/.match("_x_")         # => #<Regex::MatchData "_x_">
+/_[xyz]_/.match("_x_")     # => #<Regex::MatchData "_x_">
+/_[a-z]_/.match("_x_")     # => #<Regex::MatchData "_x_">
+/_[^a-z[:alnum:]]_/.match("_x_")    # => nil
+/_[^a-wy-z]_/.match("_x_") # => #<Regex::MatchData "_x_">
+
+%r((/)())   # => /(\/)/
+%r[[/][]]   # => /[\/]/
+%r[[/\][]]  # => /[\/]/
+%r{{/}{}}   # => /{\/}/
+%r{\{/\}{}} # => /{\/}/
+%r<</><>>   # => /<\/>/
+
+%(( jklj\n ))  #
+%[ [ [ ] \[jklj\n ]]  #
+%{{ jklj\n }}  #
+%<< jklj\n >>  #
+"foo\("  #
+
+"jk\[\]\{lasdf#{1}\#{2}"
+
+"\"" # double quote
+"\\" # backslash
+"\e" # escape
+"\f" # form feed
+"\n" # newline
+"\r" # carriage return
+"\t" # tab
+"\v" # vertical tab
+"\u0041" # == "A"
+"\u{41}" # == "A"
+"hello " \
+  "sdfjklsdf" \
+  "jksldfjklsdf" \
+  "world, " \
+  "no newlines" # same as "hello world, no newlines"
+
+foo = "hello
+sdfsdfds
+jksldf world \"
+        jklsdf" + :foo
+
+x + " foo " +
+    " bar " +
+    jskldfjklsdf +
+    jaksldf
+jksldfjsdf
+
+# Supports double quotes and nested parentheses
+%(hello ("world")) # same as "hello (\"world\")"
+
+# Supports double quotes and nested brackets
+%[hello ["world"]] # same as "hello [\"world\"]"
+
+# Supports double quotes and nested curlies
+%{hello {"world"}} # same as "hello {\"world\"}"
+
+# Supports double quotes and nested angles
+%<hello <"world">> # same as "hello <\"world\">"
+
+unless foo + bar - bleh
+  jklasdf
+end
+
+<<-STRING # => "Hello\n  world"
+            Hello
+            world
+            <F5>
+              jklasdfasdf
+            jkalsdfasdf
+            #{jklasdfasdf}
+            jklsdfsdf
+            STRING
+
+upcase <<-SOME, "bleh" # => jkl
+            jklsdf
+            SOME
+
+upcase(<<-SOME, :bleh, "bleh", 'b', /bleh/ / foo) # => "HELLO"
+            hello
+            SOME
+
+upcase(<<-'SOME', "bleh")  # => "HELLO"
+            foo
+            bar
+            SOME
+
+<<-HERE
+            hello \n \#{world}
+            HERE
+
+<<-HERE
+            hello \n #{world}
+            HERE
+
+foo = <<-'HERE' # => "hello \\n \#{world}"
+            hello \n #{world}
+            HERE
+
+foo = <<-'HERE' # => jklasdf
+            hello \n #{wordl}
+            HERE
+
+:"jklsdfjklsdf"
+
+a = 1
+b = 2
+"sum = #{foo { |a, b| jksldfjklsdf + {{ foo { |x| x ** 2 } }} + 123 }} jksldfsdf"
+"sum = #{foo { |a, b| jskldf { |x, y| x + {{ 123 }} + 123 } }} + 1" # "sum = 3"
+
+$1
+$1232321321
+
+# Octal escape sequences
+"\101" # # => "A"
+"\12"  # # => "\n"
+"\1"   # string with one character with code point 1
+"\377" # string with one byte with value 255
+
+# Hexadecimal escape sequences
+"\x41" # # => "A"
+"\xFF" # string with one byte with value 255
+
+class Foo
+  def [](foo, bar)
+    @foo
+  end
+
+  if @foo
+    jklasdfasdf
+  end
+
+  def !~
+    jksldf
+    jksdlf
+  end
+
+  def begin?
+  end
+
+  def ===
+  end
+end
+
+case array
+in [1, 2]
+in [1, 2, a]
+  puts a
+end
+
+case exp
+in [1, a]
+  puts a
+else
+  puts "No match"
+  "'"
+end
+
+if null_checked_value = array[3]
+  /foo/
+  puts value + 2
+  exit 0
+end
+
+if foo =~ /bar/
+  bleh
+end
+
+if foo =~ /bar/
+  bleh
+end
+
+foo ?
+  bar : Bleh
+
+foo.self
+foo.nil
+foo.__FILE__
+foo.true.true
+   .false
+   .jaskldf
+
+self
+nil
+__FILE__
+true
+
+# result:
+if null_checked_value = array[3]
+  puts value + 2
+  exit 0
+end
+
+foo.bar?
+
+foo = (bar,
+       bleh,
+       blerp,
+       blorp,
+       bloo)
+
+foo = {
+  x: 1,
+  y: 2,
+  z: 3
+}
+
+foo..
+bar
+
+foo = (
+  bleh,
+  bloo,
+  bar +
+    bleh -
+    bloo * fjdkls,
+  jskdlf
+)
+
+foo = (
+  bleh,
+  bloo,
+  bar + bleh -
+        bloo * fjkdlsjfklds,
+  jksldf
+)
+
+foo = (
+  bleh,
+  bar + bleh -
+        jskdlfjklsdf
+)
+
+foo bar,
+  baz,
+  bleh,
+  123
+
+@Foo
+@_FDOISfdsfds_123
+@f123
+@fds
+@@foo
+
+foo._Bar
+
+FOo12__3
+
+{foo:bar}
+foo:"bar"
+Foo::Bar
+foo?bar:bleh
+
+foo.begin
+
+foo?(bar) :bleh
+foo? bar:(bleh)
+
+'\u{1234}'
+
+:"foo#{jkalsdf} bar"
+
+foo = :[]
+foo = :<<
+bar **= :+
+
+foo + bar
+
+:**,
+  :+,
+  :[],
+  :<<,
+  :<=>,
+  :!,
+  true
+
+foo = bar(bleh, blerp,
+          jklsdf, fjdklsajfkdlsa)
+
+private def dump_or_inspect(io)
+  io << '"'
+  dump_or_inspect_unquoted(io) do |char, error|
+    yield char, error
+  end
+  io << '"'
+end
+
+if foo
+end
+
+"\\'foo\\\\\\\""
+
+foo[123]
+
+x = if true
+      5
+    else
+      10
+    end
+
+x + if true
+      5
+    else
+      10
+    end
+
+case x
+in foo
+  5
+in [Foo, Bar]
+  jklasdf
+end
+
+x = if true 5 else 10 end
+
+x = if true
+      5
+    else
+      10
+    end
+
+x = "if"
+bar
+
+foo = ([%{jk(l[{}]}])
+
+foo(
+  bar(
+    {
+      x: 1,
+      y: 2,
+      "do": 3,
+      "foo bar": 4
+    }
+  )
+)
+
+# This generates:
+#
+#     def foo
+#       1
+#     end
+define_method foo, 1
+
+bar.foo= 123
+
+foo[0]= 123
+
+:+
+:-
+:*
+:**
+:/
+:==
+:===
+:=~
+:!=
+:!~
+:!
+:<=>
+:<=
+:<<
+:<
+:>=
+:>>
+:>
+:&
+:|
+:^
+:~
+:%
+:[]=
+:[]
+
+true
+
+foo =~ /bar/
+bleh
+
+foo = true ? /foo/ : /bar/
+
+foo if bleh
+
+foo # => 1
+
+:"foo bar"
+
+p Foo::Bar.new("John").say # => "hi John"
+
+class Foo
+  if bar
+    foo
+  else
+  end
+  bleh
+end
+
+if foo
+  if bar
+    foo
+  else
+    bar
+  end
+  bleh
+end
+
+if 1
+  if 2
+  else
+  end
+end
+
+foo = :"
+            foo
+            "
+
+if true
+  5
+else
+  10
+end
+
+x = if true
+      5
+    else
+      10
+    end
+
+while true
+  if foo
+    bar
+  else
+    bleh
+  end
+end
+
+def foo
+  until true
+    do_something
+  end
+end
+
+def foo
+  bleh
+rescue Foo
+  bloo
+end
+
+Foo.boo(0, 1)
+
+VALUES = [1, 2, 3]
+
+%w(foo bar).each do |bleh|
+  bleh
+end
+
+foo = <<-TEXT
+            bleh
+            bloo blerp
+            TEXT
+
+foo.each do |bleh|
+  bleh
+end
+
+foo |
+  bar
+
+foo ||
+  bar
+
+foo /
+  bar
+
+foo <<=
+  bar
+
+bleh
+
+foo &
+  bar
+
+foo &&
+  bar
+
+foo ?
+  bar : Foo
+
+foo ? bar : bleh
+
+foo?
+bar
+
+foo *
+  bar
+
+bleh
+
+foo *
+  bar
+
+foo =
+  bar
+
+foo +=
+  bar
+
+foo =~
+  bar
+
+foo \
+  bar
+
+foo !~
+  bleh
+
+foo -
+  bar
+
+foo ?
+  bar :
+  bleh
+
+foo +
+  bar +
+  bleh
+
+foo ^
+  bar
+
+foo ^=
+  bar
+
+foo ==
+  true
+
+foo =~
+  true
+
+foo ===
+  bleh
+
+foo !=
+  true
+
+foo.each do
+  bleh
+end
+
+foo(
+  foo,
+  bar,
+  bloop
+)
+
+foo(bleh,
+    bloo,
+    bleh,
+    boop)
+
+foo = [
+  foo,
+  bar,
+  bloop,
+]
+
+foo = [foo,
+       bar,
+       bloop]
+
+foo = {
+  foo,
+  bar,
+  bloop,
+}
+
+foo = {foo,
+       bar,
+       bloop}
+
+foo = {
+  foo +
+    bar -
+    bleh,
+  blerp,
+  jksldf if true,
+  jksldf + if true
+             jksldfjskdlf
+           else
+             10
+           end,
+  jksldfjksldf
+}
+
+%w(foo bar).each do
+  bleh
+end
+
+%w(foo bar).each do
+  %w(baz qux).each do
+    bleh
+  end
+end
+
+[1, 2, 3].each do
+  bleh
+end
+
+:_!
+
+'\''
+'a'
+'"'
+'\a'
+'\\'
+'\t'
+'\u12FD'
+"\""
+"\`"
+'\''
+
+`\``
+
+{foo?: 1, _1?: 2, FOO: 3, _FOO_?: 4}
+{"foo": 1, "bar": 2, _A?: 1}
+
+[1, 2, 3].each do
+  bleh
+
+  [4, 5, 6].each do |j|
+  end
+
+  [1, 2, 3].each do |i|
+    [1, 2, 3].each do |j|
+      bleh
+    end
+  end
+end
+
+if foo || bar || baz || bing
+  puts "foo"
+end
+
+[1, 2, 3].each do |i|
+  [4, 5, 6].each do |j|
+    foo
+  end
+end
+
+foo.each { |i|
+  bleh
+}
+
+foo.each {
+  bleh
+}
+
+%w(foo bar).each {
+  bleh
+}
+
+%w(foo bar).each {
+  %w(baz qux).each {
+  }
+}
+
+x = {
+  x: 1,
+  y: 2,
+}
+
+[1, 2, 3].each {
+  bleh
+}
+
+[1, 2, 3].each {
+  bleh
+}
+
+[1, 2, 3].each {
+  bleh
+
+  [4, 5, 6].each { |j|
+  }
+
+  [1, 2, 3].each { |i|
+    [1, 2, 3].each { |i|
+      bleh
+    }
+  }
+}
+
+[1, 2, 3].each { |i|
+  [4, 5, 6].each { |j|
+    foo
+  }
+}
+
+%w(foo bar).each do
+  bleh
+end
+
+%w(foo bar).each do |bleh|
+  bleh
+end
+
+foo = "bar" \
+      "baz"
+
+method_call one,
+  two,
+  three
+
+method_call(
+  other_method_call (
+    foo
+  )
+)
+
+method_call do
+  something
+  something_else
+end
+
+require "http/server"
+
+server = HTTP::Server.new do |context|
+  context.response.content_type = "text/plain"
+  context.response.print "Hello world! The time is #{Time.local}"
+end
+
+address = server.bind_tcp 8080
+puts "Listening on http://#{address}"
+server.listen
+
+# file: help.cr
+require "option_parser"
+
+%(jklasdf)  #
+%[bleh]  #
+%{bleh}  #
+%<bleh>  #
+
+OptionParser.parse do |parser|
+  parser.banner = "Welcome to The Beatles App!"
+
+  parser.on "-v", "--version", "Show version" do
+    puts "version 1.0"
+    exit
+  end
+  parser.on "-h", "--help", "Show help" do
+    puts parser
+    exit
+  end
+end
+
+foo?[] + /jksldf/ // jskdlf
+
+# file: twist_and_shout.cr
+require "option_parser"
+
+the_beatles = [
+  "John Lennon",
+  "Paul McCartney",
+  "George Harrison",
+  "Ringo Starr",
+]
+shout = false
+
+option_parser = OptionParser.parse do |parser|
+  parser.banner = "Welcome to The Beatles App!"
+
+  parser.on "-v", "--version", "Show version" do
+    puts "version 1.0"
+    exit
+  end
+  parser.on "-h", "--help", "Show help" do
+    puts parser
+    exit
+  end
+  parser.on "-t", "--twist", "Twist and SHOUT" do
+    shout = true
+  end
+end
+
+members = the_beatles
+members = the_beatles.map &.upcase if shout
+
+puts ""
+puts "Group members:"
+puts "=============="
+members.each do |member|
+  puts member
+end
+
+module Foo
+  class Error < Exception; end
+end
+
+# :nodoc:
+CHAR_TO_DIGIT = begin
+                  table = StaticArray(Int8, 256).new(-1)
+                  10.times do |i|
+                    table.to_unsafe[48 + i] = i
+                  end
+                  26.times do |i|
+                    table.to_unsafe[65 + i] = i + 10
+                    table.to_unsafe[97 + i] = i + 10
+                  end
+                  table
+                end
+
+a,
+  b,
+  c,
+  d,
+  e
+
+foo?
+bar
+
+foo!
+bar
+
+next = [1, ["b", [:c, ['d']]]]
+flat = Array(typeof(Array.elem_type(nest))).new
+typeof(nest)
+typeof(flat)
+
+def =~(regex)
+  match = regex.match(self)
+  $~ = match
+end
+
+foo = begin
+        jksldf
+      end
+
+@def = "bleh"
+
+Foo*
+  jksldfsdf
+jksldf
+Foo?
+  jksldf
+jskldf
+
+def [](regex, group)
+  match[group] if match
+  jksldf
+  jklsdf
+  match = match(regex)
+end
+
+# :ditto:
+def rindex(search, offset = size - 1)
+  offset += size if offset < 0
+  return nil unless 0 <= offset <= size
+
+  match_result = nil
+  scan(search) do |match_data|
+    break if (index = match_data.begin) && index > offset
+    match_result = match_data
+  end
+end
+
+def foo
+  foo = $~
+  bar
+end
+
+require "file_utils"
+
+logger = if Lucky::Env.test?
+           # Logs to `tmp/test.log` so you can see what's happening without having
+           # a bunch of log output in your specs results.
+           FileUtils.mkdir_p("tmp")
+           Dexter::Logger.new(
+             io: File.new("tmp/test.log", mode: "w"),
+             level: Logger::Severity::DEBUG,
+             log_formatter: Lucky::PrettyLogFormatter
+           )
+         elsif Lucky::Env.production?
+           # This sets the log formatter to JSON so you can parse the logs with
+           # services like Logentries or Logstash.
+           #
+           # If you want logs like in development use `Lucky::PrettyLogFormatter`.
+           Dexter::Logger.new(
+             io: STDOUT,
+             level: Logger::Severity::INFO,
+             log_formatter: Dexter::Formatters::JsonLogFormatter
+           )
+         else
+           # For development, log everything to STDOUT with the pretty formatter.
+           Dexter::Logger.new(
+             io: STDOUT,
+             level: Logger::Severity::DEBUG,
+             log_formatter: Lucky::PrettyLogFormatter
+           )
+         end
+
+Lucky.configure do |settings|
+  settings.logger = logger
+end
+
+Avram::Repo.configure do |settings|
+  settings.logger = logger
+end
+
+jksdlfsdf
+
+jksldf
+
+x = if foo
+      jksldfjklsdf
+      asjkdflasdf
+      ajksldf
+    end
+
+x = [
+  if foo
+    bleh
+  else
+    bloo
+  end,
+  if blerp
+    blorp
+  else
+    fjkdlsjfklds
+  end,
+]
+
+x = [
+  if foo
+    bleh
+  else
+    bloo
+  end,
+  foo +
+    bar,
+  y + if bar
+        bleh
+      end,
+]
+
+x = case y
+    when 1
+      "foo"
+    when 2
+      "bar"
+    when 3 then "baz"
+    when 4
+      "bleh"
+      "bloo"
+    when 5 then
+      "jskdlf"
+    else
+      "blerp"
+    end
+
+true if bleh
+
+last_color_is_default =
+  @@last_color[:fore] == ColorANSI::Default &&
+  @@last_color[:back] == ColorANSI::Default &&
+  @@last_color[:mode] == 0
+
+foo
+  .bar
+  .baz
+..jksldfsdf
+
+foo..bar
+
+class Foo
+  x = {
+    end: 123,
+    rescue: jskldf
+  }
+end
+
+%r((/)()) # => /(\/)/
+%r[[/][]] # => /[\/]/
+%r{{/}{}} # => /{\/}/
+%r<</><>> # => /<\/>/
+
+%{{\{\}}}
+
+class Foo < Bar
+  jksldfjlk
+end
+
+DEFAULT_FORMATTER = Formatter.new do |severity, datetime, progname, message, io|
+  label = severity.unknown? ? "ANY" : severity.to_s
+  io << label[0] << ", [" << datetime << " #" << Process.pid << "] "
+  io << label.rjust(5) << " -- " << progname << ": " << message
+end
+
+def foo
+  bar +
+    baz +
+    bleh
+end
+
+def foo(k: 1)
+  p k
+end
+
+def: increment(x) = x + 1
+
+return foo +
+  bar

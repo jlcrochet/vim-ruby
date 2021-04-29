@@ -1,600 +1,2259 @@
-local unpack = unpack
-local find = string.find
-local match = string.match
-local sub = string.sub
-
 local v = vim.v
 
 local fn = vim.fn
 local prevnonblank = fn.prevnonblank
 local shiftwidth = fn.shiftwidth
-local getline = fn.getline
-local indent = fn.indent
-local expand = fn.expand
-local search = fn.search
-local searchpos = fn.searchpos
 local synID = fn.synID
 local synIDattr = fn.synIDattr
-local cursor = fn.cursor
 
 local api = vim.api
 local nvim_get_current_line = api.nvim_get_current_line
-local nvim_win_get_cursor = api.nvim_win_get_cursor
+local nvim_buf_get_lines = api.nvim_buf_get_lines
 
-local multiline_regions = {
+-- Helpers {{{
+local MULTILINE_REGIONS = {
   rubyString = true,
   rubySymbol = true,
   rubyRegex = true,
+  rubyRegexGroup = true,
+  rubyRegexComment = true,
   rubyCommand = true,
-  rubyComment = true,
   rubyHeredocLine = true,
   rubyHeredocLineRaw = true,
-  rubyHeredocDelimiter = true
+  rubyHeredocEnd = true
 }
 
-local hanging_re = "\\<\\%(if\\|unless\\|begin\\|case\\)\\>"
-local exception_re = "\\<\\%(begin\\|do\\|def\\)\\>"
-local list_re = "\\<\\%(begin\\|do\\|if\\|unless\\)\\>"
+local SYNGROUPS = {}
 
-local start_re = "\\<\\%(if\\|unless\\|begin\\|case\\|while\\|until\\|for\\|do\\|def\\|class\\|module\\)\\>"
-local middle_re = "\\<\\%(else\\|elsif\\|when\\|rescue\\|ensure\\)\\>"
+local function syngroup_at(lnum, col)
+  local synid = synID(lnum, col, false)
+  local syngroup = SYNGROUPS[synid]
 
-local function syngroup_at(lnum, idx)
-  return synIDattr(synID(lnum, idx + 1, false), "name")
-end
+  if not syngroup then
+    local name = synIDattr(synid, "name")
 
-local function skip_char(lnum, idx)
-  return multiline_regions[syngroup_at(lnum, idx)]
-end
-
-local function skip_word(lnum, idx)
-  return syngroup_at(lnum, idx) ~= "rubyKeyword"
-end
-
-local function skip_word_postfix(lnum, idx, p)
-  if syngroup_at(lnum, idx) ~= "rubyKeyword" then
-    return true
+    SYNGROUPS[synid] = name
+    syngroup = name
   end
 
-  if p ~= 2 then
-    return false
-  end
+  return syngroup
+end
 
-  local word = expand("<cword>")
-
-  if word == "if" or word == "unless" or word == "while" or word == "until" or word == "rescue" then
-    local _, col = unpack(searchpos("\\S", "b", lnum))
-
-    if col == 0 then
-      return false
-    end
-
-    if syngroup_at(lnum, col - 1) ~= "rubyOperator" then
-      return true
-    end
-  end
-
-  return false
+local function is_boundary(b)
+  -- [^_%w]
+  return
+    b < 48 or
+    b > 57 and b < 65 or
+    b > 90 and b < 97 and b ~= 95 or
+    b > 122
 end
 
 local function prev_non_multiline(lnum)
-  while multiline_regions[syngroup_at(lnum, 0)] do
+  while MULTILINE_REGIONS[syngroup_at(lnum, 1)] do
     lnum = prevnonblank(lnum - 1)
   end
 
   return lnum
 end
 
-local function get_last_char()
-  local lnum, col = unpack(searchpos("\\S", "bW"))
-
-  if lnum == 0 then
-    return
-  end
-
-  local syngroup = syngroup_at(lnum, col - 1)
-
-  while syngroup == "rubyComment" or syngroup == "rubyCommentDelimiter" do
-    lnum, col = unpack(searchpos("\\S\\_s*\\%(#\\|=begin\\>\\)", "bW"))
-
-    if lnum == 0 then
-      return
-    end
-
-    syngroup = syngroup_at(lnum, col - 1)
-  end
-
-  local line = nvim_get_current_line()
-  local char = sub(line, col, col)
-
-  return char, syngroup, lnum, col - 1
+local function get_line(lnum)
+  return nvim_buf_get_lines(0, lnum - 1, lnum, false)[1]
 end
 
-local function get_pos()
-  return unpack(nvim_win_get_cursor(0))
+local function is_hanging_operator(byte, lnum, col)
+  if byte == 37 or  -- %
+    byte == 38 or  -- &
+    byte == 42 or  -- *
+    byte == 43 or  -- +
+    byte == 45 or  -- -
+    byte == 47 or  -- /
+    byte == 58 or  -- :
+    byte == 60 or  -- <
+    byte == 61 or  -- =
+    byte == 62 or  -- >
+    byte == 63 or  -- ?
+    byte == 94 or  -- ^
+    byte == 124 or  -- |
+    byte == 126 then  -- ~
+    return syngroup_at(lnum, col) == "rubyOperator"
+  elseif byte == 92 then  -- \
+    return syngroup_at(lnum, col) == "rubyBackslash"
+  end
+
+  return false
 end
 
-local function set_pos(lnum, idx)
-  cursor(lnum, idx + 1)
+local function is_hanging_keyword_operator(byte, line, lnum, col)
+  if byte == 100 then  -- d
+    return line:byte(col - 1) == 110 and line:byte(col - 2) == 97 and (col - 2 == 1 or is_boundary(line:byte(col - 3))) and syngroup_at(lnum, col - 2) == "rubyKeyword"  -- n a
+  elseif byte == 114 then  -- r
+    return line:byte(col - 1) == 111 and (col - 1 == 1 or is_boundary(line:byte(col - 2))) and syngroup_at(lnum, col - 1) == "rubyKeyword"  -- o
+  elseif byte == 116 then  -- t
+    return line:byte(col - 1) == 111 and line:byte(col - 2) == 110 and (col - 2 == 1 or is_boundary(line:byte(col - 3))) and syngroup_at(lnum, col - 2) == "rubyKeyword"  -- o n
+  end
+
+  return false
 end
 
-local function search_back(re, skip_func, move_cursor, stop_line)
-  stop_line = stop_line or 1
-
-  local found_lnum, found_col = unpack(searchpos(re, "bn", stop_line))
-
-  if found_lnum == 0 then
-    return
+local function is_hanging_bracket(byte, lnum, col)
+  if byte == 40 or byte == 91 or byte == 123 or byte == 124 then  -- ( [ { |
+    return syngroup_at(lnum, col) == "rubyDelimiter"
   end
 
-  local lnum, idx = get_pos()
-
-  set_pos(found_lnum, found_col - 1)
-
-  while skip_func(found_lnum, found_col - 1) do
-    found_lnum, found_col = unpack(searchpos(re, "b", stop_line))
-
-    if found_col == 0 then
-      return set_pos(lnum, idx)
-    end
-  end
-
-  if move_cursor == false then
-    set_pos(lnum, idx)
-  end
-
-  return found_lnum, found_col - 1
+  return false
 end
 
-local function searchpair_back(start_re, middle_re, end_re, skip_func, move_cursor, stop_line)
-  stop_line = stop_line or 1
-
-  -- First, we need to make two patterns: one for top-level pairs,
-  -- another for nested pairs. The first will consist of the start and
-  -- end patterns; the second will consist of the start, end, and middle
-  -- patterns, assuming a middle pattern has been provided.
-  local top_re = "\\("..start_re.."\\)\\|\\("..end_re.."\\)"
-  local nested_re
-
-  if middle_re then
-    nested_re = "\\("..start_re.."\\)\\|\\("..end_re.."\\)\\|\\("..middle_re.."\\)"
-  else
-    nested_re = top_re
+local function is_hanging_comma(byte, lnum, col)
+  if byte == 44 then  -- ,
+    return syngroup_at(lnum, col) == "rubyComma"
   end
 
-  local lnum, idx = get_pos()
-  local pattern = nested_re
-  local nest = 1
+  return false
+end
 
-  local found_lnum, found_col, found_sub
+-- First, try to find a comment delimiter: if one is found, the
+-- non-whitespace byte immediately before it is the last byte; else,
+-- simply find the last non-whitespace byte in the line.
+local function get_last_byte(lnum, line)
+  local found = 0
 
-  while true do
-    repeat
-      found_lnum, found_col, found_sub = unpack(searchpos(pattern, "bp", stop_line))
+  repeat
+    found = line:find("#", found + 1)
 
-      if found_lnum == 0 then
-        return set_pos(lnum, idx)
-      end
-    until not skip_func(found_lnum, found_col - 1, found_sub)
+    if not found then
+      for i = #line, 1, -1 do
+        local b = line:byte(i)
 
-    if found_sub == 3 then  -- End pattern was found
-      nest = nest + 1
-      pattern = top_re
-    else
-      nest = nest - 1
-
-      if nest == 1 then
-        pattern = nested_re
-      elseif nest == 0 then
-        if move_cursor == false then
-          set_pos(lnum, idx)
+        if b > 32 then
+          return b, i
         end
+      end
+    elseif found == 1 then
+      return nil, 1
+    end
+  until syngroup_at(lnum, found) == "rubyCommentDelimiter"
 
-        return found_lnum, found_col - 1
+  for i = found - 1, 1, -1 do
+    local b = line:byte(i)
+
+    if b > 32 then
+      return b, i
+    end
+  end
+
+  return nil, found
+end
+
+local function get_pairs(lnum, line, i, j, pairs)
+  pairs = pairs or 0
+
+  local start_found = false
+
+  while i <= j do
+    local b = line:byte(i)
+    local start
+
+    if b == 98 then  -- b
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 101 then  -- e
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 103 then  -- g
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 105 then  -- i
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 110 then  -- n
+              -- begin
+              start = i - 4
+              goto kw_start
+            end
+          end
+        end
+      end
+    elseif b == 99 then  -- c
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 97 then  -- a
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 101 then  -- e
+            -- case
+            start = i - 3
+            goto kw_start
+          end
+        end
+      elseif b == 108 then  -- l
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 97 then  -- a
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 115 then  -- s
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 115 then  -- s
+              -- class
+              start = i - 4
+              goto kw_start
+            end
+          end
+        end
+      end
+    elseif b == 100 then  -- d
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 101 then  -- e
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 102 then  -- f
+          -- def
+          start = i - 2
+          goto kw_start
+        end
+      elseif b == 111 then  -- o
+        -- do
+        start = i - 1
+        goto kw_start
+      end
+    elseif b == 101 then  -- e
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 108 then  -- l
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 101 then  -- e
+            -- else
+            start = i - 3
+            goto kw_middle
+          elseif b == 105 then  -- i
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 102 then  -- f
+              -- elsif
+              start = i - 4
+              goto kw_middle
+            end
+          end
+        end
+      elseif b == 110 then  -- n
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 100 then  -- d
+          -- end
+          start = i - 2
+          goto kw_end
+        elseif b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 117 then  -- u
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 114 then  -- r
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- ensure
+                start = i - 5
+                goto kw_middle
+              end
+            end
+          end
+        end
+      end
+    elseif b == 102 then  -- f
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 111 then  -- o
+        i = i + 1
+        b = line:byte(i)
+
+        if b  == 114 then  -- r
+          -- for
+          start = i - 2
+          goto kw_start
+        end
+      end
+    elseif b == 105 then  -- i
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 102 then  -- f
+        -- if
+        start = i - 1
+        goto kw_start
+      elseif b == 110 then  -- n
+        -- in
+        start = i - 1
+        goto kw_middle
+      end
+    elseif b == 109 then  -- m
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 111 then  -- o
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 100 then  -- d
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 117 then  -- u
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 108 then  -- l
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- module
+                start = i - 5
+                goto kw_start
+              end
+            end
+          end
+        end
+      end
+    elseif b == 114 then  -- r
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 101 then  -- e
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 99 then  -- c
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 117 then  -- u
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- rescue
+                start = i - 5
+                goto kw_middle
+              end
+            end
+          end
+        end
+      end
+    elseif b == 117 then  -- u
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 110 then  -- n
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 108 then  -- l
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 101 then  -- e
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 115 then  -- s
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 115 then  -- s
+                -- unless
+                start = i - 5
+                goto kw_start
+              end
+            end
+          end
+        elseif b == 116 then  -- t
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 105 then  -- i
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 108 then  -- l
+              -- until
+              start = i - 4
+              goto kw_start
+            end
+          end
+        end
+      end
+    elseif b == 119 then  -- w
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 104 then  -- h
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 101 then  -- e
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 110 then  -- n
+            -- when
+            start = i - 3
+            goto kw_middle
+          end
+        elseif b == 105 then  -- i
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 108 then  -- l
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 101 then  -- e
+              -- while
+              start = i - 4
+              goto kw_start
+            end
+          end
+        end
       end
     end
+
+    goto default
+
+    ::kw_start::
+
+    if (start == 1 or is_boundary(line:byte(start - 1))) and (i == j or line:byte(i + 1) ~= 58 and is_boundary(line:byte(i + 1))) then
+      local syngroup = syngroup_at(lnum, start)
+
+      if syngroup == "rubyKeyword" or syngroup == "rubyDefine" then
+        pairs = pairs + 1
+        start_found = true
+      end
+    end
+
+    goto next
+
+    ::kw_middle::
+
+    if not start_found and pairs == 0 then
+      if (start == 1 or is_boundary(line:byte(start - 1))) and (i == j or is_boundary(line:byte(i + 1))) then
+        local syngroup = syngroup_at(lnum, start)
+
+        if syngroup == "rubyKeyword" or syngroup == "rubyBlockControl" or syngroup == "rubyDefineBlockControl" then
+          pairs = pairs + 1
+          start_found = true
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_end::
+
+    if (start == 1 or is_boundary(line:byte(start - 1))) and (i == j or is_boundary(line:byte(i + 1))) then
+      local syngroup = syngroup_at(lnum, start)
+
+      if syngroup == "rubyKeyword" or syngroup == "rubyDefine" then
+        pairs = pairs - 1
+      end
+    end
+
+    goto next
+
+    ::default::
+
+    if b == 40 or b == 91 or b == 123 then  -- ( [ {
+      if syngroup_at(lnum, i) == "rubyDelimiter" then
+        pairs = pairs + 1
+      end
+    elseif b == 41 or b == 93 or b == 125 then  -- ) ] }
+      if syngroup_at(lnum, i) == "rubyDelimiter" then
+        pairs = pairs - 1
+      end
+    end
+
+    ::next::
+
+    i = i + 1
+  end
+
+  return pairs
+end
+
+local function find_floating_column(lnum, line, i, j)
+  local pairs = 0
+
+  local k = j
+
+  while k >= i do
+    local offset
+    local b = line:byte(k)
+
+    if b == 100 then  -- d
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 110 then  -- n
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 101 then  -- d
+          -- end
+          goto kw_end
+        end
+      end
+    elseif b == 101 then  -- e
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 108 then  -- l
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 105 then  -- i
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 104 then  -- h
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 119 then  -- w
+              -- while
+              offset = k + 4
+              goto kw_start
+            end
+          end
+        elseif b == 117 then  -- u
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 100 then  -- d
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 111 then  -- o
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 109 then  -- m
+                -- module
+                offset = k + 5
+                goto kw_define
+              end
+            end
+          end
+        end
+      elseif b == 114 then  -- r
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 117 then  -- u
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 115 then  -- s
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 110 then  -- n
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 101 then  -- e
+                -- ensure
+                offset = k + 5
+                goto kw_middle
+              end
+            end
+          end
+        end
+      elseif b == 115 then  -- s
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 97 then  -- a
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 99 then  -- c
+            -- case
+            offset = k + 3
+            goto kw_start
+          end
+        elseif b == 108 then  -- l
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 101 then  -- e
+            -- else
+            offset = k + 3
+            goto kw_middle
+          end
+        end
+      elseif b == 117 then  -- u
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 99 then  -- c
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 115 then  -- s
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 101 then  -- e
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 114 then  -- r
+                -- rescue
+                offset = k + 5
+                goto kw_middle
+              end
+            end
+          end
+        end
+      end
+    elseif b == 102 then  -- f
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 101 then  -- e
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 100 then  -- d
+          -- def
+          offset = k + 2
+          goto kw_define
+        end
+      elseif b == 105 then  -- i
+        if k == i or is_boundary(line:byte(k - 1)) then
+          -- if
+          offset = k + 1
+          goto kw_start
+        else
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 115 then  -- s
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 108 then  -- l
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 101 then  -- e
+                -- elsif
+                offset = k + 4
+                goto kw_middle
+              end
+            end
+          end
+        end
+      end
+    elseif b == 108 then  -- l
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 105 then  -- i
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 116 then  -- t
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 110 then  -- n
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 117 then  -- u
+              -- until
+              offset = k + 4
+              goto kw_start
+            end
+          end
+        end
+      end
+    elseif b == 110 then  -- n
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 101 then  -- e
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 104 then  -- h
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 119 then  -- w
+            -- when
+            offset = k + 3
+            goto kw_middle
+          end
+        end
+      elseif b == 105 then  -- i
+        if k == i or is_boundary(line:byte(k - 1)) then
+          -- in
+          offset = k + 1
+          goto kw_middle
+        else
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 103 then  -- g
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 101 then  -- e
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 98 then  -- b
+                -- begin
+                offset = k + 4
+                goto kw_start
+              end
+            end
+          end
+        end
+      end
+    elseif b == 111 then  -- o
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 100 then  -- d
+        -- do
+        goto kw_do
+      end
+    elseif b == 114 then  -- r
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 111 then  -- o
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 102 then  -- f
+          -- for
+          offset = k + 2
+          goto kw_start
+        end
+      end
+    elseif b == 115 then  -- s
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 115 then  -- s
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 97 then  -- a
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 108 then  -- l
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 99 then  -- c
+              -- class
+              offset = k + 4
+              goto kw_define
+            end
+          end
+        elseif b == 101 then  -- e
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 108 then  -- l
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 110 then  -- n
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 117 then  -- u
+                -- unless
+                offset = k + 5
+                goto kw_start
+              end
+            end
+          end
+        end
+      end
+    end
+
+    goto default
+
+    ::kw_start::
+
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or is_boundary(line:byte(offset + 1))) then
+      if syngroup_at(lnum, k) == "rubyKeyword" then
+        if pairs == 0 then
+          return k
+        else
+          pairs = pairs + 1
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_middle::
+
+    if pairs == 0 then
+      if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or is_boundary(line:byte(offset + 1))) then
+        local syngroup = syngroup_at(lnum, k)
+
+        if syngroup == "rubyKeyword" or syngroup == "rubyBlockControl" or syngroup == "rubyDefineBlockControl" then
+          return i
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_define::
+
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or line:byte(offset + 1) ~= 58 and is_boundary(line:byte(offset + 1))) then
+      if syngroup_at(lnum, k) == "rubyDefine" then
+        if pairs == 0 then
+          return i
+        else
+          pairs = pairs + 1
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_do::
+
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (k + 1 == j or is_boundary(line:byte(k + 2))) then
+      if syngroup_at(lnum, k) == "rubyKeyword" then
+        if pairs == 0 then
+          return i
+        else
+          pairs = pairs + 1
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_end::
+
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (k + 2 == j or is_boundary(line:byte(k + 3))) then
+      local syngroup = syngroup_at(lnum, k)
+
+      if syngroup == "rubyKeyword" or syngroup == "rubyDefine" then
+        pairs = pairs - 1
+      end
+    end
+
+    goto next
+
+    ::default::
+
+    if b == 40 or b == 91 or b == 123 then  -- ( [ {
+      if syngroup_at(lnum, k) == "rubyDelimiter" then
+        if pairs == 0 then
+          for l = k + 1, j do
+            if line:byte(l) > 32 then
+              return l
+            end
+          end
+
+          return i
+        else
+          pairs = pairs + 1
+        end
+      end
+    elseif b == 41 or b == 93 or b == 125 then  -- ) ] }
+      if syngroup_at(lnum, k) == "rubyDelimiter" then
+        pairs = pairs - 1
+      end
+    elseif b == 124 then  -- |
+      if syngroup_at(lnum, k) == "rubyDelimiter" then
+        if pairs == 0 then
+          return i
+        end
+      end
+    end
+
+    goto next
+
+    ::next::
+
+    k = k - 1
   end
 end
 
-local function get_msl(lnum)
-  lnum = prev_non_multiline(lnum)
+local function has_starting_keyword(lnum, line, i, j)
+  local pairs = 0
 
-  local line = getline(lnum)
-  local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
+  local k = j
 
-  if first_char == "." and second_char ~= "." then
-    return get_msl(prevnonblank(lnum - 1))
-  elseif first_char == ")" then
-    set_pos(lnum, 0)
+  while k >= i do
+    local offset
+    local b = line:byte(k)
 
-    local found = searchpair_back("(", nil, ")", skip_char)
+    if b == 100 then  -- d
+      k = k - 1
+      b = line:byte(k)
 
-    return get_msl(found)
-  elseif first_char == "]" then
-    set_pos(lnum, 0)
+      if b == 110 then  -- n
+        k = k - 1
+        b = line:byte(k)
 
-    local found = searchpair_back("\\[", nil, "]", skip_char)
+        if b == 101 then  -- d
+          -- end
+          goto kw_end
+        end
+      end
+    elseif b == 101 then  -- e
+      k = k - 1
+      b = line:byte(k)
 
-    return get_msl(found)
-  elseif first_char == "}" then
-    set_pos(lnum, 0)
+      if b == 108 then  -- l
+        k = k - 1
+        b = line:byte(k)
 
-    local found = searchpair_back("{", nil, "}", skip_char)
+        if b == 105 then  -- i
+          k = k - 1
+          b = line:byte(k)
 
-    return get_msl(found)
-  elseif first_char == "e" and second_char == "n" and sub(line, first_col + 2, first_col + 2) == "d" and syngroup_at(lnum, first_col - 1) == "rubyKeyword" then
+          if b == 104 then  -- h
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 119 then  -- w
+              -- while
+              offset = k + 4
+              goto kw_start
+            end
+          end
+        elseif b == 117 then  -- u
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 100 then  -- d
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 111 then  -- o
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 109 then  -- m
+                -- module
+                offset = k + 5
+                goto kw_start
+              end
+            end
+          end
+        end
+      elseif b == 114 then  -- r
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 117 then  -- u
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 115 then  -- s
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 110 then  -- n
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 101 then  -- e
+                -- ensure
+                offset = k + 5
+                goto kw_middle
+              end
+            end
+          end
+        end
+      elseif b == 115 then  -- s
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 97 then  -- a
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 99 then  -- c
+            -- case
+            offset = k + 3
+            goto kw_start
+          end
+        elseif b == 108 then  -- l
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 101 then  -- e
+            -- else
+            offset = k + 3
+            goto kw_middle
+          end
+        end
+      elseif b == 117 then  -- u
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 99 then  -- c
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 115 then  -- s
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 101 then  -- e
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 114 then  -- r
+                -- rescue
+                offset = k + 5
+                goto kw_middle
+              end
+            end
+          end
+        end
+      end
+    elseif b == 102 then  -- f
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 101 then  -- e
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 100 then  -- d
+          -- def
+          offset = k + 2
+          goto kw_start
+        end
+      elseif b == 105 then  -- i
+        if k == i or is_boundary(line:byte(k - 1)) then
+          -- if
+          offset = k + 1
+          goto kw_start
+        else
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 115 then  -- s
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 108 then  -- l
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 101 then  -- e
+                -- elsif
+                offset = k + 4
+                goto kw_middle
+              end
+            end
+          end
+        end
+      end
+    elseif b == 108 then  -- l
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 105 then  -- i
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 116 then  -- t
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 110 then  -- n
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 117 then  -- u
+              -- until
+              offset = k + 4
+              goto kw_start
+            end
+          end
+        end
+      end
+    elseif b == 110 then  -- n
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 101 then  -- e
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 104 then  -- h
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 119 then  -- w
+            -- when
+            offset = k + 3
+            goto kw_middle
+          end
+        end
+      elseif b == 105 then  -- i
+        if k == i or is_boundary(line:byte(k - 1)) then
+          -- in
+          offset = k + 1
+          goto kw_middle
+        else
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 103 then  -- g
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 101 then  -- e
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 98 then  -- b
+                -- begin
+                offset = k + 4
+                goto kw_start
+              end
+            end
+          end
+        end
+      end
+    elseif b == 111 then  -- o
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 100 then  -- d
+        -- do
+        offset = k + 1
+        goto kw_start
+      end
+    elseif b == 114 then  -- r
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 111 then  -- o
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 102 then  -- f
+          -- for
+          offset = k + 2
+          goto kw_start
+        end
+      end
+    elseif b == 115 then  -- s
+      k = k - 1
+      b = line:byte(k)
+
+      if b == 115 then  -- s
+        k = k - 1
+        b = line:byte(k)
+
+        if b == 97 then  -- a
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 108 then  -- l
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 99 then  -- c
+              -- class
+              offset = k + 4
+              goto kw_start
+            end
+          end
+        elseif b == 101 then  -- e
+          k = k - 1
+          b = line:byte(k)
+
+          if b == 108 then  -- l
+            k = k - 1
+            b = line:byte(k)
+
+            if b == 110 then  -- n
+              k = k - 1
+              b = line:byte(k)
+
+              if b == 117 then  -- u
+                -- unless
+                offset = k + 5
+                goto kw_start
+              end
+            end
+          end
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_start::
+
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or is_boundary(line:byte(offset + 1))) then
+      if syngroup_at(lnum, k) == "rubyKeyword" then
+        if pairs == 0 then
+          return true
+        else
+          pairs = pairs + 1
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_middle::
+
+    if pairs == 0 then
+      if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or is_boundary(line:byte(offset + 1))) then
+        if syngroup_at(lnum, k) == "rubyKeyword" then
+          return true
+        end
+      end
+    end
+
+    goto next
+
+    ::kw_end::
+
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (k + 2 == j or is_boundary(line:byte(k + 3))) then
+      if syngroup_at(lnum, k) == "rubyKeyword" then
+        pairs = pairs - 1
+      end
+    end
+
+    goto next
+
+    ::next::
+
+    k = k - 1
+  end
+end
+
+local function get_msl(lnum, line, start, finish, skip_commas, pairs)
+  local prev_lnum = prevnonblank(lnum - 1)
+
+  if prev_lnum == 0 then
+    return lnum, start - 1, false
+  end
+
+  -- This line is *not* the MSL if:
+
+  -- It is part of a multiline region.
+  local syngroup = syngroup_at(lnum, 1)
+
+  if MULTILINE_REGIONS[syngroup] then
+    local prev_line = get_line(prev_lnum)
+    return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
+  end
+
+  -- It starts with `=end`.
+  local line = get_line(lnum)
+
+  if line:byte(1) == 61 and line:byte(2) == 101 and line:byte(3) == 110 and line:byte(4) == 100 and (#line == 4 or is_boundary(line:byte(5))) then  -- = e n d
+    for i = lnum - 1, 1, -1 do
+      line = get_line(i)
+
+      if line:byte(1) == 61 and  -- =
+        line:byte(2) == 98 and  -- b
+        line:byte(3) == 101 and  -- e
+        line:byte(4) == 103 and  -- g
+        line:byte(5) == 105 and  -- i
+        line:byte(6) == 110 and  -- n
+        (#line == 6 or is_boundary(line:byte(7))) and
+        syngroup_at(i, 1) == "rubyCommentDelimiter" then
+        local prev_lnum = prevnonblank(i - 1)
+        local prev_line = get_line(prev_lnum)
+        return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
+      end
+    end
+  end
+
+  -- It starts with a leading dot.
+  local first_col
+
+  if start == 1 then
+    for i = start, finish do
+      if line:byte(i) > 32 then
+        first_col = i
+        break
+      end
+    end
+  else
+    first_col = start
+  end
+
+  local first_byte = line:byte(first_col)
+
+  if first_byte == 46 and line:byte(first_col + 1) ~= 46 then  -- .
+    local prev_line = get_line(prev_lnum)
+    return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
+  end
+
+  -- It contains a positive number of unpaired closing brackets or
+  -- keywords; find the corresponding starting line...
+  --
+  -- *unless* the line starts with an `end` that is part of
+  -- a definition.
+  if pairs then
+    goto pairs_skipped
+  end
+
+  pairs = 0
+
+  if first_byte == 101 and line:byte(first_col + 1) == 110 and line:byte(first_col + 2) == 100 and line:byte(first_col + 3) ~= 58 and  -- e n d :
+    (first_col + 2 == finish or is_boundary(line:byte(first_col + 3))) then
     if first_col == 1 then
-      return lnum
+      return lnum, first_col - 1, false
     end
 
-    set_pos(lnum, 0)
-
-    local found = searchpair_back(start_re, nil, "\\<end\\>", skip_word_postfix)
-    local word = expand("<cword>")
-
-    if word == "do" or word == "if" or word == "unless" or word == "begin" or word == "case" then
-      return get_msl(found)
-    else
-      return found
+    if syngroup_at(lnum, first_col) == "rubyDefine" then
+      return lnum, first_col - 1, false
     end
-  elseif first_char == "=" and find(line, "^end", first_col + 1) and syngroup_at(lnum, first_col) == "rubyCommentDelimiter" then
-    set_pos(lnum, 0)
 
-    local found = search("\\_^=begin\\>", "bW")
-
-    return get_msl(found - 1)
+    pairs = get_pairs(lnum, line, first_col + 4, #line, -1)
   else
-    set_pos(lnum, 0)
+    pairs = get_pairs(lnum, line, first_col, #line)
+  end
 
-    local last_char, syngroup, prev_lnum = get_last_char()
+  if pairs < 0 then
+    for i = prev_lnum, 1, -1 do
+      local line = get_line(i)
 
-    if last_char == "," or last_char == "\\" or syngroup == "rubyOperator" then
-      return get_msl(prev_lnum)
-    elseif syngroup == "rubyKeyword" then
-      local word = expand("<cword>")
+      pairs = get_pairs(i, line, 1, #line, pairs)
 
-      if word == "or" or word == "and" then
-        return get_msl(prev_lnum)
+      if pairs >= 0 then
+        return get_msl(i, line, 1, #line, skip_commas, pairs)
       end
     end
   end
 
-  return lnum
-end
+  ::pairs_skipped::
 
-local function get_list_msl(lnum)
-  lnum = prev_non_multiline(lnum)
+  -- The previous line ends with a comma, backslash, or hanging
+  -- operator.
+  local prev_line = get_line(prev_lnum)
+  local last_byte, last_col = get_last_byte(prev_lnum, prev_line)
 
-  local line = getline(lnum)
-  local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
-
-  if first_char == "." and second_char ~= "." then
-    return get_list_msl(prevnonblank(lnum - 1))
-  elseif first_char == ")" then
-    set_pos(lnum, 0)
-
-    local found = searchpair_back("(", nil, ")", skip_char)
-
-    return get_list_msl(found)
-  elseif first_char == "]" then
-    set_pos(lnum, 0)
-
-    local found = searchpair_back("\\[", nil, "]", skip_char)
-
-    return get_list_msl(found)
-  elseif first_char == "}" then
-    set_pos(lnum, 0)
-
-    local found = searchpair_back("{", nil, "}", skip_char)
-
-    return get_list_msl(found)
-  elseif first_char == "e" and second_char == "n" and sub(line, first_col + 2, first_col + 2) == "d" and syngroup_at(lnum, first_col - 1) == "rubyKeyword" then
-    set_pos(lnum, 0)
-
-    local found = searchpair_back(list_re, nil, "\\<end\\>", skip_word_postfix)
-
-    return get_list_msl(found)
-  elseif first_char == "=" and find(line, "^end", first_col + 1) and syngroup_at(lnum, first_col) == "rubyCommentDelimiter" then
-    set_pos(lnum, 0)
-
-    local found = search("\\_^=begin\\>", "bW")
-
-    return get_list_msl(found - 1)
-  else
-    set_pos(lnum, 0)
-
-    local last_char, syngroup, prev_lnum = get_last_char()
-
-    if last_char == "\\" or syngroup == "rubyOperator" then
-      return get_list_msl(prev_lnum)
-    elseif syngroup == "rubyKeyword" then
-      local word = expand("<cword>")
-
-      if word == "or" or word == "and" then
-        return get_list_msl(prev_lnum)
-      end
+  if is_hanging_comma(last_byte, prev_lnum, last_col) then
+    if not skip_commas then
+      return get_msl(prev_lnum, prev_line, 1, last_col - 1, false)
     end
+  elseif is_hanging_operator(last_byte, prev_lnum, last_col) or is_hanging_keyword_operator(last_byte, prev_line, prev_lnum, last_col) then
+    return get_msl(prev_lnum, prev_line, 1, last_col - 1, skip_commas)
   end
 
-  return lnum
+  -- Else, this line is the MSL.
+  return lnum, first_col - 1, pairs > 0
 end
+-- }}}
 
-return function()
-  local lnum = v.lnum
+if vim.g.ruby_simple_indent == 1 then
+  -- Simple {{{
+  return function()
+    local lnum = v.lnum
 
-  -- Current line {{{1
-  -- If the current line is inside of an ignorable multiline region,
-  -- do nothing.
-  local syngroup = syngroup_at(lnum, 0)
+    do
+      local syngroup = syngroup_at(lnum, 1)
 
-  if multiline_regions[syngroup] then
-    if syngroup == "rubyComment" then
-      -- Check for `=end`
-      local line = nvim_get_current_line()
-      local first_col, _, first_char = find(line, "(%S)")
+      -- If the current line is inside of a multiline region, do
+      -- nothing.
+      if MULTILINE_REGIONS[syngroup] then
+        return -1
+      end
 
-      if first_char == "=" then
-        local word = match(line, "^%l%w*", first_col + 1)
+      -- Special case of the above:
+      --
+      -- If the current line is inside of a multiline comment, check to
+      -- see if it begins with `=end`.
+      if syngroup == "rubyComment" then
+        local line = nvim_get_current_line()
 
-        if word == "end" then
-          return 0
+        for i = 1, #line do
+          local b = line:byte(i)
+
+          if b > 32 then
+            if b == 61 and line:byte(i + 1) == 101 and line:byte(i + 2) == 110 and line:byte(i + 3) == 100 and (i + 3 == #line or is_boundary(line:byte(i + 4))) then  -- = e n d
+              return 0
+            end
+
+            break
+          end
+        end
+
+        return -1
+      end
+    end
+
+    local prev_lnum = prevnonblank(lnum - 1)
+
+    if prev_lnum == 0 then
+      return 0
+    end
+
+    -- Retrieve indentation info for the previous line.
+    local prev_line = get_line(prev_lnum)
+
+    if prev_line:byte(1) == 61 and prev_line:byte(2) == 101 and prev_line:byte(3) == 110 and prev_line:byte(4) == 100 and (#prev_line == 4 or is_boundary(prev_line:byte(5))) then  -- = e n d
+      for i = prev_lnum - 1, 1, -1 do
+        line = get_line(i)
+
+        if line:byte(1) == 61 and  -- =
+          line:byte(2) == 98 and  -- b
+          line:byte(3) == 101 and  -- e
+          line:byte(4) == 103 and  -- g
+          line:byte(5) == 105 and  -- i
+          line:byte(6) == 110 and  -- n
+          (#line == 6 or is_boundary(line:byte(7))) and
+          syngroup_at(i, 1) == "rubyCommentDelimiter" then
+          prev_lnum = prevnonblank(i - 1)
+          prev_line = get_line(prev_lnum)
+
+          break
         end
       end
     end
 
-    return -1
-  end
+    local last_byte, last_col = get_last_byte(prev_lnum, prev_line)
 
-  -- If the first character is `=` and it is followed by `begin` or
-  -- `end`, return 0.
-  local line = nvim_get_current_line()
-  local first_col, _, first_char, second_char = find(line, "(%S)(%S?)")
+    local first_col, first_byte, start_lnum, start_line
 
-  if first_col then
-    -- Check for `=begin` or `=end`
-    if first_char == "=" then
-      local word = match(line, "^%l%w*", first_col + 1)
+    -- This variable tells whether or not the previous line is
+    -- a continuation of another line.
+    -- 0 -> no continuation
+    -- 1 -> continuation caused by a backslash or hanging operator
+    -- 2 -> continuation caused by a comma (list continuation)
+    -- 3 -> continuation caused by an opening bracket
+    local continuation = 0
 
-      if word == "begin" or word == "end" then
-        return 0
+    if last_byte then
+      -- If the previous line begins in a multiline region, find the line
+      -- that began that region; this line will be referred to as the
+      -- "starting line".
+
+      if MULTILINE_REGIONS[syngroup_at(prev_lnum, 1)] then
+        start_lnum = prev_non_multiline(prevnonblank(prev_lnum - 1))
+        start_line = get_line(start_lnum)
+      else
+        start_lnum = prev_lnum
+        start_line = prev_line
+      end
+
+      -- Find the first column and first byte of the line.
+      for i = 1, #start_line do
+        first_byte = start_line:byte(i)
+
+        if first_byte > 32 then  -- %S
+          first_col = i
+          break
+        end
+      end
+
+      -- Determine whether or not the line is a continuation.
+      if first_byte == 46 then  -- .
+        if start_line:byte(first_col + 1) ~= 46 then
+          continuation = 1
+        end
+      elseif first_byte ~= 41 and first_byte ~= 93 and first_byte ~= 125 then  -- ) ] }
+        local lnum = prevnonblank(start_lnum - 1)
+
+        if lnum ~= 0 then
+          local line = get_line(lnum)
+          local b, col = get_last_byte(lnum, line)
+
+          if b then
+            if is_hanging_operator(b, lnum, col) or is_hanging_keyword_operator(b, line, lnum, col) then
+              continuation = 1
+            elseif is_hanging_comma(b, lnum, col) then
+              continuation = 2
+            elseif is_hanging_bracket(b, lnum, col) then
+              continuation = 3
+            end
+          end
+        end
+      end
+    else
+      -- The previous line is a comment line.
+      first_col = last_col
+      start_lnum = prev_lnum
+      start_line = prev_line
+    end
+
+    -- Find the first character in the current line.
+    local line = nvim_get_current_line()
+    local i, b
+
+    for j = 1, #line do
+      b = line:byte(j)
+
+      if b > 32 then  -- %S
+        i = j
+        break
       end
     end
 
-    -- If the first character of the current line is a leading dot, add
-    -- an indent unless the previous logical line also started with
-    -- a leading dot.
-    if (first_char == "." and second_char ~= ".") or (first_char == "&" and second_char == ".") then
-      local prev_lnum = prev_non_multiline(prevnonblank(lnum - 1))
-      local prev_line = getline(prev_lnum)
-      local first_col, _, first_char, second_char = find(prev_line, "(%S)(%S?)")
+    local keyword_dedent = false
 
-      if (first_char == "." and second_char ~= ".") or (first_char == "&" and second_char == ".") then
+    if b == 46 then  -- .
+      -- If the current line begins with a leading dot, add a shift
+      -- unless the previous line was a line continuation.
+
+      if line:byte(i + 1) ~= 46 then  -- .
+        if continuation == 1 then
+          return first_col - 1
+        else
+          return first_col - 1 + shiftwidth()
+        end
+      end
+    elseif b == 41 then  -- )
+      -- If the current line begins with a closing bracket, subtract
+      -- a shift unless the previous character was the corresponding
+      -- opening bracket; subtract an additional shift if the previous
+      -- line was a continuation.
+
+      local shift = 1
+
+      if last_byte == 40 and syngroup_at(prev_lnum, last_col) == "rubyDelimiter" then  -- (
+        shift = 0
+      end
+
+      if continuation == 1 then
+        shift = shift + 1
+      end
+
+      return first_col - 1 - shift * shiftwidth()
+    elseif b == 93 then  -- ]
+      local shift = 1
+
+      if last_byte == 91 and syngroup_at(prev_lnum, last_col) == "rubyDelimiter" then  -- [
+        shift = 0
+      end
+
+      if continuation == 1 then
+        shift = shift + 1
+      end
+
+      return first_col - 1 - shift * shiftwidth()
+    elseif b == 125 then  -- }
+      local shift = 1
+
+      if (last_byte == 123 or last_byte == 124) and syngroup_at(prev_lnum, last_col) == "rubyDelimiter" then  -- { |
+        shift = 0
+      end
+
+      if continuation == 1 then
+        shift = shift + 1
+      end
+
+      return first_col - 1 - shift * shiftwidth()
+    elseif b == 61 then  -- =
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 98 then  -- b
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 101 then  -- e
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 103 then  -- g
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 105 then  -- i
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 110 then  -- n
+                if i == #line or is_boundary(line:byte(i + 1)) then
+                  return 0
+                end
+              end
+            end
+          end
+        end
+      elseif b == 101 then  -- e
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 110 then  -- n
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 100 then  -- e
+            if i == #line or is_boundary(line:byte(i + 1)) then
+              return 0
+            end
+          end
+        end
+      end
+    elseif b == 101 then  -- e
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 108 then  -- l
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 101 then  -- e
+            -- else
+            keyword_dedent = true
+          elseif b == 105 then  -- i
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 102 then  -- f
+              -- elsif
+              keyword_dedent = true
+            end
+          end
+        end
+      elseif b == 110 then  -- n
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 100 then -- d
+          -- end
+          keyword_dedent = true
+        elseif b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 117 then  -- u
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 114 then  -- r
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- ensure
+                keyword_dedent = true
+              end
+            end
+          end
+        end
+      end
+    elseif b == 105 then  -- i
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 110 then  -- n
+        -- in
+        keyword_dedent = true
+      end
+    elseif b == 114 then  -- r
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 101 then  -- e
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 99 then  -- c
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 117 then  -- u
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- rescue
+                keyword_dedent = true
+              end
+            end
+          end
+        end
+      end
+    elseif b == 119 then  -- w
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 104 then  -- h
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 101 then  -- e
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 110 then  -- n
+            -- when
+            keyword_dedent = true
+          end
+        end
+      end
+    end
+
+    if keyword_dedent then
+      b = line:byte(i + 1)
+
+      if i == #line or b ~= 58 and is_boundary(b) then  -- :
+        local shift = 1
+
+        if continuation == 1 then
+          shift = shift + 1
+        end
+
+        if has_starting_keyword(start_lnum, start_line, first_col, #start_line) then
+          shift = shift - 1
+        end
+
+        return first_col - 1 - shift * shiftwidth()
+      end
+    end
+
+    -- If we can't determine the indent from the current line, examine the
+    -- previous line.
+
+    if not last_byte then
+      -- If the previous line was a comment, do nothing.
+      return first_col - 1
+    end
+
+    if is_hanging_comma(last_byte, prev_lnum, last_col) then
+      -- If the last character was a comma, add a shift unless:
+      --
+      -- The previous line begins with a closing bracket or `end`.
+      --
+      -- The line before the starting line ended with a comma or
+      -- a hanging bracket.
+
+      if prev_lnum == start_lnum then
+        if first_byte == 41 or first_byte == 93 or first_byte == 125 then  -- ) ] }
+          return first_col - 1
+        elseif first_byte == 101 and start_line:byte(first_col + 1) == 110 and start_line:byte(first_col + 2) == 100 and (first_col + 2 == #start_line or is_boundary(start_line:byte(first_col + 3))) then
+          return first_col - 1
+        end
+      end
+
+      if continuation == 1 then
+        return first_col - 1 - shiftwidth()
+      elseif continuation == 2 or continuation == 3 then
+        return first_col - 1
+      else
+        return first_col - 1 + shiftwidth()
+      end
+    elseif is_hanging_bracket(last_byte, prev_lnum, last_col) or
+      is_hanging_operator(last_byte, prev_lnum, last_col) or
+      is_hanging_keyword_operator(last_byte, prev_line, prev_lnum, last_col) then
+      if continuation == 1 then
         return first_col - 1
       else
         return first_col - 1 + shiftwidth()
       end
     end
 
-    -- If the first character is a closing bracket, align with the line
-    -- that contains the opening bracket.
-    if first_char == ")" then
-      local found = searchpair_back("(", nil, ")", skip_char)
-      return indent(found)
-    elseif first_char == "]" then
-      local found = searchpair_back("\\[", nil, "]", skip_char)
-      return indent(found)
-    elseif first_char == "}" then
-      local found = searchpair_back("{", nil, "}", skip_char)
-      return indent(found)
+    local shift
+
+    if has_starting_keyword(start_lnum, start_line, first_col, #start_line) then
+      shift = 1
+    elseif continuation == 1 or continuation == 2 then
+      shift = -1
+    else
+      shift = 0
     end
 
-    -- If the first word is a deindenting keyword, align with the
-    -- nearest indenting keyword.
-    local first_word = match(line, "^%l%w*", first_col)
-
-    set_pos(lnum, 0)
-
-    if first_word == "end" then
-      local lnum, idx = searchpair_back(start_re, middle_re, "\\<end\\>", skip_word_postfix)
-      local word = expand("<cword>")
-
-      if word == "if" or word == "unless" or word == "begin" or word == "case" then
-        return idx
-      else
-        return indent(lnum)
-      end
-    elseif first_word == "else" then
-      local _, idx = searchpair_back(hanging_re, middle_re, "\\<end\\>", skip_word_postfix)
-      return idx
-    elseif first_word == "elsif" then
-      local _, idx = searchpair_back("\\<\\%(if\\|unless\\)\\>", "\\<elsif\\>", "\\<end\\>", skip_word_postfix)
-      return idx
-    elseif first_word == "when" then
-      local _, idx = searchpair_back("\\<case\\>", "\\<when\\>", "\\<end\\>", skip_word)
-      return idx
-    elseif first_word == "in" then
-      local _, idx = searchpair_back("\\<case\\>", "\\<in\\>", "\\<end\\>", skip_word)
-      return idx
-    elseif first_word == "rescue" then
-      local lnum, idx = searchpair_back(exception_re, "\\<rescue\\>", "\\<end\\>", skip_word)
-
-      if expand("<cword>") == "begin" then
-        return idx
-      else
-        return indent(lnum)
-      end
-    elseif first_word == "ensure" then
-      local lnum, idx = searchpair_back(exception_re, "\\<\\%(rescue\\|else\\)\\>", "\\<end\\>", skip_word)
-
-      if expand("<cword>") == "begin" then
-        return idx
-      else
-        return indent(lnum)
-      end
-    end
+    return first_col - 1 + shift * shiftwidth()
   end
+  -- }}}
+else
+  -- Default {{{
+  return function()
+    local lnum = v.lnum
 
-  -- Previous line {{{1
-  -- Begin by finding the previous non-comment character in the file.
-  local last_char, syngroup, prev_lnum, last_idx = get_last_char()
+    do
+      local syngroup = syngroup_at(lnum, 1)
 
-  if not last_char then
-    return 0
-  end
+      -- If the current line is inside of a multiline region, do
+      -- nothing.
+      if MULTILINE_REGIONS[syngroup] then
+        return -1
+      end
 
-  -- The only characters we care about for indentation are operators and
-  -- delimiters.
+      -- Special case of the above:
+      --
+      -- If the current line is inside of a multiline comment, check to
+      -- see if it begins with `=end`.
+      if syngroup == "rubyComment" then
+        local line = nvim_get_current_line()
 
-  if syngroup == "rubyOperator" then
-    -- If the last character was a hanging operator, add an indent unless
-    -- the line before it also ended with a hanging operator.
-    set_pos(prev_non_multiline(prev_lnum), 0)
+        for i = 1, #line do
+          local b = line:byte(i)
 
-    local _, syngroup = get_last_char()
+          if b > 32 then
+            if b == 61 and line:byte(i + 1) == 101 and line:byte(i + 2) == 110 and line:byte(i + 3) == 100 and (i + 3 == #line or is_boundary(line:byte(i + 4))) then  -- = e n d
+              return 0
+            end
 
-    if syngroup == "rubyOperator" then
-      return indent(prev_lnum)
-    elseif syngroup == "rubyKeyword" then
-      local word = expand("<cword>")
+            break
+          end
+        end
 
-      if word == "or" or word == "and" then
-        return indent(prev_lnum)
+        return -1
       end
     end
 
-    return indent(prev_lnum) + shiftwidth()
-  end
+    -- If there is no previous line in the file, do nothing.
+    local prev_lnum = prevnonblank(lnum - 1)
 
-  if syngroup == "rubyKeyword" then
-    local word = expand("<cword>")
+    if prev_lnum == 0 then
+      return 0
+    end
 
-    if word == "or" or word == "and" then
-      -- `or` and `and` behave like operators.
-      set_pos(prev_non_multiline(prev_lnum), 0)
+    -- Find the last non-comment byte of the previous line.
+    local prev_line = get_line(prev_lnum)
+    local last_byte, last_col = get_last_byte(prev_lnum, prev_line)
 
-      local _, syngroup = get_last_char()
+    -- Before we proceed, we need to determine which column we will use as
+    -- the starting position.
+    --
+    -- If there is a floating column somewhere in the previous line, that
+    -- is the starting column.
+    --
+    -- Else, the first column of the previous line is the starting
+    -- position.
+    local start_col, first_col, floating_col
 
-      if syngroup == "rubyOperator" then
-        return indent(prev_lnum)
-      elseif syngroup == "rubyKeyword" then
-        local word = expand("<cword>")
-
-        if word == "or" or word == "and" then
-          return indent(prev_lnum)
+    if not last_byte then
+      -- The previous line was a comment line.
+      first_col = last_col
+      start_col = last_col
+    else
+      for i = 1, last_col do
+        if prev_line:byte(i) > 32 then
+          first_col = i
+          break
         end
       end
 
-      return indent(prev_lnum) + shiftwidth()
+      floating_col = find_floating_column(prev_lnum, prev_line, first_col, last_col)
+      start_col = floating_col or first_col
+
+      -- Check the last byte of the previous line.
+      if is_hanging_operator(last_byte, prev_lnum, last_col) then
+        -- If the previous line ends with a hanging operator or backslash...
+
+        do
+          -- Find the next previous line.
+          local prev_prev_lnum = prevnonblank(prev_lnum - 1)
+
+          local prev_prev_line, prev_last_byte, prev_last_col
+
+          if prev_prev_lnum == 0 then
+            goto exit
+          end
+
+          prev_prev_line = get_line(prev_prev_lnum)
+          prev_last_byte, prev_last_col = get_last_byte(prev_prev_lnum, prev_prev_line)
+
+          -- If the next previous line also ends with a hanging operator or
+          -- backslash...
+          if is_hanging_operator(prev_last_byte, prev_prev_lnum, prev_last_col) then
+            -- Align with the starting column.
+            return start_col - 1
+          end
+
+          ::exit::
+        end
+
+        -- Else, find the first operator in the previous line.
+        for i = start_col, last_col - 3 do
+          if is_hanging_operator(prev_line:byte(i), prev_lnum, i) then
+            -- Find the first non-whitespace column after the operator.
+            for j = i + 1, last_col - 3 do
+              local b = prev_line:byte(j)
+
+              if b > 32 then
+                -- If one is found, align with it.
+                return j - 1
+              end
+            end
+          end
+        end
+
+        -- Otherwise, simply align with the starting position and add
+        -- a shift.
+        return start_col - 1 + shiftwidth()
+      elseif is_hanging_comma(last_byte, prev_lnum, last_col) then
+        -- If the previous line ends with a comma...
+
+        do
+          -- First, find the MSL of the previous line.
+          local msl, ind = get_msl(prev_lnum, prev_line, start_col, last_col, true)
+
+          -- Find the line prior to the MSL.
+          local prev_prev_lnum = prevnonblank(msl - 1)
+
+          if prev_prev_lnum == 0 then
+            goto exit
+          end
+
+          local prev_prev_line = get_line(prev_prev_lnum)
+          local prev_last_byte, prev_last_col = get_last_byte(prev_prev_lnum, prev_prev_line)
+
+          if is_hanging_comma(prev_last_byte, prev_prev_lnum, prev_last_col) or is_hanging_bracket(prev_last_byte, prev_prev_lnum, prev_last_col) then
+            -- If the next previous line also ended with a comma or an
+            -- opening bracket, align with the MSL, unless the current line
+            -- begins with a closing bracket.
+            local line = nvim_get_current_line()
+
+            for i = 1, #line do
+              local b = line:byte(i)
+
+              if b > 32 then
+                if b == 41 or b == 93 or b == 125 then  -- ) ] }
+                  return ind - shiftwidth()
+                end
+
+                break
+              end
+            end
+
+            return ind
+          elseif is_hanging_operator(prev_last_byte, prev_prev_line, prev_last_col) then
+            -- If the next previous line ended with a backslash or hanging
+            -- operator, align with the MSL.
+            return ind
+          end
+
+          ::exit::
+        end
+
+        -- Else, align with the previous line and add a shift.
+        if floating_col then
+          return floating_col - 1
+        else
+          return first_col - 1 + shiftwidth()
+        end
+      elseif is_hanging_keyword_operator(last_byte, prev_line, prev_lnum, last_col) then
+        -- If the previous line ends with a keyword operator (`and`,
+        -- `or`, or `not`), add a shift unless the next previous line
+        -- also does.
+
+        do
+          -- Find the next previous line.
+          local prev_prev_lnum = prevnonblank(prev_lnum - 1)
+
+          local prev_prev_line, prev_last_byte, prev_last_col
+
+          if prev_prev_lnum == 0 then
+            goto exit
+          end
+
+          prev_prev_line = get_line(prev_prev_lnum)
+          prev_last_byte, prev_last_col = get_last_byte(prev_prev_lnum, prev_prev_line)
+
+          -- If the next previous line also ends with a hanging operator keyword...
+          if is_hanging_keyword_operator(prev_last_byte, prev_prev_line, prev_prev_lnum, prev_last_col) then
+            -- Align with the starting column.
+            return start_col - 1
+          end
+
+          ::exit::
+        end
+
+        -- Else, add a shift.
+        return start_col - 1 + shiftwidth()
+      end
     end
-  end
 
-  if syngroup == "rubyDelimiter" then
-    -- If the last character was an opening bracket, add an indent.
-    if find(last_char, "[([{|]") then
-      return indent(prev_lnum) + shiftwidth()
+    -- Next, examine the first byte of the current line.
+    local line = nvim_get_current_line()
+    local i, b
+
+    for j = 1, #line do
+      b = line:byte(j)
+
+      if b > 32 then
+        i = j
+        break
+      end
     end
 
-    -- If the last character was a backslash, add an indent unless the
-    -- next previous line also ended with a backslash.
-    if last_char == "\\" then
-      set_pos(prev_non_multiline(prev_lnum), 0)
+    local keyword_dedent = false
 
-      local last_char, syngroup = get_last_char()
+    if b == 46 then  -- .
+      -- If the current line starts with a leading dot:
+      --
+      -- If the previous line also started with a leading dot, align with
+      -- the previous line.
+      --
+      -- Else, align with the first leading dot in the previous line, if
+      -- any.
+      --
+      -- Else, add a shift.
 
-      if last_char == "\\" and syngroup == "rubyDelimiter" then
-        return indent(prev_lnum)
+      if line:byte(i + 1) ~= 46 then  -- .
+        for i = start_col, last_col do
+          local b = prev_line:byte(i)
+
+          if b == 46 and prev_line:byte(i + 1) ~= 46 and syngroup_at(prev_lnum, i) == "rubyOperator" then  -- .
+            return i - 1
+          end
+        end
+
+        return start_col - 1 + shiftwidth()
+      end
+    elseif b == 41 or b == 93 or b == 125 then  -- ) ] }
+      -- If the current line begins with a closing bracket, subtract
+      -- a shift.
+
+      if floating_col then
+        return floating_col - 1
       else
-        return indent(prev_lnum) + shiftwidth()
+        local _, ind = get_msl(prev_lnum, prev_line, first_col, last_col, true)
+        return ind - shiftwidth()
+      end
+    elseif b == 61 then  -- =
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 98 then  -- b
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 101 then  -- e
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 103 then  -- g
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 105 then  -- i
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 110 then  -- n
+                if i == #line or is_boundary(line:byte(i + 1)) then
+                  return 0
+                end
+              end
+            end
+          end
+        end
+      elseif b == 101 then  -- d
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 110 then  -- n
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 100 then  -- e
+            if i == #line or is_boundary(line:byte(i + 1)) then
+              return 0
+            end
+          end
+        end
+      end
+    elseif b == 101 then  -- e
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 108 then  -- l
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 101 then  -- e
+            -- else
+            keyword_dedent = true
+          elseif b == 105 then  -- i
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 102 then  -- f
+              -- elsif
+              keyword_dedent = true
+            end
+          end
+        end
+      elseif b == 110 then  -- n
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 100 then -- d
+          -- end
+          keyword_dedent = true
+        elseif b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 117 then  -- u
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 114 then  -- r
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- ensure
+                keyword_dedent = true
+              end
+            end
+          end
+        end
+      end
+    elseif b == 105 then  -- i
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 110 then  -- n
+        -- in
+        keyword_dedent = true
+      end
+    elseif b == 114 then  -- r
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 101 then  -- e
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 115 then  -- s
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 99 then  -- c
+            i = i + 1
+            b = line:byte(i)
+
+            if b == 117 then  -- u
+              i = i + 1
+              b = line:byte(i)
+
+              if b == 101 then  -- e
+                -- rescue
+                keyword_dedent = true
+              end
+            end
+          end
+        end
+      end
+    elseif b == 119 then  -- w
+      i = i + 1
+      b = line:byte(i)
+
+      if b == 104 then  -- h
+        i = i + 1
+        b = line:byte(i)
+
+        if b == 101 then  -- e
+          i = i + 1
+          b = line:byte(i)
+
+          if b == 110 then  -- n
+            -- when
+            keyword_dedent = true
+          end
+        end
       end
     end
 
-    -- If the last character was a comma, check the following:
-    --
-    -- 1. If the comma is preceded by an unpaired opening bracket
-    -- somehwere in the same line, align with the bracket.
-    -- 2. If the next previous line also ended with a comma or it ended
-    -- with an opening bracket, align with the beginning of the previous
-    -- line.
-    -- 3. If the next previous line ended with a hanging operator, add an
-    -- indent.
-    -- 4. If the previous line is not its own MSL, align with the MSL.
-    -- 5. Else, add an indent.
-    if last_char == "," then
-      local _, idx = searchpair_back("[([{]", nil, "[)\\]}]", skip_char, true, prev_lnum)
+    if keyword_dedent then
+      b = line:byte(i + 1)
 
-      if idx then
-        return idx + 1
+      if i == #line or b ~= 58 and is_boundary(b) then  -- :
+        if floating_col then
+          return floating_col - 1
+        else
+          local _, ind, shift = get_msl(prev_lnum, prev_line, first_col, last_col)
+
+          if shift then
+            return ind
+          else
+            return ind - shiftwidth()
+          end
+        end
+      end
+    end
+
+    if floating_col then
+      return floating_col - 1 + shiftwidth()
+    else
+      local _, ind, shift = get_msl(prev_lnum, prev_line, first_col, last_col)
+
+      if shift then
+        ind = ind + shiftwidth()
       end
 
-      set_pos(prev_lnum, 0)
-      local last_char, syngroup = get_last_char()
-
-      if not last_char then
-        return indent(prev_lnum) + shiftwidth()
-      end
-
-      if syngroup == "rubyDelimiter" and find(last_char, "[,([{]") then
-        return indent(prev_lnum)
-      end
-
-      local msl = get_list_msl(prev_lnum)
-
-      if msl ~= prev_lnum then
-        return indent(msl)
-      end
-
-      return indent(prev_lnum) + shiftwidth()
+      return ind
     end
   end
-
-  -- MSL {{{1
-  local msl = get_msl(prev_lnum)
-
-  -- Find the last keyword in the previous logical line.
-  set_pos(prev_lnum, last_idx)
-
-  local lnum, idx = search_back("\\<\\l", skip_word, true, msl)
-
-  if not lnum then
-    return indent(msl)
-  end
-
-  local word = expand("<cword>")
-
-  if word == "if" or word == "unless" or word == "while" or word == "until" or word == "rescue" then
-    local _, prev_col = unpack(searchpos("\\S", "b", lnum))
-
-    if prev_col == 0 then
-      return idx + shiftwidth()
-    end
-
-    if syngroup_at(lnum, prev_col - 1) == "rubyOperator" then
-      return idx + shiftwidth()
-    end
-
-    return indent(msl)
-  elseif word == "begin" or word == "case" or word == "ensure" or word == "else" or word == "elsif" or word == "when" then
-    return idx + shiftwidth()
-  elseif word == "do" or word == "then" or word == "def" or word == "class" or word == "module" then
-    return indent(msl) + shiftwidth()
-  elseif word == "in" then
-    local found_lnum, found_col = unpack(searchpos("\\<for\\>", "b", msl))
-
-    if found_lnum > 0 and syngroup_at(found_lnum, found_col - 1) == "rubyKeyword" then
-      return indent(msl) + shiftwidth()
-    end
-
-    local found = search("\\<", "b")
-
-    if found ~= lnum then
-      return indent(msl) + shiftwidth()
-    end
-
-    return indent(msl)
-  else
-    return indent(msl)
-  end
-  -- }}}1
+  -- }}}
 end
 
 -- vim:fdm=marker

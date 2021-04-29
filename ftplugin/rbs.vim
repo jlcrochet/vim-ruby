@@ -1,5 +1,5 @@
 " Vim ftplugin file
-" Language: Ruby
+" Language: Ruby Signature (RBS) <github.com/ruby/rbs>
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
@@ -12,8 +12,8 @@ let b:did_ftplugin = 1
 setlocal shiftwidth=2
 setlocal comments=:#
 setlocal commentstring=#\ %s
-setlocal suffixesadd=.rb
+setlocal suffixesadd=.rbs
 
 " matchit.vim
-let b:match_words = g:ruby#ftplugin#match_words
-let b:match_skip = 'S:^ruby\%(Keyword\|Define\|BlockControl\|DefineBlockControl\)$'
+let b:match_words = '\<\%(class\|module\|interface\)\>:\<end\>'
+let b:match_skip = 'S:^rbsDefine$'

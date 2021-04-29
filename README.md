@@ -1,30 +1,132 @@
 ## Introduction
 
-This is intended to be a replacement for [vim-ruby](https://github.com/vim-ruby/vim-ruby) for people who are willing to sacrifice some of the aforementioned plugin's features and customization for superior performance.
+This is intended to be a drop-in replacement for [vim-ruby](https://github.com/vim-ruby/vim-ruby). The reason I wrote it is because the original vim-ruby is known for having many accuracy and performance issues related to syntax highlighting and indentation. After perusing the code for the original plugin, I decided that a complete rewrite was necessary.
 
-The reason I wrote this plugin is because the original vim-ruby is known for having many performance issues related to syntax highlighting and indentation.
-
-After installation, you can check out `test.rb` for a variety of cases -- mostly pulled from the [Ruby Reference](https://rubyreferences.github.io/rubyref/) -- that this plugin is able to handle.
-
-The only notable edge case I've found that this plugin can't handle at the moment is highlighting nested heredocs, such as the following:
-
-    puts(<<-ONE, <<-TWO)
-    content for heredoc one
-    ONE
-    content for heredoc two
-    TWO
-
-I may come up with a solution for this someday, but it seems to be an extremely rare use case anyway.
+In addition to regular Ruby files (`*.rb`), this plugin also supports eRuby (`*.erb`) and [Ruby Signature](https://github.com/ruby/rbs) (`*.rbs`) files.
 
 ## Configuration
 
-For `%`-style literals, this plugin only supports the following delimiters by default: `()`, `[]`, `{}`, and `<>`. This is because covering the entire range of possible delimiters -- which includes ```~`!@#$%^&*_-+=|\:;"',.?/``` -- is expensive and most of them are never used.
+NOTE: The following variables are read only when this plugin is first loaded, so in order for any changes to take effect, you must place them in `.vimrc` or some other file loaded on startup and then restart Vim.
 
-If you want support for the full set of delimiters, you can set `g:ruby_extended_delimiters` to `1` in your vimrc or elsewhere.
+#### `g:ruby_simple_indent`
+
+The default indentation style used by this plugin is the one most commonly found in the Ruby community, which allows for "hanging" or "floating" indentation. Some examples:
+
+    x = if y
+          5
+        else
+          10
+        end
+
+    x = begin
+          h["foo"]
+        rescue KeyError
+          "Not Found"
+        end
+
+    x = case y
+        when :foo
+          5
+        when :bar
+          10
+        else
+          1
+        end
+
+    x = [:foo, :bar,
+         :baz, :qux]
+
+    x = 5 + 10 +
+        15 + 20 -
+        5 * 3
+
+    x = y.foo
+         .bar
+         .baz
+
+For those who prefer a more traditional indentation style or who desire slightly faster highlighting and indentation, set `g:ruby_simple_indent` to `1`. The above examples will now be indented thus:
+
+    x = if y
+      5
+    else
+      10
+    end
+
+    x = begin
+      h["foo"]
+    rescue KeyError
+      "Not Found"
+    end
+
+    x = case y
+    when :foo
+      5
+    when :bar
+      10
+    else
+      1
+    end
+
+    x = [:foo, :bar,
+      :baz, :qux]
+
+    # OR
+
+    x = [
+      :foo, :bar,
+      :baz, :qux
+    ]
+
+    x = 5 + 10 +
+      15 + 20 -
+      5 * 3
+
+    # OR
+
+    x =
+      5 + 10 +
+      15 + 20 -
+      5 * 3
+
+    x = y.foo
+      .bar
+      .baz
+
+    # OR
+
+    x = y
+      .foo
+      .bar
+      .baz
+
+#### `g:ruby_fold`
+
+If `1`, definition blocks (`module`, `class`, `def`) will be folded.
+
+NOTE: If this is set, `g:ruby_simple_indent` will be disabled, since floating blocks have to be matched in order for folding to work properly.
+
+#### `g:eruby_extensions`
+
+A dictionary of filetype extensions is used to determine which filetype to use when loading ERB files. For example, opening a file named `foo.html.erb` will load HTML as the filetype with ERB syntax added on top.
+
+The default recognized extensions are as follows:
+
+    .html => html
+    .js => javascript
+    .json => json
+    .yml => yaml
+    .txt => text
+    .md => markdown
+
+Each extension maps to the name of the filetype that you want to load for that extension.
+
+To add or overwrite entries in the dictionary, set `g:eruby_extensions` to a dictinoary with the entries that you want to inject. For example, the following would allow the plugin to recognize XML files and would case `*.js` files to be recognized as JSX instead of JavaScript:
+
+    let g:eruby_extensions = { "xml": "xml", "js": "javascriptreact" }
 
 ## Performance Comparison with [vim-ruby](https://github.com/vim-ruby/vim-ruby)
 
-Comparisons made between the respective HEAD's of each plugin as of this writing (2020-11-17), using `test.rb` as the test file. I'm currently running NeoVim 0.5.0.
+Comparisons made between the respective HEAD's of each plugin as of this writing (2021-4-29) using [this test file](https://gist.github.com/jlcrochet/baf507ffc4be93e9074a99f39a79ec8e). I'm currently running NeoVim 0.5.0.
 
 ### Syntax
 
@@ -51,23 +153,21 @@ Results on my machine:
 
     vim-ruby/vim-ruby:
 
-    2.24s
-    2.10s  (g:ruby_no_expensive = 1)
+    4.51s
 
     jlcrochet/vim-ruby:
 
-    0.18s
-    0.32s  (g:ruby_extended_delimiters = 1)
+    0.62s
+    0.47s  (g:ruby_simple_indent = 1)
 
 ### Indentation
 
 Benchmark:
 
     command! IndentBenchmark
+          \ goto |
           \ let start = reltime() |
-          \ for _ in range(15) |
-          \ call feedkeys("ggVG=", "x") |
-          \ endfor |
+          \ call feedkeys("=G", "x") |
           \ echo reltimestr(reltime(start)) |
           \ unlet start
 
@@ -77,22 +177,14 @@ Results:
 
     vim-ruby/vim-ruby:
 
-    12.82s
-    29.68s  (g:ruby_no_expensive = 1) (?!)
+    10.13s
 
     jlcrochet/vim-ruby (VimL):
 
-    5.40s
-    6.29s  (g:ruby_extended_delimiters = 1)
+    1.39s
+    0.72s  (g:ruby_simple_indent = 1)
 
     jlcrochet/vim-ruby (Lua):
 
-    1.88s
-    2.73s  (g:ruby_extended_delimiters = 1)
-
-Not only is the original vim-ruby much slower (especially with `g:ruby_no_expensive = 1`; not sure why), but there are also numerous cases in `test.rb` that it doesn't indent properly.
-
-## TODO
-
-* ERB
-* Folding
+    0.32s
+    0.16s  (g:ruby_simple_indent = 1)
