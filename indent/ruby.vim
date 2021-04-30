@@ -13,7 +13,7 @@ setlocal indentkeys=0),0],0},.,o,O,!^F
 setlocal indentkeys+==begin,=end,0=else,0=elsif,0=when,0=in,0=rescue,0=ensure
 
 if has("nvim-0.5")
-  lua get_ruby_indent = require("get_ruby_indent")
+  lua require "get_ruby_indent"
   setlocal indentexpr=v:lua.get_ruby_indent()
   finish
 endif

@@ -1405,7 +1405,7 @@ end
 
 if vim.g.ruby_simple_indent == 1 then
   -- Simple {{{
-  return function()
+  function get_ruby_indent()
     local lnum = v.lnum
 
     do
@@ -1826,7 +1826,7 @@ if vim.g.ruby_simple_indent == 1 then
   -- }}}
 else
   -- Default {{{
-  return function()
+  function get_ruby_indent()
     local lnum = v.lnum
 
     do
