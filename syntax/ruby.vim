@@ -269,7 +269,6 @@ syn match rubyMethodAssignmentOperator /\%#=1=/ contained
 " Miscellaneous {{{2
 syn keyword rubyKeyword and or not then elsif when undef
 syn keyword rubyKeyword include extend nextgroup=rubyConstant skipwhite
-syn keyword rubyKeyword attr attr_reader attr_writer attr_accessor nextgroup=rubySymbol skipwhite
 syn keyword rubyKeyword return next break yield redo retry nextgroup=rubyPostfixKeyword skipwhite
 
 syn keyword rubyKeyword alias nextgroup=rubyAlias
