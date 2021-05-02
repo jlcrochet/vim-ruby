@@ -37,15 +37,15 @@ let s:pair_re = '\C\v<%((def|class|module)|(if|unless|case|while|until|for|begin
 let s:floating_re = '\C\v<%((begin|case|for|if|unless|until|while)|(else|elsif|ensure|in|rescue|when)|(class|def|module)|(do)|(end)):@!>|([([{])|([)\]}])|(\|)'
 
 if get(g:, "ruby_simple_indent")
-  let s:skip_keyword_expr = 'synID(line("."), col("."), 0) != g:ruby#indent#keyword'
+  let s:skip_keyword_expr = 'synID(line("."), col("."), 1) != g:ruby#indent#keyword'
 else
   function s:skip_keyword()
-    let synid = synID(line("."), col("."), 0)
+    let synid = synID(line("."), col("."), 1)
     return synid != g:ruby#indent#keyword && synid != g:ruby#indent#define && synid != g:ruby#indent#block_control && synid != g:ruby#indent#define_block_control
   endfunction
 
   function s:skip_pair()
-    let synid = synID(line("."), col("."), 0)
+    let synid = synID(line("."), col("."), 1)
     return synid != g:ruby#indent#keyword && synid != g:ruby#indent#define && synid != g:ruby#indent#block_control && synid != g:ruby#indent#define_block_control && synid != g:ruby#indent#delimiter
   endfunction
 
@@ -56,7 +56,7 @@ endif
 function s:prev_non_multiline(lnum)
   let lnum = a:lnum
 
-  while get(g:ruby#indent#multiline_regions, synID(lnum, 1, 0))
+  while get(g:ruby#indent#multiline_regions, synID(lnum, 1, 1))
     let lnum -= 1
   endwhile
 
@@ -65,37 +65,37 @@ endfunction
 
 function s:is_hanging_operator(char, lnum, col)
   if a:char =~# '[%&+\-*/?:<=>^|~]'
-    return synID(a:lnum, a:col, 0) == g:ruby#indent#operator
+    return synID(a:lnum, a:col, 1) == g:ruby#indent#operator
   elseif a:char ==# '\'
-    return synID(a:lnum, a:col, 0) == g:ruby#indent#backslash
+    return synID(a:lnum, a:col, 1) == g:ruby#indent#backslash
   endif
 endfunction
 
 function s:is_hanging_keyword_operator(char, line, lnum, col)
   if a:char ==# "d"
     if a:line[a:col - 4 : a:col - 2] =~# '\<an$'
-      return synID(a:lnum, a:col - 2, 0) == g:ruby#indent#keyword
+      return synID(a:lnum, a:col - 2, 1) == g:ruby#indent#keyword
     endif
   elseif a:char ==# "r"
     if a:line[a:col - 3 : a:col - 2] =~# '\<o$'
-      return synID(a:lnum, a:col - 1, 0) == g:ruby#indent#keyword
+      return synID(a:lnum, a:col - 1, 1) == g:ruby#indent#keyword
     endif
   elseif a:char ==# "t"
     if a:line[a:col - 4 : a:col - 2] =~# '\<no$'
-      return synID(a:lnum, a:col - 2, 0) == g:ruby#indent#keyword
+      return synID(a:lnum, a:col - 2, 1) == g:ruby#indent#keyword
     endif
   endif
 endfunction
 
 function s:is_hanging_bracket(char, lnum, col)
   if a:char =~# '[([{|]'
-    return synID(a:lnum, a:col, 0) == g:ruby#indent#delimiter
+    return synID(a:lnum, a:col, 1) == g:ruby#indent#delimiter
   endif
 endfunction
 
 function s:is_hanging_comma(char, lnum, col)
   if a:char ==# ","
-    return synID(a:lnum, a:col, 0) == g:ruby#indent#comma
+    return synID(a:lnum, a:col, 1) == g:ruby#indent#comma
   endif
 endfunction
 
@@ -116,7 +116,7 @@ function s:get_last_char(lnum, line)
       return ["", -1]
     endif
 
-    if synID(a:lnum, found + 1, 0) == g:ruby#indent#comment_delimiter
+    if synID(a:lnum, found + 1, 1) == g:ruby#indent#comment_delimiter
       break
     endif
   endwhile
@@ -133,7 +133,7 @@ function s:find_floating_index(lnum, i, j)
 
   while col >= a:i + 1
     if p == 2  " begin case for if unless until while
-      if synID(a:lnum, col, 0) == g:ruby#indent#keyword
+      if synID(a:lnum, col, 1) == g:ruby#indent#keyword
         if pairs == 0
           return col - 1
         else
@@ -142,14 +142,14 @@ function s:find_floating_index(lnum, i, j)
       endif
     elseif p == 3  " else elsif ensure in rescue when
       if pairs == 0
-        let synid = synID(a:lnum, col, 0)
+        let synid = synID(a:lnum, col, 1)
 
         if synid == g:ruby#indent#keyword || synid == g:ruby#indent#block_control || synid == g:ruby#indent#define_block_control
           return a:i
         endif
       endif
     elseif p == 4  " class def module
-      if synID(a:lnum, col, 0) == g:ruby#indent#define
+      if synID(a:lnum, col, 1) == g:ruby#indent#define
         if pairs == 0
           return a:i
         else
@@ -157,7 +157,7 @@ function s:find_floating_index(lnum, i, j)
         endif
       endif
     elseif p == 5  " do
-      if synID(a:lnum, col, 0) == g:ruby#indent#keyword
+      if synID(a:lnum, col, 1) == g:ruby#indent#keyword
         if pairs == 0
           return a:i
         else
@@ -165,13 +165,13 @@ function s:find_floating_index(lnum, i, j)
         endif
       endif
     elseif p == 6  " end
-      let synid = synID(a:lnum, col, 0)
+      let synid = synID(a:lnum, col, 1)
 
       if synid == g:ruby#indent#keyword || synid == g:ruby#indent#define
         let pairs -= 1
       endif
     elseif p == 7  " ( [ {
-      if synID(a:lnum, col, 0) == g:ruby#indent#delimiter
+      if synID(a:lnum, col, 1) == g:ruby#indent#delimiter
         if pairs == 0
           let [_, col2] = searchpos('\S', "z", a:lnum)
 
@@ -185,12 +185,12 @@ function s:find_floating_index(lnum, i, j)
         endif
       endif
     elseif p == 8  " ) ] }
-      if synID(a:lnum, col, 0) == g:ruby#indent#delimiter
+      if synID(a:lnum, col, 1) == g:ruby#indent#delimiter
         let pairs -= 1
       endif
     elseif p == 9  " |
       if pairs == 0
-        if synID(a:lnum, col, 0) == g:ruby#indent#delimiter
+        if synID(a:lnum, col, 1) == g:ruby#indent#delimiter
           return a:i
         endif
       endif
@@ -213,7 +213,7 @@ function s:find_msl(skip_commas, pairs)
   " This line is *not* the MSL if:
 
   " It is part of a multiline region.
-  let synid = synID(lnum, 1, 0)
+  let synid = synID(lnum, 1, 1)
 
   if synid == g:ruby#indent#comment || get(g:ruby#indent#multiline_regions, synid)
     call cursor(prev_lnum, 1)
@@ -226,7 +226,7 @@ function s:find_msl(skip_commas, pairs)
   if line =~# '^=end\>'
     let lnum = search('^=begin\>', "bWz")
 
-    while synID(lnum, 1, 0) != g:ruby#indent#comment_delimiter
+    while synID(lnum, 1, 1) != g:ruby#indent#comment_delimiter
       let lnum = search('^=begin\>', "bWz")
     endwhile
 
@@ -253,7 +253,7 @@ function s:find_msl(skip_commas, pairs)
         return [lnum, col - 1, 0]
       endif
 
-      if synID(lnum, col, 0) == g:ruby#indent#define
+      if synID(lnum, col, 1) == g:ruby#indent#define
         return [lnum, col - 1, 0]
       endif
 
@@ -265,7 +265,7 @@ function s:find_msl(skip_commas, pairs)
     let [_, col2, p] = searchpos(s:pair_re, "czp", lnum)
 
     while p
-      let synid = synID(lnum, col2, 0)
+      let synid = synID(lnum, col2, 1)
 
       if p == 2  " def class module
         if synid == g:ruby#indent#define
@@ -347,7 +347,7 @@ if get(g:, "ruby_simple_indent")
   " Simple {{{
   function GetRubyIndent() abort
     " If the current line is inside of a multiline region, do nothing.
-    let synid = synID(v:lnum, 1, 0)
+    let synid = synID(v:lnum, 1, 1)
 
     if get(g:ruby#indent#multiline_regions, synid)
       return -1
@@ -379,7 +379,7 @@ if get(g:, "ruby_simple_indent")
 
       let lnum = search('^=begin\>', "bWz")
 
-      while synID(lnum, 1, 0) != g:ruby#indent#comment_delimiter
+      while synID(lnum, 1, 1) != g:ruby#indent#comment_delimiter
         let lnum = search('^=begin\>', "bWz")
       endwhile
 
@@ -401,7 +401,7 @@ if get(g:, "ruby_simple_indent")
       " If the previous line begins in a multiline region, find the line
       " that began that region.
 
-      if get(g:ruby#indent#multiline_regions, synID(prev_lnum, 1, 0))
+      if get(g:ruby#indent#multiline_regions, synID(prev_lnum, 1, 1))
         let start_lnum = s:prev_non_multiline(prevnonblank(prev_lnum - 1))
         let start_line = getline(start_lnum)
       else
@@ -466,7 +466,7 @@ if get(g:, "ruby_simple_indent")
 
       let shift = 1
 
-      if last_char ==# "(" && synID(prev_lnum, last_idx + 1, 0) == g:ruby#indent#delimiter
+      if last_char ==# "(" && synID(prev_lnum, last_idx + 1, 1) == g:ruby#indent#delimiter
         let shift = 0
       endif
 
@@ -478,7 +478,7 @@ if get(g:, "ruby_simple_indent")
     elseif char ==# "]"
       let shift = 1
 
-      if last_char ==# "[" && synID(prev_lnum, last_idx + 1, 0) == g:ruby#indent#delimiter
+      if last_char ==# "[" && synID(prev_lnum, last_idx + 1, 1) == g:ruby#indent#delimiter
         let shift = 0
       endif
 
@@ -490,7 +490,7 @@ if get(g:, "ruby_simple_indent")
     elseif char ==# "}"
       let shift = 1
 
-      if (last_char ==# "{" || last_char ==# "|") && synID(prev_lnum, last_idx + 1, 0) == g:ruby#indent#delimiter
+      if (last_char ==# "{" || last_char ==# "|") && synID(prev_lnum, last_idx + 1, 1) == g:ruby#indent#delimiter
         let shift = 0
       endif
 
@@ -570,7 +570,7 @@ else
   " Default {{{
   function GetRubyIndent() abort
     " If the current line is inside of a multiline region, do nothing.
-    let synid = synID(v:lnum, 1, 0)
+    let synid = synID(v:lnum, 1, 1)
 
     if get(g:ruby#indent#multiline_regions, synid)
       return -1
@@ -602,7 +602,7 @@ else
 
       let [lnum, col] = searchpos('^=begin\>', "bWz")
 
-      while synID(lnum, col, 0) != g:ruby#indent#comment_delimiter
+      while synID(lnum, col, 1) != g:ruby#indent#comment_delimiter
         let [lnum, col] = searchpos('^=begin\>', "bWz")
       endwhile
 
@@ -651,25 +651,44 @@ else
           endif
         endif
 
-        " Else, find the first operator in the previous line.
-        let segment = prev_line[:last_idx - 3]
-        let [char, idx, offset] = matchstrpos(segment, '[%&+\-*/?:<=>^|~]', start_idx + 1)
+        " If the first character in the previous line is part of
+        " a keyword, align with the first non-operator character after
+        " that word.
+        let [_, _, offset] = matchstrpos(prev_line, '\v^%(case|elsif|if|in|unless|until|when|while):@!>', start_idx)
 
-        while idx != -1
-          if synID(prev_lnum, idx + 1, 0) == g:ruby#indent#operator
-            " Find the first non-whitespace column after the operator that
-            " is not also an operator.
-            let [char, idx, _] = matchstrpos(segment, '[^[:space:]%&+\-*/?:<=>^|~]', offset)
+        if offset != -1
+          return match(prev_line, '\S', offset + 1)
+        endif
 
-            if idx == -1
-              break
+        " Otherwise, align with the first character after the first
+        " assignment operator in the line, if one can be found.
+        "
+        " NOTE: Make sure to skip bracketed groups.
+        call cursor(prev_lnum, start_idx + 1)
+
+        let pairs = 0
+        let [_, col, p] = searchpos('\([([{]\)\|\([)\]}]\)\|\([=!]\@1<!=[=>~]\@!\)', "cpz", prev_lnum)
+
+        while p
+          if p == 2
+            if synID(prev_lnum, col, 1) == g:ruby#indent#delimiter
+              let pairs += 1
             endif
+          elseif p == 3
+            if pairs > 0 && synID(prev_lnum, col, 1) == g:ruby#indent#delimiter
+              let pairs -= 1
+            endif
+          elseif p == 4
+            if pairs == 0 && synID(prev_lnum, col, 1) == g:ruby#indent#operator
+              let idx = match(prev_line, '\S', col)
 
-            " If one is found, align with it.
-            return idx
+              if idx != -1
+                return idx
+              endif
+            endif
           endif
 
-          let [char, idx, offset] = matchstrpos(segment, '[%&+\-*/?:<=>^|~]', offset)
+          let [_, col, p] = searchpos('\([([{]\)\|\([)\]}]\)\|\([=!]\@1<!=[=>~]\@!\)', "pz", prev_lnum)
         endwhile
 
         " Otherwise, simply align with the starting position and add

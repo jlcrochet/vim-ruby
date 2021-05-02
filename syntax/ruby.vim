@@ -92,7 +92,7 @@ syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1"/ end=/\%#=1"/
 syn match rubyStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}\%(\s\x\{1,6}\)*}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)/ contained
 syn region rubyStringInterpolation matchgroup=rubyStringInterpolationDelimiter start=/\%#=1#{/ end=/\%#=1}/ contained contains=@rubyTop,rubyNestedBraces
 syn region rubyStringInterpolation matchgroup=rubyStringInterpolationDelimiter start=/\%#=1#\ze\%(\$\|@\)/ end=/\%#=1\>/ oneline contained contains=rubyInstanceVariable,rubyClassVariable,rubyGlobalVariable
-syn region rubyNestedBraces start=/\%#=1{/ matchgroup=rubyDelimiter end=/\%#=1}/ contained contains=@rubyTop,rubyNestedBraces
+syn region rubyNestedBraces start=/\%#=1{/ matchgroup=rubyDelimiter end=/\%#=1}/ contained transparent nextgroup=rubyOperator,rubyRangeOperator,rubyPostfixKeyword skipwhite
 
 syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1'/ end=/\%#=1'/ contains=rubyQuoteEscape nextgroup=rubyOperator,rubyRangeOperator,rubyPostfixKeyword skipwhite
 syn match rubyQuoteEscape /\%#=1\\[\\']/ contained
@@ -233,19 +233,19 @@ else
   " have to be matched with :syn-match instead of :syn-keyword to
   " prevent the block regions from being clobbered.
 
-  syn region rubyBlock matchgroup=rubyKeyword start=/\%#=1\<\%(if\|unless\|case\|begin\|while\|until\|for\)\>/ end=/\%#=1\<end:\@!\>/ contains=@rubyTop,rubyBlockControl nextgroup=rubyPostfixKeyword skipwhite
+  syn region rubyBlock matchgroup=rubyKeyword start=/\%#=1\<\%(if\|unless\|case\|begin\|while\|until\|for\)\>/ end=/\%#=1\<\.\@1<!end:\@!\>/ contains=@rubyTop,rubyBlockControl nextgroup=rubyPostfixKeyword skipwhite
   syn keyword rubyBlockControl else ensure contained
   syn keyword rubyBlockControl rescue nextgroup=rubyConstant,rubyOperator skipwhite
 
-  syn region rubyBlockSkip matchgroup=rubyKeyword start=/\%#=1\<\%(while\|until\|for\)\>/ end=/\%#=1\ze\<do:\@!\>/ transparent oneline nextgroup=rubyBlock
+  syn region rubyBlockSkip matchgroup=rubyKeyword start=/\%#=1\<\%(while\|until\|for\)\>/ end=/\%#=1\ze\<\.\@1<!do:\@!\>/ transparent oneline nextgroup=rubyBlock
 
   syn match rubyKeyword /\%#=1\<do\>/ nextgroup=rubyBlockParameters skipwhite contained containedin=rubyBlock
-  syn region rubyBlock start=/\%#=1\<do\>/ matchgroup=rubyKeyword end=/\%#=1\<end:\@!\>/ contains=@rubyTop,rubyBlockControl nextgroup=rubyPostfixKeyword skipwhite
+  syn region rubyBlock start=/\%#=1\<do\>/ matchgroup=rubyKeyword end=/\%#=1\<\.\@1<!end:\@!\>/ contains=@rubyTop,rubyBlockControl nextgroup=rubyPostfixKeyword skipwhite
 
   syn match rubyDefine /\%#=1\<def\>/ nextgroup=rubyMethodDefinition,rubyMethodReceiver,rubyMethodSelf,rubyMethodColon skipwhite
   syn match rubyDefine /\%#=1\<\%(class\|module\)\>/ nextgroup=rubyTypeDefinition skipwhite contained containedin=rubyDefineBlock
 
-  syn region rubyDefineBlock start=/\%#=1\<\%(def:\@!\|class\|module\)\>/ matchgroup=rubyDefine end=/\%#=1\<end:\@!\>/ contains=@rubyTop,rubyDefineBlockControl fold
+  syn region rubyDefineBlock start=/\%#=1\<\%(def:\@!\|class\|module\)\>/ matchgroup=rubyDefine end=/\%#=1\<\.\@1<!end:\@!\>/ contains=@rubyTop,rubyDefineBlockControl fold
   syn keyword rubyDefineBlockControl else ensure contained
   syn keyword rubyDefineBlockControl rescue contained nextgroup=rubyConstant,rubyOperator skipwhite
 
