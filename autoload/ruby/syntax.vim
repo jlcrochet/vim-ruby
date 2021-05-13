@@ -24,10 +24,10 @@ function s:or(...)
   return '\%('.join(a:000, '\|').'\)'
 endfunction
 
-let s:exponent_suffix = '[eE][+-]\=\d\+\%(_\d\+\)*i\='
-let s:fraction = '\.\d\+\%(_\d\+\)*' . s:or(s:exponent_suffix, 'r\=i\=')
+let s:exponent_suffix = '[eE][+-]\=\d\%(_\d\+\)*i\='
+let s:fraction = '\.\d\%(_\d\+\)*' . s:or(s:exponent_suffix, 'r\=i\=')
 
-let s:nonzero_re = '[1-9]\d*\%(_\d\+\)*' . s:or(
+let s:nonzero_re = '[1-9]\%(_\d\+\)*' . s:or(
       \ s:exponent_suffix,
       \ s:fraction,
       \ 'r\=i\=',
@@ -36,9 +36,9 @@ let s:nonzero_re = '[1-9]\d*\%(_\d\+\)*' . s:or(
 let s:zero_re = '0' . s:or(
       \ s:exponent_suffix,
       \ s:fraction,
-      \ '\o*\%(_\o\+\)*r\=i\=\>',
-      \ '[bB][01]\+\%(_[01]\+\)*r\=i\=\>',
-      \ '[oO]\o\+\%(_\o\+\)*r\=i\=\>',
+      \ '\o\%(_\o\+\)*',
+      \ '[bB][01]\+\%(_[01]\+\)*r\=i\=',
+      \ '[oO]\o\+\%(_\o\+\)*r\=i\=',
       \ '[dD]\d\+\%(_\d\+\)*r\=i\=',
       \ '[xX]\x\+\%(_\x\+\)*r\=i\=',
       \ ) . '\='

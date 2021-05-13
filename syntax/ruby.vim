@@ -73,7 +73,7 @@ syn match rubyClassVariable /\%#=1@@\h\w*/ nextgroup=rubyOperator,rubyRangeOpera
 syn match rubyGlobalVariable /\%#=1\$\%(\h\w*\|[!@~&`'+=/\\,;:.<>_*$?]\|-\w\|0\|[1-9]\d*\)/ nextgroup=rubyOperator,rubyRangeOperator,rubyPostfixKeyword skipwhite
 
 syn match rubyConstant /\%#=1\u\w*/ nextgroup=rubyOperator,rubyRangeOperator,rubyNamespaceOperator,rubyPostfixKeyword skipwhite
-syn match rubyVariableOrMethod /\%#=1[_[:lower:]]\w*[=?!]\=/ nextgroup=rubyOperator,rubyRangeOperator,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip,rubyHashKey,rubyPostfixKeyword skipwhite
+syn match rubyVariableOrMethod /\%#=1[[:lower:]_]\w*[=?!]\=/ nextgroup=rubyOperator,rubyRangeOperator,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip,rubyHashKey,rubyPostfixKeyword skipwhite
 
 syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained contains=rubySymbolDelimiter
 
