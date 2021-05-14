@@ -90,8 +90,10 @@ syn match rubyCharacter /\%#=1?\%(\\\%(\o\{1,3}\|x\x\{,2}\|u\%(\x\{,4}\|{\x\{1,6
 
 syn region rubyString matchgroup=rubyStringDelimiter start=/\%#=1"/ end=/\%#=1"/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=rubyOperator,rubyRangeOperator,rubyPostfixKeyword skipwhite
 
+syn match rubyStringInterpolation /\%#=1#@@\=\h\w*/ contained contains=rubyStringInterpolationDelimiter,rubyInstanceVariable,rubyClassVariable
+syn match rubyStringInterpolation /\%#=1#\$\%(\h\w*\|[!@~&`'+=/\\,;:.<>_*$?]\|-\w\|0\|[1-9]\d*\)/ contained contains=rubyStringInterpolationDelimiter,rubyGlobalVariable
+syn match rubyStringInterpolationDelimiter /\%#=1#/ contained
 syn region rubyStringInterpolation matchgroup=rubyStringInterpolationDelimiter start=/\%#=1#{/ end=/\%#=1}/ contained contains=@rubyTop,rubyNestedBraces
-syn region rubyStringInterpolation matchgroup=rubyStringInterpolationDelimiter start=/\%#=1#\ze\%(\$\|@\)/ end=/\%#=1\>/ oneline contained contains=rubyInstanceVariable,rubyClassVariable,rubyGlobalVariable
 syn region rubyNestedBraces start=/\%#=1{/ matchgroup=rubyDelimiter end=/\%#=1}/ contained transparent nextgroup=rubyOperator,rubyRangeOperator,rubyPostfixKeyword skipwhite
 
 syn match rubyStringEscape /\%#=1\\\_./ contained
