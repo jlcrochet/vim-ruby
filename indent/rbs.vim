@@ -1,5 +1,5 @@
 " Vim indent file
-" Language: Ruby Signature (RBS) <github.com/rbs/rbs>
+" Language: Ruby Signature (RBS) <github.com/ruby/rbs>
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 

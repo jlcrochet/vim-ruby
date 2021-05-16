@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language: Ruby Signature (RBS) <github.com/rbs/rbs>
+" Language: Ruby Signature (RBS) <github.com/ruby/rbs>
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
@@ -51,7 +51,7 @@ syn match rbsDeclarationOperator /\%#=1:/ contained nextgroup=@rbsTypes skipwhit
 
 syn match rbsGlobal /\%#=1\$\h\w*/ nextgroup=rbsDeclarationOperator skipwhite
 
-syn region rbsComment matchgroup=rbsCommentDelimiter start=/\%#=1^\s*\zs#/ end=/\%#=1$/ oneline contains=rbsTodo
+syn region rbsComment matchgroup=rbsCommentDelimiter start=/\%#=1#/ end=/\%#=1$/ oneline contains=rbsTodo
 syn keyword rbsTodo BUG DEPRECATED FIXME NOTE OPTIMIZE TODO contained
 
 " Members {{{2
