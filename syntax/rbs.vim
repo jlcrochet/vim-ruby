@@ -7,7 +7,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-if get(g:, "rbs_fold")
+if get(g:, "ruby_fold")
   setlocal foldmethod=syntax
 endif
 
