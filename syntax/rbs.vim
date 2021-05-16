@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Ruby Signature (RBS) <github.com/rbs/rbs>
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
-" URL: https://github.com/jlcrochet/vim-rbs
+" URL: https://github.com/jlcrochet/vim-ruby
 
 if exists("b:current_syntax")
   finish

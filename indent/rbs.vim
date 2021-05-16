@@ -1,7 +1,7 @@
 " Vim indent file
 " Language: Ruby Signature (RBS) <github.com/rbs/rbs>
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
-" URL: https://github.com/jlcrochet/vim-rbs
+" URL: https://github.com/jlcrochet/vim-ruby
 
 if get(b:, "did_indent")
   finish
