@@ -43,7 +43,7 @@ let s:zero_re = '0' . s:or(
       \ '[xX]\x\+\%(_\x\+\)*r\=i\=',
       \ ) . '\='
 
-let s:syn_match_template = 'syn match rubyNumber /\%%#=1%s/ nextgroup=rubyOperator,rubyRangeOperator,rubyPostfixKeyword skipwhite'
+let s:syn_match_template = 'syn match rubyNumber /\%%#=1%s/ nextgroup=@rubyPostfix skipwhite'
 
 const g:ruby#syntax#numbers = printf(s:syn_match_template, s:nonzero_re) .. " | " .. printf(s:syn_match_template, s:zero_re)
 
