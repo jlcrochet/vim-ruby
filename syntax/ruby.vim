@@ -209,11 +209,11 @@ syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1%x\z([~`!@#$%
 syn match rubyArrayEscape /\%#=1\\\s/ contained
 
 " Here Documents {{{3
-syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1\ze\s*$/ transparent contains=rubyHeredocStartLine,rubyHeredocLine
+syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ transparent contains=rubyHeredocStartLine,rubyHeredocLine
 syn region rubyHeredocStartLine start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLine skipnl
 syn region rubyHeredocLine start=/\%#=1^/ end=/\%#=1$/ contained oneline contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=rubyHeredocLine skipnl
 
-syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\='\z(\w\+\)'/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1\ze\s*$/ transparent contains=rubyHeredocStartLineRaw,rubyHeredocLineRaw
+syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\='\z(\w\+\)'/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ transparent contains=rubyHeredocStartLineRaw,rubyHeredocLineRaw
 syn region rubyHeredocStartLineRaw start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLineRaw skipnl
 syn region rubyHeredocLineRaw start=/\%#=1^/ end=/\%#=1$/ contained oneline nextgroup=rubyHeredocLineRaw skipnl
 
