@@ -258,8 +258,8 @@ syn match rubyTypeDefinition /\%#=1\u\w*/ contained nextgroup=rubyTypeNamespace,
 syn match rubyTypeNamespace /\%#=1::/ contained nextgroup=rubyTypeDefinition
 syn match rubyInheritanceOperator /\%#=1</ contained nextgroup=rubyConstant skipwhite
 
-syn match rubyMethodDefinition /\%#=1[[:lower:]_]\w*[=?!]\=/ contained nextgroup=rubyMethodAssignmentOperator skipwhite
-execute 'syn match rubyMethodDefinition /\%#=1'.g:ruby#syntax#overloadable_operators.'/ contained'
+syn match rubyMethodDefinition /\%#=1[[:lower:]_]\w*[=?!]\=/ contained nextgroup=rubyMethodAssignmentOperator,rubyHashKey skipwhite
+execute 'syn match rubyMethodDefinition /\%#=1'.g:ruby#syntax#overloadable_operators.'/ contained nextgroup=rubyMethodAssignmentOperator,rubyHashKey skipwhite'
 syn match rubyMethodReceiver /\%#=1\h\w*\./ contained contains=rubyMethodReceiverVariable,rubyMethodReceiverConstant,rubyMethodReceiverSelf,rubyMethodReceiverDot nextgroup=rubyMethodDefinition
 syn match rubyMethodReceiverVariable /\%#=1[[:lower:]_]\w*/ contained
 syn match rubyMethodReceiverConstant /\%#=1\u\w*/ contained

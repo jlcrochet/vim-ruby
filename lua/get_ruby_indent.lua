@@ -1265,7 +1265,7 @@ local function has_starting_keyword(lnum, line, i, j)
 
     ::kw_start::
 
-    if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or is_boundary(line:byte(offset + 1))) then
+    if (k == 1 or is_boundary(line:byte(k - 1))) and (offset == j or line:byte(offset + 1) ~= 58 and is_boundary(line:byte(offset + 1))) then
       if syngroup_at(lnum, k) == "rubyKeyword" then
         if pairs == 0 then
           return true
