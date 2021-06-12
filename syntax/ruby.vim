@@ -165,17 +165,20 @@ syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i{/  end=/\%#=
 syn region rubySymbol matchgroup=rubySymbolDelimiter start=/\%#=1%i</  end=/\%#=1>/ contains=rubyStringAngleBrackets,rubyArrayAngleBracketEscape nextgroup=@rubyPostfix skipwhite
 
 " Regular Expressions {{{3
-syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1\// end=/\%#=1\/[imx]*/ oneline contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1\/\s\@!/ end=/\%#=1\/[imx]*/ skip=/\%#=1\\\\\|\\\// oneline keepend contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
 
 " NOTE: This is defined here in order to take precedence over /-style
 " regexes
-syn match rubyOperator /\%#=1\/\ze\s/ contained
 syn match rubyOperator /\%#=1\/=/ contained
 
 syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r(/  end=/\%#=1)/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
 syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r\[/ end=/\%#=1]/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
 syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r{/  end=/\%#=1}/ skip=/\%#=1{.\{-}}/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
 syn region rubyRegex matchgroup=rubyRegexDelimiter start=/\%#=1%r</  end=/\%#=1>/ skip=/\%#=1<.\{-}>/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
+
+syn cluster rubyRegexSpecial contains=
+      \ rubyRegexMetacharacter,rubyRegexClass,rubyRegexGroup,rubyRegexComment,
+      \ rubyRegexEscape,rubyRegexCapturedGroup,rubyRegexQuantifier
 
 syn match rubyRegexMetacharacter /\%#=1[.^$|]/ contained
 syn match rubyRegexQuantifier /\%#=1[*+?]/ contained
@@ -184,12 +187,8 @@ syn region rubyRegexClass matchgroup=rubyRegexMetacharacter start=/\%#=1\[\^\=/ 
 syn match rubyRegexPOSIXClass /\%#=1\[\^\=:\%(alnum\|alpha\|ascii\|blank\|cntrl\|digit\|graph\|lower\|print\|punct\|space\|upper\|word\|xdigit\):]/ contained
 syn region rubyRegexGroup matchgroup=rubyRegexMetacharacter start=/\%#=1(\%(?\%([:>|=!]\|<\%([=!]\|\h\w*>\)\|[imx]\+\)\)\=/ end=/\%#=1)/ transparent contained
 syn region rubyRegexComment start=/\%#=1(#/ end=/\%#=1)/ contained
-syn match rubyRegexEscape /\%#=1\\[dDsSwWAZbBG]/ contained
+syn match rubyRegexEscape /\%#=1\\[pP]{\h\w*}/ contained
 syn match rubyRegexCapturedGroup /\%#=1\\\%(\d\+\|g\%({\w\+}\|<\w\+>\)\)/ contained
-
-syn cluster rubyRegexSpecial contains=
-      \ rubyRegexMetacharacter,rubyRegexClass,rubyRegexGroup,rubyRegexComment,
-      \ rubyRegexEscape,rubyRegexCapturedGroup,rubyRegexQuantifier
 
 " Commands {{{3
 syn region rubyCommand matchgroup=rubyCommandDelimiter start=/\%#=1`/ end=/\%#=1`/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
