@@ -51,7 +51,7 @@ syn match rbsDeclarationOperator /\%#=1:/ contained nextgroup=@rbsTypes skipwhit
 
 syn match rbsGlobal /\%#=1\$\h\w*/ nextgroup=rbsDeclarationOperator skipwhite
 
-syn region rbsComment matchgroup=rbsCommentDelimiter start=/\%#=1#/ end=/\%#=1$/ oneline contains=rbsTodo
+syn region rbsComment start=/\%#=1#/ end=/\%#=1$/ contains=rbsTodo
 syn keyword rbsTodo BUG DEPRECATED FIXME NOTE OPTIMIZE TODO contained
 
 " Members {{{2
@@ -176,7 +176,7 @@ syn keyword rbsType self instance class bool boolish untyped nil top bot void co
 syn match rbsTypeOperator /\%#=1[|&]/ contained nextgroup=@rbsTypes skipwhite skipnl
 syn match rbsOptionalTypeOperator /\%#=1?/ contained nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
-syn region rbsRHSComment matchgroup=rbsCommentDelimiter start=/\%#=1#/ end=/\%#=1$/ contained oneline nextgroup=rbsTypeOperator,rbsRHSComment skipwhite skipnl
+syn region rbsRHSComment start=/\%#=1#/ end=/\%#=1$/ contained nextgroup=rbsTypeOperator,rbsRHSComment skipwhite skipnl
 
 " Synchronization {{{1
 syn sync fromstart
@@ -202,7 +202,6 @@ hi def link rbsConstant Identifier
 hi def link rbsDeclarationOperator Operator
 hi def link rbsGlobal Identifier
 hi def link rbsComment Comment
-hi def link rbsCommentDelimiter rbsComment
 hi def link rbsInstanceVariable Identifier
 hi def link rbsMethod Define
 hi def link rbsMethodName Typedef

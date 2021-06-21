@@ -19,10 +19,9 @@ syn include @ruby syntax/ruby.vim
 let b:current_syntax = "eruby"
 
 syn region erubyTag matchgroup=erubyDelimiter start=/\%#=1<%-\==\=/ end=/\%#=1-\=%>/ contains=@ruby
-syn region erubyComment matchgroup=erubyCommentDelimiter start=/\%#=1<%#/ end=/\%#=1%>/
+syn region erubyComment start=/\%#=1<%#/ end=/\%#=1%>/
 syn match erubyTagEscape /\%#=1<%%/
 
 hi def link erubyDelimiter PreProc
 hi def link erubyComment Comment
-hi def link erubyCommentDelimiter erubyComment
 hi def link erubyTagEscape erubyDelimiter

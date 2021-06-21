@@ -25,15 +25,15 @@ syn cluster rubyArguments contains=rubyNumber,rubyString,rubySymbol,rubyRegex,ru
 
 " Comments {{{2
 if get(b:, "is_eruby")
-  syn region rubyComment matchgroup=rubyCommentDelimiter start=/\%#=1#/ end=/\%#=1\%($\|\ze-\=%>\)/ oneline contains=rubyTodo
+  syn region rubyComment start=/\%#=1#/ end=/\%#=1\%($\|\ze-\=%>\)/ contains=rubyTodo
 else
-  syn region rubyComment matchgroup=rubyCommentDelimiter start=/\%#=1#/ end=/\%#=1$/ oneline contains=rubyTodo
+  syn match rubyComment /\%#=1#.*/ contains=rubyTodo
 endif
 
-syn region rubyComment matchgroup=rubyCommentDelimiter start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
+syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
 syn keyword rubyTodo BUG DEPRECATED FIXME NOTE WARNING OPTIMIZE TODO XXX TBD contained
 
-syn region rubyShebang start=/\%#=1\%^#!/ end=/\%#=1$/ oneline
+syn match rubyShebang /\%#=1\%^#!.*/
 
 " Operators {{{2
 syn match rubyUnaryOperator /\%#=1[+*!~&^]/
@@ -275,7 +275,7 @@ syn keyword rubyKeyword include extend nextgroup=rubyConstant skipwhite
 syn keyword rubyKeyword return next break yield redo retry nextgroup=rubyPostfixKeyword skipwhite
 
 syn keyword rubyKeyword alias nextgroup=rubyAlias
-syn region rubyAlias start=/\%#=1/ end=/\%#=1$/ contained oneline contains=rubySymbolAlias,rubyGlobalVariableAlias,rubyMethodAlias
+syn region rubyAlias start=/\%#=1/ end=/\%#=1$/ contained contains=rubySymbolAlias,rubyGlobalVariableAlias,rubyMethodAlias
 syn match rubySymbolAlias /\%#=1:[[:lower:]_]\w*[=?!]\=/ contained
 execute 'syn match rubySymbolAlias /\%#=1:'.g:ruby#syntax#overloadable_operators.'/ contained'
 syn match rubyGlobalVariableAlias /\%#=1\$\%(\h\w*\|-\w\)/ contained
@@ -289,7 +289,7 @@ syn keyword rubyKeyword in nextgroup=rubyHashKey skipwhite
 
 syn keyword rubyKeyword BEGIN END
 
-syn region rubyBlockParameters matchgroup=rubyDelimiter start=/\%#=1|/ end=/\%#=1|/ transparent oneline contained
+syn region rubyBlockParameters matchgroup=rubyDelimiter start=/\%#=1|/ end=/\%#=1|/ transparent contained
 " }}}2
 
 " Synchronization {{{1
@@ -297,7 +297,6 @@ syn sync fromstart
 
 " Highlighting {{{1
 hi def link rubyComment Comment
-hi def link rubyCommentDelimiter rubyComment
 hi def link rubyTodo Todo
 hi def link rubyShebang Special
 hi def link rubyOperator Operator
