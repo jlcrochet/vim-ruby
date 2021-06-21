@@ -266,7 +266,7 @@ syn match rubyMethodReceiverVariable /\%#=1[[:lower:]_]\w*/ contained
 syn match rubyMethodReceiverConstant /\%#=1\u\w*/ contained
 syn keyword rubyMethodReceiverSelf self contained
 syn match rubyMethodReceiverDot /\%#=1\./ contained
-syn match rubyMethodColon /\%#=1:/ contained nextgroup=rubyMethodDefinition skipwhite skipnl
+syn match rubyMethodColon /\%#=1:/ contained nextgroup=rubyMethodDefinition skipwhite
 syn match rubyMethodAssignmentOperator /\%#=1=/ contained
 
 " Miscellaneous {{{2
