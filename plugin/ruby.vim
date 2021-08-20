@@ -3,10 +3,6 @@
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-if get(g:, "ruby_fold")
-  let g:ruby_simple_indent = 0
-endif
-
 " vim-endwise
 if get(g:, "loaded_endwise")
   augroup endwise

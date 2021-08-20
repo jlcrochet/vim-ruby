@@ -6,59 +6,24 @@ In addition to regular Ruby files (`*.rb`), this plugin also supports eRuby (`*.
 
 ## Configuration
 
-NOTE: The following variables are read only when this plugin is first loaded, so in order for any changes to take effect, you must place them in `.vimrc` or some other file loaded on startup and then restart Vim.
-
 #### `g:ruby_simple_indent`
 
 The default indentation style used by this plugin is the one most commonly found in the Ruby community, which allows for "hanging" or "floating" indentation. Some examples:
 
-    x = if y
-          5
-        else
-          10
-        end
-
-    x = begin
-          h["foo"]
-        rescue KeyError
-          "Not Found"
-        end
-
-    x = case y
-        when :foo
-          5
-        when :bar
-          10
-        else
-          1
-        end
-
-    x = [:foo, :bar,
-         :baz, :qux]
-
-    x = 5 + 10 +
-        15 + 20 -
-        5 * 3
-
-    x = y.foo
-         .bar
-         .baz
-
-For those who prefer a more traditional indentation style or who desire slightly faster highlighting and indentation, set `g:ruby_simple_indent` to `1`. The above examples will now be indented thus:
-
-    x = if y
+``` ruby
+x = if y
       5
     else
       10
     end
 
-    x = begin
+x = begin
       h["foo"]
     rescue KeyError
       "Not Found"
     end
 
-    x = case y
+x = case y
     when :foo
       5
     when :bar
@@ -67,37 +32,74 @@ For those who prefer a more traditional indentation style or who desire slightly
       1
     end
 
-    x = [:foo, :bar,
-      :baz, :qux]
+x = [:foo, :bar,
+     :baz, :qux]
 
-    # OR
+x = 5 + 10 +
+    15 + 20 -
+    5 * 3
 
-    x = [
-      :foo, :bar,
-      :baz, :qux
-    ]
+x = y.foo
+     .bar
+     .baz
+```
 
-    x = 5 + 10 +
-      15 + 20 -
-      5 * 3
+For those who prefer a more traditional indentation style or who desire slightly faster highlighting and indentation, set `g:ruby_simple_indent` to `1`. The above examples will now be indented thus:
 
-    # OR
+``` ruby
+x = if y
+  5
+else
+  10
+end
 
-    x =
-      5 + 10 +
-      15 + 20 -
-      5 * 3
+x = begin
+  h["foo"]
+rescue KeyError
+  "Not Found"
+end
 
-    x = y.foo
-      .bar
-      .baz
+x = case y
+when :foo
+  5
+when :bar
+  10
+else
+  1
+end
 
-    # OR
+x = [:foo, :bar,
+  :baz, :qux]
 
-    x = y
-      .foo
-      .bar
-      .baz
+# OR
+
+x = [
+  :foo, :bar,
+  :baz, :qux
+]
+
+x = 5 + 10 +
+  15 + 20 -
+  5 * 3
+
+# OR
+
+x =
+  5 + 10 +
+  15 + 20 -
+  5 * 3
+
+x = y.foo
+  .bar
+  .baz
+
+# OR
+
+x = y
+  .foo
+  .bar
+  .baz
+```
 
 #### `g:ruby_fold`
 
@@ -111,18 +113,31 @@ A dictionary of filetype extensions is used to determine which filetype to use w
 
 The default recognized extensions are as follows:
 
-    .html => html
-    .js => javascript
-    .json => json
-    .yml => yaml
-    .txt => text
-    .md => markdown
+```
+.html => html
+.js => javascript
+.json => json
+.xml => xml
+.yml => yaml
+.txt => text
+.md => markdown
+```
 
 Each extension maps to the name of the filetype that you want to load for that extension.
 
-To add or overwrite entries in the dictionary, set `g:eruby_extensions` to a dictinoary with the entries that you want to inject. For example, the following would allow the plugin to recognize XML files and would case `*.js` files to be recognized as JSX instead of JavaScript:
+To add or overwrite entries in the dictionary, set `g:eruby_extensions` to a dictinoary with the entries that you want to inject. For example, the following would allow the plugin to recognize `*.js` files as JSX instead of JavaScript:
 
-    let g:eruby_extensions = { "xml": "xml", "js": "javascriptreact" }
+``` vim
+let g:eruby_extensions = { "js": "javascriptreact" }
+```
+
+If no subtype is specified in the file name itself (e.g., `foo.erb`), the value of `g:eruby_default_subtype` is used as the subtype.
+
+#### `g:eruby_default_subtype`
+
+Determines the default subtype to use for ERB files when no subtype is specified in the file name itself (e.g., `foo.erb`).
+
+The default value is `html`. Setting this to nothing (`let g:eruby_default_subtype = ""`) will cause no subtype to be used.
 
 ## Performance Comparison with [vim-ruby](https://github.com/vim-ruby/vim-ruby)
 
@@ -132,59 +147,67 @@ Comparisons made between the respective HEAD's of each plugin as of this writing
 
 Benchmark:
 
-    command! SyntaxBenchmark
-          \ syntime clear |
-          \ syntime on |
-          \ let last_lnum = line("$") |
-          \ for _ in range(15) |
-          \ goto |
-          \ while line(".") < last_lnum |
-          \ redraw |
-          \ execute "normal! \<c-d>" |
-          \ endwhile |
-          \ endfor |
-          \ syntime off |
-          \ syntime report |
-          \ unlet last_lnum
+``` vim
+command! SyntaxBenchmark
+      \ syntime clear |
+      \ syntime on |
+      \ let last_lnum = line("$") |
+      \ for _ in range(15) |
+      \ goto |
+      \ while line(".") < last_lnum |
+      \ redraw |
+      \ execute "normal! \<c-d>" |
+      \ endwhile |
+      \ endfor |
+      \ syntime off |
+      \ syntime report |
+      \ unlet last_lnum
+```
 
 The general idea is to go to the top of the file, redraw the viewport, page down (<kbd>Ctrl</kbd>+<kbd>D</kbd>), and repeat until the end of the file has been reached. This is done fifteen times, after which we get the cumulative results from `syntime report`. It's kinda rough, but it works.
 
 Results on my machine:
 
-    vim-ruby/vim-ruby:
+```
+vim-ruby/vim-ruby:
 
-    4.51s
+4.51s
 
-    jlcrochet/vim-ruby:
+jlcrochet/vim-ruby:
 
-    0.62s
-    0.47s  (g:ruby_simple_indent = 1)
+0.62s
+0.47s  (g:ruby_simple_indent = 1)
+```
 
 ### Indentation
 
 Benchmark:
 
-    command! IndentBenchmark
-          \ goto |
-          \ let start = reltime() |
-          \ call feedkeys("=G", "x") |
-          \ echo reltimestr(reltime(start)) |
-          \ unlet start
+``` vim
+command! IndentBenchmark
+      \ goto |
+      \ let start = reltime() |
+      \ call feedkeys("=G", "x") |
+      \ echo reltimestr(reltime(start)) |
+      \ unlet start
+```
 
 Again, a pretty rough test, but it gets the job done.
 
 Results:
 
-    vim-ruby/vim-ruby:
+```
+vim-ruby/vim-ruby:
 
-    10.13s
+10.13s
 
-    jlcrochet/vim-ruby (VimL):
+jlcrochet/vim-ruby (VimL):
 
-    1.39s
-    0.72s  (g:ruby_simple_indent = 1)
+1.39s
+0.72s  (g:ruby_simple_indent = 1)
 
-    jlcrochet/vim-ruby (Lua):
+jlcrochet/vim-ruby (Lua):
 
-    0.32s
-    0.16s  (g:ruby_simple_indent = 1)
+0.32s
+0.16s  (g:ruby_simple_indent = 1)
+```

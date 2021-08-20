@@ -14,6 +14,10 @@ setlocal comments=:#
 setlocal commentstring=#\ %s
 setlocal suffixesadd=.rb
 
+if get(g:, "ruby_fold")
+  let g:ruby_simple_indent = 0
+endif
+
 " matchit.vim
 let b:match_words = g:ruby#ftplugin#match_words
 let b:match_skip = 'S:^ruby\%(Keyword\|Define\|BlockControl\|DefineBlockControl\)$'

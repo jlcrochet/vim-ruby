@@ -7,6 +7,7 @@ let g:eruby#ftplugin#extensions = {
       \ "html": "html",
       \ "js": "javascript",
       \ "json": "json",
+      \ "xml": "xml",
       \ "yml": "yaml",
       \ "txt": "text",
       \ "md": "markdown"
@@ -17,3 +18,5 @@ if exists("g:eruby_extensions")
 endif
 
 lockvar g:eruby#ftplugin#extensions
+
+let g:eruby#ftplugin#default_subtype = get(g:, "eruby_default_subtype", "html")

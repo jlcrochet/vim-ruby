@@ -21,6 +21,8 @@ if len(s:parts) > 2
   endif
 elseif s:parts[-1] ==# "rhtml"
   let b:eruby_subtype = "html"
+else
+  let b:eruby_subtype = g:eruby#ftplugin#default_subtype
 endif
 
 unlet! s:parts s:sub_extension
