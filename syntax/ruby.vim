@@ -20,7 +20,7 @@ else
   syn cluster rubyTop contains=TOP
 endif
 
-syn cluster rubyPostfix contains=rubyOperator,rubyRangeOperator,rubyPostfixKeyword,rubyComma
+syn cluster rubyPostfix contains=rubyOperator,rubyRangeOperator,rubyNamespaceOperator,rubyPostfixKeyword,rubyComma
 syn cluster rubyArguments contains=rubyNumber,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip,rubyHashKey
 
 " Comments {{{2
@@ -78,7 +78,7 @@ syn match rubyInstanceVariable /\%#=1@\h\w*/ nextgroup=@rubyPostfix skipwhite
 syn match rubyClassVariable /\%#=1@@\h\w*/ nextgroup=@rubyPostfix skipwhite
 syn match rubyGlobalVariable /\%#=1\$\%(\h\w*\|[!@~&`'+=/\\,;:.<>_*$?]\|-\w\|0\|[1-9]\d*\)/ nextgroup=@rubyPostfix skipwhite
 
-syn match rubyConstant /\%#=1\u\w*/ nextgroup=@rubyPostfix,rubyNamespaceOperator skipwhite
+syn match rubyConstant /\%#=1\u\w*/ nextgroup=@rubyPostfix skipwhite
 syn match rubyVariableOrMethod /\%#=1[[:lower:]_]\w*[?!]\=/ nextgroup=@rubyPostfix,@rubyArguments skipwhite
 
 syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained contains=rubySymbolDelimiter nextgroup=rubyComma skipwhite
