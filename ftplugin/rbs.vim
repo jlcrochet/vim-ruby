@@ -16,4 +16,4 @@ setlocal suffixesadd=.rbs
 
 " matchit.vim
 let b:match_words = '\<\%(class\|module\|interface\)\>:\<end\>'
-let b:match_skip = 'S:^rbsDefine$'
+let b:match_skip = 's:^rbs\%(String\|Symbol\|Comment\)$'

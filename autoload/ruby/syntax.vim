@@ -20,20 +20,20 @@ const g:ruby#syntax#overloadable_operators = '\%('.join(s:overloadable_operators
 unlet s:overloadable_operators
 
 " Number patterns:
-function s:or(...)
+function s:choice(...)
   return '\%('.join(a:000, '\|').'\)'
 endfunction
 
 let s:exponent_suffix = '[eE][+-]\=\d\+\%(_\d\+\)*i\='
-let s:fraction = '\.\d\+\%(_\d\+\)*' . s:or(s:exponent_suffix, 'r\=i\=')
+let s:fraction = '\.\d\+\%(_\d\+\)*' . s:choice(s:exponent_suffix, 'r\=i\=')
 
-let s:nonzero_re = '[1-9]\d*\%(_\d\+\)*' . s:or(
+let s:nonzero_re = '[1-9]\d*\%(_\d\+\)*' . s:choice(
       \ s:exponent_suffix,
       \ s:fraction,
       \ 'r\=i\=',
       \ )
 
-let s:zero_re = '0' . s:or(
+let s:zero_re = '0' . s:choice(
       \ s:exponent_suffix,
       \ s:fraction,
       \ '\o\+\%(_\o\+\)*',
@@ -45,8 +45,8 @@ let s:zero_re = '0' . s:or(
 
 let s:syn_match_template = 'syn match rubyNumber /\%%#=1%s/ nextgroup=@rubyPostfix skipwhite'
 
-const g:ruby#syntax#numbers = printf(s:syn_match_template, s:nonzero_re) .. " | " .. printf(s:syn_match_template, s:zero_re)
+const g:ruby#syntax#numbers = printf(s:syn_match_template, s:nonzero_re) . " | " . printf(s:syn_match_template, s:zero_re)
 
-delfunction s:or
+delfunction s:choice
 
 unlet s:exponent_suffix s:fraction s:nonzero_re s:zero_re s:syn_match_template
