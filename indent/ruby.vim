@@ -10,12 +10,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentkeys=0),0],0},0.,0=..,o,O,!^F
-setlocal indentkeys+=0=begin,0=end,0=else,0=elsif,0=when,0=in,0=rescue,0=ensure
-setlocal indentkeys+=0==begin,0==end
-
-" There are a lot of common words that begin with `in`, so we don't
-" always want to dedent when the line begins with it.
-setlocal indentkeys+=0=ina,0=inb,0=inc,0=ind,0=ine,0=inf,0=ing,0=inh,0=ini,0=inj,0=ink,0=inl,0=inm,0=inn,0=ino,0=inp,0=inq,0=inr,0=ins,0=int,0=inu,0=inv,0=inw,0=inx,0=iny,0=inz,0=in0,0=in1,0=in2,0=in3,0=in4,0=in5,0=in6,0=in7,0=in8,0=in9,0=in_,0=in:
+let &indentkeys ..= "," .. g:ruby#indent#dedent_words
 
 if has("nvim-0.5")
   lua require "get_ruby_indent"
@@ -42,16 +37,16 @@ let s:pair_re = '\C\v<%((def|class|module)|(if|unless|case|while|until|for|begin
 let s:floating_re = '\C\v<%((begin|case|for|if|unless|until|while)|(else|elsif|ensure|in|rescue|when)|(class|def|module)|(do)|(end)):@!>|([([{])|([)\]}])|(\|)'
 
 if get(g:, "ruby_simple_indent")
-  let s:skip_keyword_expr = 'synID(line("."), col("."), 1) != g:ruby#indent#keyword'
+  let s:skip_keyword_expr = 'synID(line("."), col("."), 1) != g:ruby#highlighting#keyword'
 else
   function s:skip_keyword()
     let synid = synID(line("."), col("."), 1)
-    return synid != g:ruby#indent#keyword && synid != g:ruby#indent#define && synid != g:ruby#indent#block_control && synid != g:ruby#indent#define_block_control
+    return synid != g:ruby#highlighting#keyword && synid != g:ruby#highlighting#define && synid != g:ruby#highlighting#block_control && synid != g:ruby#highlighting#define_block_control
   endfunction
 
   function s:skip_pair()
     let synid = synID(line("."), col("."), 1)
-    return synid != g:ruby#indent#keyword && synid != g:ruby#indent#define && synid != g:ruby#indent#block_control && synid != g:ruby#indent#define_block_control && synid != g:ruby#indent#delimiter
+    return synid != g:ruby#highlighting#keyword && synid != g:ruby#highlighting#define && synid != g:ruby#highlighting#block_control && synid != g:ruby#highlighting#define_block_control && synid != g:ruby#highlighting#delimiter
   endfunction
 
   let s:skip_keyword_expr = function("s:skip_keyword")
@@ -61,7 +56,7 @@ endif
 function s:prev_non_multiline(lnum)
   let lnum = a:lnum
 
-  while get(g:ruby#indent#multiline_regions, synID(lnum, 1, 1))
+  while get(g:ruby#highlighting#multiline_regions, synID(lnum, 1, 1))
     let lnum -= 1
   endwhile
 
@@ -70,37 +65,37 @@ endfunction
 
 function s:is_hanging_operator(char, lnum, col)
   if a:char =~# '[%&+\-*/?:<=>^|~]'
-    return synID(a:lnum, a:col, 1) == g:ruby#indent#operator
+    return synID(a:lnum, a:col, 1) == g:ruby#highlighting#operator
   elseif a:char ==# '\'
-    return synID(a:lnum, a:col, 1) == g:ruby#indent#backslash
+    return synID(a:lnum, a:col, 1) == g:ruby#highlighting#backslash
   endif
 endfunction
 
 function s:is_hanging_keyword_operator(char, line, lnum, col)
   if a:char ==# "d"
     if a:line[a:col - 4 : a:col - 2] =~# '\<an$'
-      return synID(a:lnum, a:col - 2, 1) == g:ruby#indent#keyword
+      return synID(a:lnum, a:col - 2, 1) == g:ruby#highlighting#keyword
     endif
   elseif a:char ==# "r"
     if a:line[a:col - 3 : a:col - 2] =~# '\<o$'
-      return synID(a:lnum, a:col - 1, 1) == g:ruby#indent#keyword
+      return synID(a:lnum, a:col - 1, 1) == g:ruby#highlighting#keyword
     endif
   elseif a:char ==# "t"
     if a:line[a:col - 4 : a:col - 2] =~# '\<no$'
-      return synID(a:lnum, a:col - 2, 1) == g:ruby#indent#keyword
+      return synID(a:lnum, a:col - 2, 1) == g:ruby#highlighting#keyword
     endif
   endif
 endfunction
 
 function s:is_hanging_bracket(char, lnum, col)
   if a:char =~# '[([{|]'
-    return synID(a:lnum, a:col, 1) == g:ruby#indent#delimiter
+    return synID(a:lnum, a:col, 1) == g:ruby#highlighting#delimiter
   endif
 endfunction
 
 function s:is_hanging_comma(char, lnum, col)
   if a:char ==# ","
-    return synID(a:lnum, a:col, 1) == g:ruby#indent#comma
+    return synID(a:lnum, a:col, 1) == g:ruby#highlighting#comma
   endif
 endfunction
 
@@ -121,7 +116,7 @@ function s:get_last_char(lnum, line)
       return ["", -1]
     endif
 
-    if synID(a:lnum, found + 1, 1) == g:ruby#indent#comment
+    if synID(a:lnum, found + 1, 1) == g:ruby#highlighting#comment
       break
     endif
   endwhile
@@ -138,7 +133,7 @@ function s:find_floating_index(lnum, i, j)
 
   while col >= a:i + 1
     if p == 2  " begin case for if unless until while
-      if synID(a:lnum, col, 1) == g:ruby#indent#keyword
+      if synID(a:lnum, col, 1) == g:ruby#highlighting#keyword
         if pairs == 0
           return col - 1
         else
@@ -149,12 +144,12 @@ function s:find_floating_index(lnum, i, j)
       if pairs == 0
         let synid = synID(a:lnum, col, 1)
 
-        if synid == g:ruby#indent#keyword || synid == g:ruby#indent#block_control || synid == g:ruby#indent#define_block_control
+        if synid == g:ruby#highlighting#keyword || synid == g:ruby#highlighting#block_control || synid == g:ruby#highlighting#define_block_control
           return a:i
         endif
       endif
     elseif p == 4  " class def module
-      if synID(a:lnum, col, 1) == g:ruby#indent#define
+      if synID(a:lnum, col, 1) == g:ruby#highlighting#define
         if pairs == 0
           return a:i
         else
@@ -162,7 +157,7 @@ function s:find_floating_index(lnum, i, j)
         endif
       endif
     elseif p == 5  " do
-      if synID(a:lnum, col, 1) == g:ruby#indent#keyword
+      if synID(a:lnum, col, 1) == g:ruby#highlighting#keyword
         if pairs == 0
           return a:i
         else
@@ -172,11 +167,11 @@ function s:find_floating_index(lnum, i, j)
     elseif p == 6  " end
       let synid = synID(a:lnum, col, 1)
 
-      if synid == g:ruby#indent#keyword || synid == g:ruby#indent#define
+      if synid == g:ruby#highlighting#keyword || synid == g:ruby#highlighting#define
         let pairs -= 1
       endif
     elseif p == 7  " ( [ {
-      if synID(a:lnum, col, 1) == g:ruby#indent#delimiter
+      if synID(a:lnum, col, 1) == g:ruby#highlighting#delimiter
         if pairs == 0
           let [_, col2] = searchpos('\S', "z", a:lnum)
 
@@ -190,12 +185,12 @@ function s:find_floating_index(lnum, i, j)
         endif
       endif
     elseif p == 8  " ) ] }
-      if synID(a:lnum, col, 1) == g:ruby#indent#delimiter
+      if synID(a:lnum, col, 1) == g:ruby#highlighting#delimiter
         let pairs -= 1
       endif
     elseif p == 9  " |
       if pairs == 0
-        if synID(a:lnum, col, 1) == g:ruby#indent#delimiter
+        if synID(a:lnum, col, 1) == g:ruby#highlighting#delimiter
           return a:i
         endif
       endif
@@ -220,7 +215,7 @@ function s:find_msl(skip_commas, pairs)
   " It is part of a multiline region.
   let synid = synID(lnum, 1, 1)
 
-  if synid == g:ruby#indent#comment || get(g:ruby#indent#multiline_regions, synid)
+  if synid == g:ruby#highlighting#comment || get(g:ruby#highlighting#multiline_regions, synid)
     call cursor(prev_lnum, 1)
     return s:find_msl(a:skip_commas, v:null)
   endif
@@ -231,7 +226,7 @@ function s:find_msl(skip_commas, pairs)
   if line =~# '^=end\>'
     let lnum = search('^=begin\>', "bWz")
 
-    while synID(lnum, 1, 1) != g:ruby#indent#comment
+    while synID(lnum, 1, 1) != g:ruby#highlighting#comment
       let lnum = search('^=begin\>', "bWz")
     endwhile
 
@@ -258,7 +253,7 @@ function s:find_msl(skip_commas, pairs)
         return [lnum, col - 1, 0]
       endif
 
-      if synID(lnum, col, 1) == g:ruby#indent#define
+      if synID(lnum, col, 1) == g:ruby#highlighting#define
         return [lnum, col - 1, 0]
       endif
 
@@ -273,35 +268,35 @@ function s:find_msl(skip_commas, pairs)
       let synid = synID(lnum, col2, 1)
 
       if p == 2  " def class module
-        if synid == g:ruby#indent#define
+        if synid == g:ruby#highlighting#define
           let pairs += 1
         endif
       elseif p == 3  " if unless case while until for begin do
-        if synid == g:ruby#indent#keyword
+        if synid == g:ruby#highlighting#keyword
           let pairs += 1
         endif
       elseif p == 4  " else rescue ensure
         if pairs == 0
-          if synid == g:ruby#indent#block_control || synid == g:ruby#indent#define_block_control
+          if synid == g:ruby#highlighting#block_control || synid == g:ruby#highlighting#define_block_control
             let pairs += 1
           endif
         endif
       elseif p == 5  " elsif when in
         if pairs == 0
-          if synid == g:ruby#indent#keyword
+          if synid == g:ruby#highlighting#keyword
             let pairs += 1
           endif
         endif
       elseif p == 6  " end
-        if synid == g:ruby#indent#define || synid == g:ruby#indent#keyword
+        if synid == g:ruby#highlighting#define || synid == g:ruby#highlighting#keyword
           let pairs -= 1
         endif
       elseif p == 7  " ( [ {
-        if synid == g:ruby#indent#delimiter
+        if synid == g:ruby#highlighting#delimiter
           let pairs += 1
         endif
       elseif p == 8  " ) ] }
-        if synid == g:ruby#indent#delimiter
+        if synid == g:ruby#highlighting#delimiter
           let pairs -= 1
         endif
       endif
@@ -354,7 +349,7 @@ if get(g:, "ruby_simple_indent")
     " If the current line is inside of a multiline region, do nothing.
     let synid = synID(v:lnum, 1, 1)
 
-    if get(g:ruby#indent#multiline_regions, synid)
+    if get(g:ruby#highlighting#multiline_regions, synid)
       return -1
     endif
 
@@ -362,7 +357,7 @@ if get(g:, "ruby_simple_indent")
     "
     " If the current line is inside of a multiline comment, check to see
     " if it begins with `=end`.
-    if synid == g:ruby#indent#comment
+    if synid == g:ruby#highlighting#comment
       if getline(v:lnum) =~# '^\s*=end\>'
         return 0
       else
@@ -384,7 +379,7 @@ if get(g:, "ruby_simple_indent")
 
       let lnum = search('^=begin\>', "bWz")
 
-      while synID(lnum, 1, 1) != g:ruby#indent#comment
+      while synID(lnum, 1, 1) != g:ruby#highlighting#comment
         let lnum = search('^=begin\>', "bWz")
       endwhile
 
@@ -406,7 +401,7 @@ if get(g:, "ruby_simple_indent")
       " If the previous line begins in a multiline region, find the line
       " that began that region.
 
-      if get(g:ruby#indent#multiline_regions, synID(prev_lnum, 1, 1))
+      if get(g:ruby#highlighting#multiline_regions, synID(prev_lnum, 1, 1))
         let start_lnum = s:prev_non_multiline(prevnonblank(prev_lnum - 1))
         let start_line = getline(start_lnum)
       else
@@ -471,7 +466,7 @@ if get(g:, "ruby_simple_indent")
 
       let shift = 1
 
-      if last_char ==# "(" && synID(prev_lnum, last_idx + 1, 1) == g:ruby#indent#delimiter
+      if last_char ==# "(" && synID(prev_lnum, last_idx + 1, 1) == g:ruby#highlighting#delimiter
         let shift = 0
       endif
 
@@ -483,7 +478,7 @@ if get(g:, "ruby_simple_indent")
     elseif char ==# "]"
       let shift = 1
 
-      if last_char ==# "[" && synID(prev_lnum, last_idx + 1, 1) == g:ruby#indent#delimiter
+      if last_char ==# "[" && synID(prev_lnum, last_idx + 1, 1) == g:ruby#highlighting#delimiter
         let shift = 0
       endif
 
@@ -495,7 +490,7 @@ if get(g:, "ruby_simple_indent")
     elseif char ==# "}"
       let shift = 1
 
-      if (last_char ==# "{" || last_char ==# "|") && synID(prev_lnum, last_idx + 1, 1) == g:ruby#indent#delimiter
+      if (last_char ==# "{" || last_char ==# "|") && synID(prev_lnum, last_idx + 1, 1) == g:ruby#highlighting#delimiter
         let shift = 0
       endif
 
@@ -577,7 +572,7 @@ else
     " If the current line is inside of a multiline region, do nothing.
     let synid = synID(v:lnum, 1, 1)
 
-    if get(g:ruby#indent#multiline_regions, synid)
+    if get(g:ruby#highlighting#multiline_regions, synid)
       return -1
     endif
 
@@ -585,7 +580,7 @@ else
     "
     " If the current line is inside of a multiline comment, check to see
     " if it begins with `=end`.
-    if synid == g:ruby#indent#comment
+    if synid == g:ruby#highlighting#comment
       if getline(v:lnum) =~# '^\s*=end\>'
         return 0
       else
@@ -607,7 +602,7 @@ else
 
       let [lnum, col] = searchpos('^=begin\>', "bWz")
 
-      while synID(lnum, col, 1) != g:ruby#indent#comment
+      while synID(lnum, col, 1) != g:ruby#highlighting#comment
         let [lnum, col] = searchpos('^=begin\>', "bWz")
       endwhile
 
@@ -676,15 +671,15 @@ else
 
         while p
           if p == 2
-            if synID(prev_lnum, col, 1) == g:ruby#indent#delimiter
+            if synID(prev_lnum, col, 1) == g:ruby#highlighting#delimiter
               let pairs += 1
             endif
           elseif p == 3
-            if pairs > 0 && synID(prev_lnum, col, 1) == g:ruby#indent#delimiter
+            if pairs > 0 && synID(prev_lnum, col, 1) == g:ruby#highlighting#delimiter
               let pairs -= 1
             endif
           elseif p == 4
-            if pairs == 0 && synID(prev_lnum, col, 1) == g:ruby#indent#operator
+            if pairs == 0 && synID(prev_lnum, col, 1) == g:ruby#highlighting#operator
               let idx = match(prev_line, '\S', col)
 
               if idx != -1

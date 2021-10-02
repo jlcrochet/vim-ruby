@@ -3,43 +3,24 @@
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-" Caching important syntax ID's for use in indentation logic
-let s:names = [
-      \ "rubyString",
-      \ "rubyStringEscape",
-      \ "rubyStringInterpolationDelimiter",
-      \ "rubyStringParenthesisEscape",
-      \ "rubyStringSquareBracketEscape",
-      \ "rubyStringCurlyBraceEscape",
-      \ "rubyStringAngleBracketEscape",
-      \ "rubyArrayEscape",
-      \ "rubySymbol",
-      \ "rubyRegex",
-      \ "rubyRegexGroup",
-      \ "rubyRegexComment",
-      \ "rubyRegexEscape",
-      \ "rubyCommand",
-      \ "rubyHeredocLine",
-      \ "rubyHeredocLineRaw",
-      \ "rubyHeredocEnd"
-      \ ]
+" There are certain keywords that cause a dedent, but a dedent should
+" only occur if the word is not succeeded by a keyword character, in
+" order to avoid dedenting when a line has a variable named "end_col" or
+" something like that.
+let s:dedent_words = []
 
-let g:ruby#indent#multiline_regions = {}
+let s:chars = map(str2list("abcdefghijklmnopqrstuvwxyz0123456789_:"), "nr2char(v:val)")
 
-for s:name in s:names
-  let g:ruby#indent#multiline_regions[hlID(s:name)] = 1
+for s:word in ["begin", "end", "else", "elsif", "when", "in", "rescue", "ensure", "=begin", "=end"]
+  let str = "0=" .. s:word
+
+  call add(s:dedent_words, str)
+
+  for char in s:chars
+    call add(s:dedent_words, str .. char)
+  endfor
 endfor
 
-lockvar g:ruby#indent#multiline_regions
+const g:ruby#indent#dedent_words = join(s:dedent_words, ",")
 
-unlet s:name s:names
-
-const g:ruby#indent#keyword = hlID("rubyKeyword")
-const g:ruby#indent#define = hlID("rubyDefine")
-const g:ruby#indent#block_control = hlID("rubyBlockControl")
-const g:ruby#indent#define_block_control = hlID("rubyDefineBlockControl")
-const g:ruby#indent#operator = hlID("rubyOperator")
-const g:ruby#indent#delimiter = hlID("rubyDelimiter")
-const g:ruby#indent#comma = hlID("rubyComma")
-const g:ruby#indent#backslash = hlID("rubyBackslash")
-const g:ruby#indent#comment = hlID("rubyComment")
+unlet s:word s:chars s:dedent_words
