@@ -151,7 +151,7 @@ local function get_last_byte(lnum, line)
     elseif found == 1 then
       return nil, 1
     end
-  until syngroup_at(lnum, found) == "rubyComment"
+  until syngroup_at(lnum, found) == "rubyCommentDelimiter"
 
   for i = found - 1, 1, -1 do
     local b = line:byte(i)
@@ -1336,7 +1336,7 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
         line:byte(5) == 105 and  -- i
         line:byte(6) == 110 and  -- n
         (#line == 6 or is_boundary(line:byte(7))) and
-        syngroup_at(i, 1) == "rubyComment" then
+        syngroup_at(i, 1) == "rubyCommentDelimiter" then
         local prev_lnum = prevnonblank(i - 1)
         local prev_line = get_line(prev_lnum)
         return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
@@ -1480,7 +1480,7 @@ if vim.g.ruby_simple_indent == 1 then
           line:byte(5) == 105 and  -- i
           line:byte(6) == 110 and  -- n
           (#line == 6 or is_boundary(line:byte(7))) and
-          syngroup_at(i, 1) == "rubyComment" then
+          syngroup_at(i, 1) == "rubyCommentDelimiter" then
           prev_lnum = prevnonblank(i - 1)
           prev_line = get_line(prev_lnum)
 

@@ -25,12 +25,12 @@ syn cluster rubyArguments contains=rubyNumber,rubyString,rubySymbol,rubyRegex,ru
 
 " Comments {{{2
 if get(b:, "is_eruby")
-  syn region rubyComment start=/\%#=1#/ end=/\%#=1\%($\|\ze-\=%>\)/ contains=rubyTodo
+  syn region rubyComment matchgroup=rubyCommentDelimiter start=/\%#=1#/ end=/\%#=1\%($\|\ze-\=%>\)/ contains=rubyTodo containedin=ALLBUT,@rubyLiteralRegions
 else
-  syn match rubyComment /\%#=1#.*/ contains=rubyTodo
+  syn region rubyComment matchgroup=rubyCommentDelimiter start=/\%#=1#/ end=/\%#=1$/ contains=rubyTodo containedin=ALLBUT,@rubyLiteralRegions
 endif
 
-syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
+syn region rubyComment matchgroup=rubyCommentDelimiter start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo containedin=ALLBUT,@rubyLiteralRegions
 syn keyword rubyTodo BUG DEPRECATED FIXME NOTE WARNING OPTIMIZE TODO XXX TBD contained
 
 syn match rubyShebang /\%#=1\%^#!.*/
@@ -84,6 +84,15 @@ syn match rubyVariableOrMethod /\%#=1[[:lower:]_]\w*[?!]\=/ nextgroup=@rubyPostf
 syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained contains=rubySymbolDelimiter nextgroup=rubyComma skipwhite
 
 " Literals {{{2
+syn cluster rubyLiteralRegions contains=
+      \ rubyComment,rubyShebang,
+      \ rubyCharacter,
+      \ rubyString,rubyStringParentheses,rubyStringSquareBrackets,rubyStringCurlyBraces,rubyStringAngleBrackets,
+      \ rubySymbol,
+      \ rubyRegex,rubyRegexClass,rubyRegexGroup,rubyRegexComment,
+      \ rubyCommand,
+      \ rubyHeredocLine,rubyHeredocLineRaw
+
 syn keyword rubyNil nil nextgroup=@rubyPostfix skipwhite
 syn keyword rubyBoolean true false nextgroup=@rubyPostfix skipwhite
 syn keyword rubySelf self nextgroup=@rubyPostfix skipwhite
@@ -297,6 +306,7 @@ syn sync fromstart
 
 " Highlighting {{{1
 hi def link rubyComment Comment
+hi def link rubyCommentDelimiter rubyComment
 hi def link rubyTodo Todo
 hi def link rubyShebang Special
 hi def link rubyOperator Operator

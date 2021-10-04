@@ -41,5 +41,6 @@ const g:ruby#highlighting#delimiter = hlID("rubyDelimiter")
 const g:ruby#highlighting#comma = hlID("rubyComma")
 const g:ruby#highlighting#backslash = hlID("rubyBackslash")
 const g:ruby#highlighting#comment = hlID("rubyComment")
+const g:ruby#highlighting#comment_delimiter = hlID("rubyCommentDelimiter")
 
 unlet s:name s:names s:regions

@@ -175,8 +175,8 @@ vim-ruby/vim-ruby:
 
 jlcrochet/vim-ruby:
 
-0.62s
-0.47s  (g:ruby_simple_indent = 1)
+0.48s
+0.32s  (g:ruby_simple_indent = 1)
 ```
 
 ### Indentation
@@ -203,11 +203,11 @@ vim-ruby/vim-ruby:
 
 jlcrochet/vim-ruby (VimL):
 
-1.39s
-0.72s  (g:ruby_simple_indent = 1)
+1.37s
+0.70s  (g:ruby_simple_indent = 1)
 
 jlcrochet/vim-ruby (Lua):
 
-0.32s
-0.16s  (g:ruby_simple_indent = 1)
+0.30s
+0.14s  (g:ruby_simple_indent = 1)
 ```

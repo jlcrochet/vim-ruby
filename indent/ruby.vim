@@ -116,7 +116,7 @@ function s:get_last_char(lnum, line)
       return ["", -1]
     endif
 
-    if synID(a:lnum, found + 1, 1) == g:ruby#highlighting#comment
+    if synID(a:lnum, found + 1, 1) == g:ruby#highlighting#comment_delimiter
       break
     endif
   endwhile
@@ -226,7 +226,7 @@ function s:find_msl(skip_commas, pairs)
   if line =~# '^=end\>'
     let lnum = search('^=begin\>', "bWz")
 
-    while synID(lnum, 1, 1) != g:ruby#highlighting#comment
+    while synID(lnum, 1, 1) != g:ruby#highlighting#comment_delimiter
       let lnum = search('^=begin\>', "bWz")
     endwhile
 
@@ -379,7 +379,7 @@ if get(g:, "ruby_simple_indent")
 
       let lnum = search('^=begin\>', "bWz")
 
-      while synID(lnum, 1, 1) != g:ruby#highlighting#comment
+      while synID(lnum, 1, 1) != g:ruby#highlighting#comment_delimiter
         let lnum = search('^=begin\>', "bWz")
       endwhile
 
@@ -602,7 +602,7 @@ else
 
       let [lnum, col] = searchpos('^=begin\>', "bWz")
 
-      while synID(lnum, col, 1) != g:ruby#highlighting#comment
+      while synID(lnum, col, 1) != g:ruby#highlighting#comment_delimiter
         let [lnum, col] = searchpos('^=begin\>', "bWz")
       endwhile
 
