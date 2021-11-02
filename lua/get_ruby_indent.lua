@@ -19,12 +19,16 @@ local MULTILINE_REGIONS = {
   rubyStringSquareBracketEscape = true,
   rubyStringCurlyBraceEscape = true,
   rubyStringAngleBracketEscape = true,
+  rubyStringEnd = true,
   rubyArrayEscape = true,
   rubySymbol = true,
+  rubySymbolEnd = true,
   rubyRegex = true,
+  rubyRegexEnd = true,
   rubyRegexGroup = true,
   rubyRegexComment = true,
   rubyCommand = true,
+  rubyCommandEnd = true,
   rubyHeredocLine = true,
   rubyHeredocLineRaw = true,
   rubyHeredocEnd = true
@@ -151,7 +155,7 @@ local function get_last_byte(lnum, line)
     elseif found == 1 then
       return nil, 1
     end
-  until syngroup_at(lnum, found) == "rubyCommentDelimiter"
+  until syngroup_at(lnum, found) == "rubyCommentStart"
 
   for i = found - 1, 1, -1 do
     local b = line:byte(i)
@@ -1336,7 +1340,7 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
         line:byte(5) == 105 and  -- i
         line:byte(6) == 110 and  -- n
         (#line == 6 or is_boundary(line:byte(7))) and
-        syngroup_at(i, 1) == "rubyCommentDelimiter" then
+        syngroup_at(i, 1) == "rubyCommentStart" then
         local prev_lnum = prevnonblank(i - 1)
         local prev_line = get_line(prev_lnum)
         return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
@@ -1480,7 +1484,7 @@ if vim.g.ruby_simple_indent == 1 then
           line:byte(5) == 105 and  -- i
           line:byte(6) == 110 and  -- n
           (#line == 6 or is_boundary(line:byte(7))) and
-          syngroup_at(i, 1) == "rubyCommentDelimiter" then
+          syngroup_at(i, 1) == "rubyCommentStart" then
           prev_lnum = prevnonblank(i - 1)
           prev_line = get_line(prev_lnum)
 
@@ -1657,7 +1661,7 @@ if vim.g.ruby_simple_indent == 1 then
           i = i + 1
           b = line:byte(i)
 
-          if b == 100 then  -- e
+          if b == 100 then  -- d
             if i == #line or is_boundary(line:byte(i + 1)) then
               return 0
             end
@@ -2032,11 +2036,11 @@ else
 
           if b > 32 then
             if b == 40 or b == 91 or b == 123 then  -- ( [ {
-              if syngroup_at(prev_lnum, i) == "crystalDelimiter" then
+              if syngroup_at(prev_lnum, i) == "rubyDelimiter" then
                 pairs = pairs + 1
               end
             elseif b == 41 or b == 93 or b == 125 then  -- ) ] }
-              if pairs > 0 and syngroup_at(prev_lnum, i) == "crystalDelimiter" then
+              if pairs > 0 and syngroup_at(prev_lnum, i) == "rubyDelimiter" then
                 pairs = pairs - 1
               end
             elseif pairs == 0 and is_assignment_operator(b, i, prev_line, prev_lnum) then

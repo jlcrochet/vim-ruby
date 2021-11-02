@@ -51,7 +51,7 @@ syn match rbsDeclarationOperator /\%#=1:/ contained nextgroup=@rbsTypes skipwhit
 
 syn match rbsGlobal /\%#=1\$\h\w*/ nextgroup=rbsDeclarationOperator skipwhite
 
-syn region rbsComment start=/\%#=1#/ end=/\%#=1$/ contains=rbsTodo
+syn region rbsComment matchgroup=rbsCommentStart start=/\%#=1#/ end=/\%#=1$/ contains=rbsTodo
 syn keyword rbsTodo BUG DEPRECATED FIXME NOTE OPTIMIZE TODO contained
 
 " Members {{{2
@@ -106,55 +106,55 @@ syn match rbsAliasName /\%#=1\l\w*/ contained nextgroup=rbsDeclarationOperator,r
 
 syn cluster rbsLiterals contains=rbsString,rbsSymbol,rbsUnaryOperator,rbsInteger,rbsBoolean
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1"/ end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1"/ matchgroup=rbsStringEnd end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn match rbsStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}\%(\s\x\{1,6}\)*}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)/ contained
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1'/ end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1'/ matchgroup=rbsStringEnd end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn match rbsQuoteEscape /\%#=1\\[\\']/ contained
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%Q\=(/ end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=(/ matchgroup=rbsStringEnd end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsStringParentheses matchgroup=rbsString start=/\%#=1(/ end=/\%#=1)/ transparent contained contains=rbsStringParentheses,rbsStringEscape
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%Q\=\[/ end=/\%#=1]/ contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=\[/ matchgroup=rbsStringEnd end=/\%#=1]/ contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsStringSquareBrackets matchgroup=rbsString start=/\%#=1\[/ end=/\%#=1]/ transparent contained contains=rbsStringSquareBrackets,rbsStringEscape
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%Q\={/ end=/\%#=1}/ contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\={/ matchgroup=rbsStringEnd end=/\%#=1}/ contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsStringCurlyBraces matchgroup=rbsString start=/\%#=1{/ end=/\%#=1}/ transparent contained contains=rbsStringCurlyBraces,rbsStringEscape
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%Q\=</ end=/\%#=1>/ contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=</ matchgroup=rbsStringEnd end=/\%#=1>/ contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsStringAngleBrackets matchgroup=rbsString start=/\%#=1</ end=/\%#=1>/ transparent contained contains=rbsStringAngleBrackets,rbsStringEscape
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%Q\=\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%q(/ end=/\%#=1)/ contains=rbsRawStringParentheses,rbsParenthesisEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q(/ matchgroup=rbsStringEnd end=/\%#=1)/ contains=rbsRawStringParentheses,rbsParenthesisEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsRawStringParentheses matchgroup=rbsString start=/\%#=1(/ end=/\%#=1)/ transparent contained contains=rbsRawStringParentheses,rbsParenthesisEscape
 syn match rbsParenthesisEscape /\%#=1\\[\\()]/ contained
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%q\[/ end=/\%#=1]/ contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q\[/ matchgroup=rbsStringEnd end=/\%#=1]/ contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsRawStringSquareBrackets matchgroup=rbsString start=/\%#=1\[/ end=/\%#=1]/ transparent contained contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape
 syn match rbsSquareBracketEscape /\%#=1\\[\\\[\]]/ contained
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%q{/ end=/\%#=1}/ contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q{/ matchgroup=rbsStringEnd end=/\%#=1}/ contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsRawStringCurlyBraces matchgroup=rbsString start=/\%#=1{/ end=/\%#=1}/ transparent contained contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape
 syn match rbsCurlyBraceEscape /\%#=1\\[\\{}]/ contained
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%q</ end=/\%#=1>/ contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q</ matchgroup=rbsStringEnd end=/\%#=1>/ contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 syn region rbsRawStringAngleBrackets matchgroup=rbsString start=/\%#=1</ end=/\%#=1>/ transparent contained contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape
 syn match rbsAngleBracketEscape /\%#=1\\[\\<>]/ contained
 
-syn region rbsString matchgroup=rbsStringDelimiter start=/\%#=1%q\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
-syn match rbsSymbol /\%#=1:\h\w*[=?!]\=/ contained contains=rbsSymbolDelimiter nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
-syn match rbsSymbolDelimiter /\%#=1:/ contained
+syn match rbsSymbol /\%#=1:\h\w*[=?!]\=/ contained contains=rbsSymbolStart nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn match rbsSymbolStart /\%#=1:/ contained
 
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1:"/ end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1:'/ end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1:"/ matchgroup=rbsSymbolEnd end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1:'/ matchgroup=rbsSymbolEnd end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1%s(/  end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1%s\[/ end=/\%#=1]/ contained contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1%s{/  end=/\%#=1}/ contained contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1%s</  end=/\%#=1>/ contained contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s(/  matchgroup=rbsSymbolEnd end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\[/ matchgroup=rbsSymbolEnd end=/\%#=1]/ contained contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s{/  matchgroup=rbsSymbolEnd end=/\%#=1}/ contained contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s</  matchgroup=rbsSymbolEnd end=/\%#=1>/ contained contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
-syn region rbsSymbol matchgroup=rbsSymbolDelimiter start=/\%#=1%s\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
+syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsSymbolEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
 syn match rbsUnaryOperator /\%#=1[+-]/ contained nextgroup=rbsInteger
 syn match rbsInteger /\%#=1[1-9]\d*\%(_\d\+\)*/ contained nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
@@ -163,9 +163,9 @@ syn match rbsInteger /\%#=10\%([bB][01]\+\%(_[01]\+\)*\|[oO]\o\+\%(_\o\+\)*\|[dD
 syn keyword rbsBoolean true false contained nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
 syn region rbsRecord matchgroup=rbsDelimiter start=/\%#=1{/ end=/\%#=1}/ contained contains=rbsRecordName nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
-syn match rbsRecordName /\%#=1\h\w*[?!]\=:/ contained contains=rbsSymbolDelimiter nextgroup=@rbsTypes skipwhite
-syn region rbsRecordName matchgroup=rbsSymbolDelimiter start=/\%#=1"/ end=/\%#=1":/ contained contains=rbsStringEscape nextgroup=@rbsTypes skipwhite
-syn region rbsRecordName matchgroup=rbsSymbolDelimiter start=/\%#=1'/ end=/\%#=1':/ contained contains=rbsQuoteEscape nextgroup=@rbsTypes skipwhite
+syn match rbsRecordName /\%#=1\h\w*[?!]\=:/ contained contains=rbsSymbolStart nextgroup=@rbsTypes skipwhite
+syn region rbsRecordName matchgroup=rbsSymbolStart start=/\%#=1"/ matchgroup=rbsSymbolEnd end=/\%#=1":/ contained contains=rbsStringEscape nextgroup=@rbsTypes skipwhite
+syn region rbsRecordName matchgroup=rbsSymbolStart start=/\%#=1'/ matchgroup=rbsSymbolEnd end=/\%#=1':/ contained contains=rbsQuoteEscape nextgroup=@rbsTypes skipwhite
 
 syn region rbsTuple matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
@@ -176,7 +176,7 @@ syn keyword rbsType self instance class bool boolish untyped nil top bot void co
 syn match rbsTypeOperator /\%#=1[|&]/ contained nextgroup=@rbsTypes skipwhite skipnl
 syn match rbsOptionalTypeOperator /\%#=1?/ contained nextgroup=rbsTypeOperator,rbsRHSComment,rbsOptionalTypeOperator skipwhite skipnl
 
-syn region rbsRHSComment start=/\%#=1#/ end=/\%#=1$/ contained nextgroup=rbsTypeOperator,rbsRHSComment skipwhite skipnl
+syn region rbsRHSComment matchgroup=rbsCommentStart start=/\%#=1#/ end=/\%#=1$/ contained nextgroup=rbsTypeOperator,rbsRHSComment skipwhite skipnl
 
 " Synchronization {{{1
 syn sync fromstart
@@ -202,6 +202,7 @@ hi def link rbsConstant Identifier
 hi def link rbsDeclarationOperator Operator
 hi def link rbsGlobal Identifier
 hi def link rbsComment Comment
+hi def link rbsCommentDelimiter rbsComment
 hi def link rbsInstanceVariable Identifier
 hi def link rbsMethod Define
 hi def link rbsMethodName Typedef
@@ -225,7 +226,8 @@ hi def link rbsClassName Identifier
 hi def link rbsInterfaceName Identifier
 hi def link rbsSingleton Type
 hi def link rbsString String
-hi def link rbsStringDelimiter rbsString
+hi def link rbsStringStart rbsString
+hi def link rbsStringEnd rbsStringStart
 hi def link rbsStringEscape PreProc
 hi def link rbsQuoteEscape rbsStringEscape
 hi def link rbsParenthesisEscape rbsStringEscape
@@ -233,7 +235,8 @@ hi def link rbsSquareBracketEscape rbsStringEscape
 hi def link rbsCurlyBraceEscape rbsStringEscape
 hi def link rbsAngleBracketEscape rbsStringEscape
 hi def link rbsSymbol String
-hi def link rbsSymbolDelimiter rbsSymbol
+hi def link rbsSymbolStart rbsSymbol
+hi def link rbsSymbolEnd rbsSymbolStart
 hi def link rbsUnaryOperator Operator
 hi def link rbsInteger Number
 hi def link rbsBoolean Boolean

@@ -12,13 +12,17 @@ let s:names = [
       \ "rubyStringSquareBracketEscape",
       \ "rubyStringCurlyBraceEscape",
       \ "rubyStringAngleBracketEscape",
+      \ "rubyStringEnd",
       \ "rubyArrayEscape",
       \ "rubySymbol",
+      \ "rubySymbolEnd",
       \ "rubyRegex",
+      \ "rubyRegexEnd",
       \ "rubyRegexGroup",
       \ "rubyRegexComment",
       \ "rubyRegexEscape",
       \ "rubyCommand",
+      \ "rubyCommandEnd",
       \ "rubyHeredocLine",
       \ "rubyHeredocLineRaw",
       \ "rubyHeredocEnd"
@@ -41,6 +45,6 @@ const g:ruby#highlighting#delimiter = hlID("rubyDelimiter")
 const g:ruby#highlighting#comma = hlID("rubyComma")
 const g:ruby#highlighting#backslash = hlID("rubyBackslash")
 const g:ruby#highlighting#comment = hlID("rubyComment")
-const g:ruby#highlighting#comment_delimiter = hlID("rubyCommentDelimiter")
+const g:ruby#highlighting#comment_start = hlID("rubyCommentStart")
 
 unlet s:name s:names s:regions
