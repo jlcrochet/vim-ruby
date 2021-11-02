@@ -202,7 +202,7 @@ hi def link rbsConstant Identifier
 hi def link rbsDeclarationOperator Operator
 hi def link rbsGlobal Identifier
 hi def link rbsComment Comment
-hi def link rbsCommentDelimiter rbsComment
+hi def link rbsCommentStart rbsComment
 hi def link rbsInstanceVariable Identifier
 hi def link rbsMethod Define
 hi def link rbsMethodName Typedef
@@ -245,6 +245,7 @@ hi def link rbsType Type
 hi def link rbsTypeOperator Operator
 hi def link rbsOptionalTypeOperator rbsTypeOperator
 hi def link rbsRHSComment rbsComment
+hi def link rbsRHSCommentStart rbsRHSComment
 " }}}1
 
 " vim:fdm=marker
