@@ -33,7 +33,7 @@ function GetRBSIndent() abort
       let idx = stridx(prev_line, ":", first_idx + 4)
 
       while idx != -1
-        let synid = synID(prev_lnum, idx + 1, 0)
+        let synid = synID(prev_lnum, idx + 1, 1)
 
         if synid == g:rbs#indent#declaration_operator || synid == g:rbs#indent#method_declaration_operator
           return idx

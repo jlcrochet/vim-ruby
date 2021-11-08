@@ -56,7 +56,7 @@ endif
 function s:prev_non_multiline(lnum)
   let lnum = a:lnum
 
-  while get(g:ruby#highlighting#multiline_regions, synID(lnum, 1, 1))
+  while get(g:ruby#highlighting#multiline_regions, synID(lnum, 1, 0))
     let lnum -= 1
   endwhile
 
@@ -213,7 +213,7 @@ function s:find_msl(skip_commas, pairs)
   " This line is *not* the MSL if:
 
   " It is part of a multiline region.
-  let synid = synID(lnum, 1, 1)
+  let synid = synID(lnum, 1, 0)
 
   if synid == g:ruby#highlighting#comment || get(g:ruby#highlighting#multiline_regions, synid)
     call cursor(prev_lnum, 1)
@@ -347,7 +347,7 @@ if get(g:, "ruby_simple_indent")
   " Simple {{{
   function GetRubyIndent() abort
     " If the current line is inside of a multiline region, do nothing.
-    let synid = synID(v:lnum, 1, 1)
+    let synid = synID(v:lnum, 1, 0)
 
     if get(g:ruby#highlighting#multiline_regions, synid)
       return -1
@@ -401,7 +401,7 @@ if get(g:, "ruby_simple_indent")
       " If the previous line begins in a multiline region, find the line
       " that began that region.
 
-      if get(g:ruby#highlighting#multiline_regions, synID(prev_lnum, 1, 1))
+      if get(g:ruby#highlighting#multiline_regions, synID(prev_lnum, 1, 0))
         let start_lnum = s:prev_non_multiline(prevnonblank(prev_lnum - 1))
         let start_line = getline(start_lnum)
       else
@@ -570,7 +570,7 @@ else
   " Default {{{
   function GetRubyIndent() abort
     " If the current line is inside of a multiline region, do nothing.
-    let synid = synID(v:lnum, 1, 1)
+    let synid = synID(v:lnum, 1, 0)
 
     if get(g:ruby#highlighting#multiline_regions, synid)
       return -1
