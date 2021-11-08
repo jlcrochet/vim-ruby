@@ -174,7 +174,7 @@ syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1%i{/  matchgroup=ru
 syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1%i</  matchgroup=rubySymbolEnd end=/\%#=1>/ contains=rubyStringAngleBrackets,rubyArrayAngleBracketEscape nextgroup=@rubyPostfix skipwhite
 
 " Regular Expressions {{{3
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1\/\s\@!/ matchgroup=rubySymbolEnd end=/\%#=1\/[imx]*/ skip=/\%#=1\\\\\|\\\// oneline keepend contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1\/\s\@!/ matchgroup=rubyRegexEnd end=/\%#=1\/[imx]*/ skip=/\%#=1\\\\\|\\\// oneline keepend contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
 
 " NOTE: This is defined here in order to take precedence over /-style
 " regexes
