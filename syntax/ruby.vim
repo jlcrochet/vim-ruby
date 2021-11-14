@@ -7,10 +7,6 @@ if exists("b:current_syntax")
   finish
 endif
 
-if get(g:, "ruby_fold")
-  setlocal foldmethod=syntax
-endif
-
 " Syntax {{{1
 syn iskeyword @,48-57,_,?,!
 

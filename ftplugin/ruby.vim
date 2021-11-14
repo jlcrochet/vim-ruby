@@ -16,6 +16,7 @@ setlocal suffixesadd=.rb
 
 if get(g:, "ruby_fold")
   let g:ruby_simple_indent = 0
+  setlocal foldmethod=syntax
 endif
 
 " matchit.vim
