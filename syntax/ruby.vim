@@ -8,6 +8,7 @@ if exists("b:current_syntax")
 endif
 
 " Syntax {{{1
+syn sync fromstart
 syn iskeyword @,48-57,_,?,!
 
 if get(b:, "is_eruby")
@@ -20,9 +21,7 @@ syn cluster rubyPostfix contains=rubyOperator,rubyRangeOperator,rubyNamespaceOpe
 syn cluster rubyArguments contains=rubyNumber,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip,rubyHashKey
 
 " Comments {{{2
-syn cluster rubyNoComments contains=rubyComment,rubyShebang,@rubyLiteralRegions
-
-syn match rubyCommentStart /\%#=1#/ nextgroup=rubyComment containedin=ALLBUT,@rubyNoComments
+syn match rubyCommentStart /\%#=1#/ nextgroup=rubyComment
 
 if get(b:, "is_eruby")
   syn match rubyComment /\%#=1.\{-}\%($\|\ze-\=%>\)/ contained contains=rubyTodo
@@ -30,7 +29,7 @@ else
   syn match rubyComment /\%#=1.*/ contained contains=rubyTodo
 endif
 
-syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1^=begin\>.*/ matchgroup=rubyCommentEnd end=/\%#=1^=end\>.*/ contains=rubyTodo containedin=ALLBUT,@rubyNoComments
+syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1^=begin\>.*/ matchgroup=rubyCommentEnd end=/\%#=1^=end\>.*/ contains=rubyTodo
 syn keyword rubyTodo BUG DEPRECATED FIXME NOTE WARNING OPTIMIZE TODO XXX TBD contained
 
 syn match rubyShebang /\%#=1\%^#!.*/
@@ -84,14 +83,6 @@ syn match rubyVariableOrMethod /\%#=1[[:lower:]_]\w*[?!]\=/ nextgroup=@rubyPostf
 syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained contains=rubySymbolStart nextgroup=rubyComma skipwhite
 
 " Literals {{{2
-syn cluster rubyLiteralRegions contains=
-      \ rubyCharacter,
-      \ rubyString,rubyStringParentheses,rubyStringSquareBrackets,rubyStringCurlyBraces,rubyStringAngleBrackets,
-      \ rubySymbol,
-      \ rubyRegex,rubyRegexClass,rubyRegexGroup,rubyRegexComment,
-      \ rubyCommand,
-      \ rubyHeredocLine,rubyHeredocLineRaw
-
 syn keyword rubyNil nil nextgroup=@rubyPostfix skipwhite
 syn keyword rubyBoolean true false nextgroup=@rubyPostfix skipwhite
 syn keyword rubySelf self nextgroup=@rubyPostfix skipwhite
@@ -299,9 +290,6 @@ syn keyword rubyKeyword BEGIN END
 
 syn region rubyBlockParameters matchgroup=rubyDelimiter start=/\%#=1|/ end=/\%#=1|/ transparent contained
 " }}}2
-
-" Synchronization {{{1
-syn sync fromstart
 
 " Highlighting {{{1
 hi def link rubyComment Comment
