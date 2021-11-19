@@ -20,13 +20,17 @@ syn cluster rubyPostfix contains=rubyOperator,rubyRangeOperator,rubyNamespaceOpe
 syn cluster rubyArguments contains=rubyNumber,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip,rubyHashKey
 
 " Comments {{{2
+syn cluster rubyNoComments contains=rubyComment,rubyShebang,@rubyLiteralRegions
+
+syn match rubyCommentStart /\%#=1#/ nextgroup=rubyComment containedin=ALLBUT,@rubyNoComments
+
 if get(b:, "is_eruby")
-  syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1#/ end=/\%#=1\%($\|\ze-\=%>\)/ contains=rubyTodo containedin=ALLBUT,@rubyLiteralRegions
+  syn match rubyComment /\%#=1.\{-}\%($\|\ze-\=%>\)/ contained contains=rubyTodo
 else
-  syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1#/ end=/\%#=1$/ contains=rubyTodo containedin=ALLBUT,@rubyLiteralRegions
+  syn match rubyComment /\%#=1.*/ contained contains=rubyTodo
 endif
 
-syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1^=begin\>.*/ matchgroup=rubyCommentEnd end=/\%#=1^=end\>.*/ contains=rubyTodo containedin=ALLBUT,@rubyLiteralRegions
+syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1^=begin\>.*/ matchgroup=rubyCommentEnd end=/\%#=1^=end\>.*/ contains=rubyTodo containedin=ALLBUT,@rubyNoComments
 syn keyword rubyTodo BUG DEPRECATED FIXME NOTE WARNING OPTIMIZE TODO XXX TBD contained
 
 syn match rubyShebang /\%#=1\%^#!.*/
@@ -81,7 +85,6 @@ syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained contains=rubySymbolStart
 
 " Literals {{{2
 syn cluster rubyLiteralRegions contains=
-      \ rubyComment,rubyShebang,
       \ rubyCharacter,
       \ rubyString,rubyStringParentheses,rubyStringSquareBrackets,rubyStringCurlyBraces,rubyStringAngleBrackets,
       \ rubySymbol,
