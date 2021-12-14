@@ -185,7 +185,7 @@ syn match rubyRegexQuantifier /\%#=1{\d*,\=\d*}/ contained
 syn region rubyRegexClass matchgroup=rubyRegexMetacharacter start=/\%#=1\[\^\=/ end=/\%#=1]/ oneline transparent contained contains=rubyRegexEscape,rubyRegexPOSIXClass
 syn match rubyRegexPOSIXClass /\%#=1\[\^\=:\%(alnum\|alpha\|ascii\|blank\|cntrl\|digit\|graph\|lower\|print\|punct\|space\|upper\|word\|xdigit\):]/ contained
 syn region rubyRegexGroup matchgroup=rubyRegexMetacharacter start=/\%#=1(\%(?\%([:>|=!]\|<\%([=!]\|\h\w*>\)\|[imx]\+\)\)\=/ end=/\%#=1)/ transparent contained
-syn region rubyRegexComment start=/\%#=1(#/ end=/\%#=1)/ contained
+syn region rubyRegexComment start=/\%#=1(?#/ end=/\%#=1)/ contained
 syn match rubyRegexEscape /\%#=1\\[pP]{\h\w*}/ contained
 syn match rubyRegexCapturedGroup /\%#=1\\\%(\d\+\|g\%({\w\+}\|<\w\+>\)\)/ contained
 
