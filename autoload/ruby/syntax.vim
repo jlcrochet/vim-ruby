@@ -31,8 +31,6 @@ let s:syn_match_template = 'syn match rubyNumber /\%%#=1%s/ nextgroup=@rubyPostf
 
 const g:ruby#syntax#numbers = printf(s:syn_match_template, s:nonzero_re) . " | " . printf(s:syn_match_template, s:zero_re)
 
-unlet s:exponent_suffix s:fraction s:nonzero_re s:zero_re s:syn_match_template
-
 " This pattern matches all operators that can be used as methods; these
 " are also the only operators that can be referenced as symbols.
 const g:ruby#syntax#overloadable_operators = s:choice(
@@ -45,5 +43,35 @@ const g:ruby#syntax#overloadable_operators = s:choice(
       \ '\[]=\=',
       \ '![@=~]\='
       \ )
+
+" Onigmo groups and references are kinda complicated, so we're defining
+" the patterns here:
+let s:onigmo_group_modifier = "?" . s:choice(
+      \ '[imxdau]\+\%(-[imx]\+\)\=:\=',
+      \ '[:=!>~]',
+      \ '<[=!]',
+      \ '<\h\w*>',
+      \ "(" . s:choice('\d\+', '<\h\w*>', '''\h\w*''') . ")"
+      \ )
+
+const g:ruby#syntax#onigmo_group = printf(
+      \ 'syn region rubyOnigmoGroup matchgroup=rubyOnigmoMetaCharacter start=/\%%#=1(\%%(%s\)\=/ end=/\%%#=1)/ contained transparent',
+      \ s:onigmo_group_modifier
+      \ )
+
+let s:onigmo_reference = '\\' . s:choice(
+      \ '\d\+',
+      \ 'k' . s:choice('<\%(\h\w*\|-\=\d\+\)\%([+-]\d\+\)\=>', '''\%(\h\w*\|-\=\d\+\)\%([+-]\d\+\)\='''),
+      \ 'g' . s:choice('<\%(\h\w*\|-\=\d\+\)>', '''\%(\h\w*\|-\=\d\+\)''')
+      \ )
+
+const g:ruby#syntax#onigmo_reference = printf(
+      \ 'syn match rubyOnigmoReference /\%%#=1%s/ contained',
+      \ s:onigmo_reference
+      \ )
+
+unlet
+      \ s:exponent_suffix s:fraction s:nonzero_re s:zero_re s:syn_match_template
+      \ s:onigmo_group_modifier s:onigmo_reference
 
 delfunction s:choice

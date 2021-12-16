@@ -164,30 +164,39 @@ syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1%i{/  matchgroup=ru
 syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1%i</  matchgroup=rubySymbolEnd end=/\%#=1>/ contains=rubyStringAngleBrackets,rubyArrayAngleBracketEscape nextgroup=@rubyPostfix skipwhite
 
 " Regular Expressions {{{3
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1\/\s\@!/ matchgroup=rubyRegexEnd end=/\%#=1\/[imx]*/ skip=/\%#=1\\\\\|\\\// oneline keepend contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1\/\s\@!/ matchgroup=rubyRegexEnd end=/\%#=1\/[imx]*/ skip=/\%#=1\\\\\|\\\// oneline keepend contains=rubyStringEscape,rubyStringEscapeError,rubyStringInterpolation,@rubyOnigmo nextgroup=@rubyPostfix skipwhite
 
 " NOTE: This is defined here in order to take precedence over /-style
 " regexes
 syn match rubyOperator /\%#=1\/=/ contained
 
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r(/  matchgroup=rubyRegexEnd end=/\%#=1)/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r\[/ matchgroup=rubyRegexEnd end=/\%#=1]/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r{/  matchgroup=rubyRegexEnd end=/\%#=1}/ skip=/\%#=1{.\{-}}/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r</  matchgroup=rubyRegexEnd end=/\%#=1>/ skip=/\%#=1<.\{-}>/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r(/  matchgroup=rubyRegexEnd end=/\%#=1)[imx]*/ contains=rubyStringEscape,rubyStringEscapeError,rubyStringInterpolation,@rubyOnigmo nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r\[/ matchgroup=rubyRegexEnd end=/\%#=1][imx]*/ contains=rubyStringEscape,rubyStringEscapeError,rubyStringInterpolation,@rubyOnigmo nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r{/  matchgroup=rubyRegexEnd end=/\%#=1}[imx]*/ skip=/\%#=1{.\{-}}/ contains=rubyStringEscape,rubyStringEscapeError,rubyStringInterpolation,@rubyOnigmo nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r</  matchgroup=rubyRegexEnd end=/\%#=1>[imx]*/ skip=/\%#=1<.\{-}>/ contains=rubyStringEscape,rubyStringEscapeError,rubyStringInterpolation,@rubyOnigmo nextgroup=@rubyPostfix skipwhite
 
-syn cluster rubyRegexSpecial contains=
-      \ rubyRegexMetacharacter,rubyRegexClass,rubyRegexGroup,rubyRegexComment,
-      \ rubyRegexEscape,rubyRegexCapturedGroup,rubyRegexQuantifier
+" Onigmo {{{4
+syn cluster rubyOnigmo contains=
+      \ rubyOnigmoGroup,rubyOnigmoReference,rubyOnigmoEscape,rubyOnigmoMetaCharacter,rubyOnigmoQuantifier,rubyOnigmoComment,rubyOnigmoClass
 
-syn match rubyRegexMetacharacter /\%#=1[.^$|]/ contained
-syn match rubyRegexQuantifier /\%#=1[*+?]/ contained
-syn match rubyRegexQuantifier /\%#=1{\d*,\=\d*}/ contained
-syn region rubyRegexClass matchgroup=rubyRegexMetacharacter start=/\%#=1\[\^\=/ end=/\%#=1]/ oneline transparent contained contains=rubyRegexEscape,rubyRegexPOSIXClass
-syn match rubyRegexPOSIXClass /\%#=1\[\^\=:\%(alnum\|alpha\|ascii\|blank\|cntrl\|digit\|graph\|lower\|print\|punct\|space\|upper\|word\|xdigit\):]/ contained
-syn region rubyRegexGroup matchgroup=rubyRegexMetacharacter start=/\%#=1(\%(?\%([:>|=!]\|<\%([=!]\|\h\w*>\)\|[imx]\+\)\)\=/ end=/\%#=1)/ transparent contained
-syn region rubyRegexComment start=/\%#=1(?#/ end=/\%#=1)/ contained
-syn match rubyRegexEscape /\%#=1\\[pP]{\h\w*}/ contained
-syn match rubyRegexCapturedGroup /\%#=1\\\%(\d\+\|g\%({\w\+}\|<\w\+>\)\)/ contained
+execute g:ruby#syntax#onigmo_group
+execute g:ruby#syntax#onigmo_reference
+
+syn match rubyOnigmoEscape /\%#=1\\\%(p{\^\=\h\w*}\|P{\h\w*}\|x{\x\+}\)/ contained
+
+syn match rubyOnigmoMetaCharacter /\%#=1[.^$|]/ contained
+
+syn match rubyOnigmoQuantifier /\%#=1?[?+]\=/ contained
+syn match rubyOnigmoQuantifier /\%#=1\*[?+]\=/ contained
+syn match rubyOnigmoQuantifier /\%#=1+[?+]\=/ contained
+syn match rubyOnigmoQuantifier /\%#=1{\%(\d\+,\=\d*\|,\d\+\)}[?+]\=/ contained
+
+syn region rubyOnigmoComment start=/\%#=1(?#/ end=/\%#=1)/ contained contains=rubyRegexSlashEscape
+syn match rubyRegexSlashEscape /\%#=1\\\// contained
+
+syn region rubyOnigmoClass matchgroup=rubyOnigmoMetaCharacter start=/\%#=1\[\^\=/ end=/\%#=1\]/ contained transparent contains=rubyOnigmoEscape,rubyStringEscape,rubyStringEscapeError,rubyOnigmoPOSIXClass,rubyOnigmoClass,rubyOnigmoIntersection
+syn match rubyOnigmoPOSIXClass /\%#=1\[:\^\=\h\w*:\]/ contained
+syn match rubyOnigmoIntersection /\%#=1&&/ contained nextgroup=rubyOnigmoClass
 
 " Commands {{{3
 syn region rubyCommand matchgroup=rubyCommandStart start=/\%#=1`/ matchgroup=rubyCommandEnd end=/\%#=1`/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
@@ -337,12 +346,14 @@ hi def link rubySymbolEnd rubySymbolStart
 hi def link rubyRegex String
 hi def link rubyRegexStart rubyRegex
 hi def link rubyRegexEnd rubyRegexStart
-hi def link rubyRegexMetacharacter SpecialChar
-hi def link rubyRegexPOSIXClass rubyRegexMetacharacter
-hi def link rubyRegexComment Comment
-hi def link rubyRegexEscape rubyRegexMetacharacter
-hi def link rubyRegexCapturedGroup rubyRegexMetacharacter
-hi def link rubyRegexQuantifier rubyRegexMetacharacter
+hi def link rubyOnigmoMetaCharacter SpecialChar
+hi def link rubyOnigmoReference rubyOnigmoMetaCharacter
+hi def link rubyOnigmoEscape rubyOnigmoMetaCharacter
+hi def link rubyOnigmoQuantifier rubyOnigmoMetaCharacter
+hi def link rubyOnigmoComment rubyComment
+hi def link rubyOnigmoPOSIXClass rubyOnigmoMetaCharacter
+hi def link rubyOnigmoIntersection rubyOnigmoMetaCharacter
+hi def link rubyRegexSlashEscape rubyStringEscape
 hi def link rubyCommand String
 hi def link rubyCommandStart rubyCommand
 hi def link rubyCommandEnd rubyCommandStart
