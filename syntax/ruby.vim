@@ -186,9 +186,7 @@ syn match rubyOnigmoEscape /\%#=1\\\%(p{\^\=\h\w*}\|P{\h\w*}\|x{\x\+}\)/ contain
 
 syn match rubyOnigmoMetaCharacter /\%#=1[.^$|]/ contained
 
-syn match rubyOnigmoQuantifier /\%#=1?[?+]\=/ contained
-syn match rubyOnigmoQuantifier /\%#=1\*[?+]\=/ contained
-syn match rubyOnigmoQuantifier /\%#=1+[?+]\=/ contained
+syn match rubyOnigmoQuantifier /\%#=1[?*+][?+]\=/ contained
 syn match rubyOnigmoQuantifier /\%#=1{\%(\d\+,\=\d*\|,\d\+\)}[?+]\=/ contained
 
 syn region rubyOnigmoComment start=/\%#=1(?#/ end=/\%#=1)/ contained contains=rubyRegexSlashEscape
