@@ -46,6 +46,25 @@ const g:ruby#syntax#overloadable_operators = s:choice(
 
 " Onigmo groups and references are kinda complicated, so we're defining
 " the patterns here:
+let s:onigmo_escape = '\\' . s:choice(
+      \ '\d\+',
+      \ 'x\%(\x\x\|{\x\+}\)',
+      \ 'u\x\x\x\x',
+      \ 'c.',
+      \ 'C-.',
+      \ 'M-\%(\\C-.\|.\)',
+      \ 'p{\^\=\h\w*}',
+      \ 'P{\h\w*}',
+      \ 'k' . s:choice('<\%(\h\w*\|-\=\d\+\)\%([+-]\d\+\)\=>', '''\%(\h\w*\|-\=\d\+\)\%([+-]\d\+\)\='''),
+      \ 'g' . s:choice('<\%(\h\w*\|-\=\d\+\)>', '''\%(\h\w*\|-\=\d\+\)'''),
+      \ '.'
+      \ )
+
+const g:ruby#syntax#onigmo_escape = printf(
+      \ 'syn match rubyOnigmoEscape /\%%#=1%s/ contained',
+      \ s:onigmo_escape
+      \ )
+
 let s:onigmo_group_modifier = "?" . s:choice(
       \ '[imxdau]\+\%(-[imx]\+\)\=:\=',
       \ '[:=!>~]',
@@ -59,19 +78,8 @@ const g:ruby#syntax#onigmo_group = printf(
       \ s:onigmo_group_modifier
       \ )
 
-let s:onigmo_reference = '\\' . s:choice(
-      \ '\d\+',
-      \ 'k' . s:choice('<\%(\h\w*\|-\=\d\+\)\%([+-]\d\+\)\=>', '''\%(\h\w*\|-\=\d\+\)\%([+-]\d\+\)\='''),
-      \ 'g' . s:choice('<\%(\h\w*\|-\=\d\+\)>', '''\%(\h\w*\|-\=\d\+\)''')
-      \ )
-
-const g:ruby#syntax#onigmo_reference = printf(
-      \ 'syn match rubyOnigmoReference /\%%#=1%s/ contained',
-      \ s:onigmo_reference
-      \ )
-
 unlet
       \ s:exponent_suffix s:fraction s:nonzero_re s:zero_re s:syn_match_template
-      \ s:onigmo_group_modifier s:onigmo_reference
+      \ s:onigmo_escape s:onigmo_group_modifier
 
 delfunction s:choice
