@@ -7,7 +7,10 @@ if get(b:, "did_ftplugin")
   finish
 endif
 
+let s:undo_ftplugin = ""
+
 setlocal suffixesadd=.erb
+let b:undo_ftplugins = "setl suffixesadd<"
 
 " Determine the sub-filetype based on the file extension of the file
 " being opened.
@@ -45,6 +48,8 @@ else
   setlocal shiftwidth=2
   setlocal commentstring=<%#\ %s\ %>
   setlocal indentkeys==end,=else,=elsif
+
+  let b:undo_ftplugin .= " setl shiftwidth< commentstring< indentkeys<"
 endif
 
 let b:did_ftplugin = 1
