@@ -131,7 +131,7 @@ The default recognized extensions are as follows:
 
 Each extension maps to the name of the filetype that you want to load for that extension.
 
-To add or overwrite entries in the dictionary, set `g:eruby_extensions` to a dictinoary with the entries that you want to inject. For example, the following would allow the plugin to recognize `*.js` files as JSX instead of JavaScript:
+To add or overwrite entries in the dictionary, set `g:eruby_extensions` to a dictionary with the entries that you want to inject. For example, the following would allow the plugin to recognize `*.js` files as JSX instead of JavaScript:
 
 ``` vim
 let g:eruby_extensions = { "js": "javascriptreact" }

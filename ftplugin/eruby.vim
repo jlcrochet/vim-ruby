@@ -11,7 +11,7 @@ setlocal suffixesadd=.erb
 
 " Determine the sub-filetype based on the file extension of the file
 " being opened.
-let s:parts = split(expand("%:t"), '\.')
+let s:parts = split(expand("<afile>"), '\.')
 
 if len(s:parts) > 2
   let s:sub_extension = s:parts[-2]
@@ -29,7 +29,11 @@ unlet! s:parts s:sub_extension
 
 " If a subtype was found, load filetype settings for that subtype.
 if exists("b:eruby_subtype")
-  execute printf("runtime! ftplugin/%s.vim indent/%s.vim", b:eruby_subtype, b:eruby_subtype)
+  execute printf("runtime! ftplugin/%s.vim ftplugin/%s_*.vim ftplugin/%s/*.vim indent/%s.vim", b:eruby_subtype, b:eruby_subtype, b:eruby_subtype, b:eruby_subtype)
+
+  if has("nvim")
+    execute printf("runtime! ftplugin/%s.lua ftplugin/%s_*.lua ftplugin/%s/*.lua indent/%s.lua", b:eruby_subtype, b:eruby_subtype, b:eruby_subtype, b:eruby_subtype)
+  endif
 
   let b:eruby_subtype_indentexpr = &indentexpr
   let &indentkeys .= ",=end,=else,=elsif"
