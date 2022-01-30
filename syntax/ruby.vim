@@ -17,16 +17,16 @@ else
   syn cluster rubyTop contains=TOP
 endif
 
-syn cluster rubyPostfix contains=rubyOperator,rubyRangeOperator,rubyNamespaceOperator,rubyPostfixKeyword,rubyComma
+syn cluster rubyPostfix contains=rubyOperator,rubyMethodOperator,rubyRangeOperator,rubyNamespaceOperator,rubyPostfixKeyword,rubyComma
 syn cluster rubyArguments contains=rubyNumber,rubyString,rubySymbol,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip,rubyHashKey
 
 " Comments {{{2
-syn match rubyCommentStart /\%#=1#/ nextgroup=rubyComment
+syn match rubyCommentStart /\%#=1#/ nextgroup=rubyLineComment
 
 if get(b:, "is_eruby")
-  syn match rubyComment /\%#=1.\{-}\%($\|\ze-\=%>\)/ contained contains=rubyTodo
+  syn match rubyLineComment /\%#=1.\{-}\%($\|\ze-\=%>\)/ contained contains=rubyTodo
 else
-  syn match rubyComment /\%#=1.*/ contained contains=rubyTodo
+  syn match rubyLineComment /\%#=1.*/ contained contains=rubyTodo
 endif
 
 syn region rubyComment matchgroup=rubyCommentStart start=/\%#=1^=begin\>.*/ matchgroup=rubyCommentEnd end=/\%#=1^=end\>.*/ contains=rubyTodo
@@ -51,7 +51,7 @@ syn match rubyOperator /\%#=1&&\==\=/ contained
 syn match rubyOperator /\%#=1||\==\=/ contained
 syn match rubyOperator /\%#=1\^=\=/ contained
 
-syn match rubyOperator /\%#=1&\=\./ nextgroup=rubyVariableOrMethod,rubyOperatorMethod skipwhite
+syn match rubyMethodOperator /\%#=1&\=\./ nextgroup=rubyVariableOrMethod,rubyOperatorMethod skipwhite
 execute 'syn match rubyOperatorMethod /\%#=1'.g:ruby#syntax#overloadable_operators.'/ contained nextgroup=@rubyPostfix,@rubyArguments skipwhite'
 
 syn match rubyRangeOperator /\%#=1\.\.\.\=/ nextgroup=rubyOperator,rubyPostfixKeyword skipwhite
@@ -298,6 +298,7 @@ syn region rubyBlockParameters matchgroup=rubyDelimiter start=/\%#=1|/ end=/\%#=
 
 " Highlighting {{{1
 hi def link rubyComment Comment
+hi def link rubyLineComment rubyComment
 hi def link rubyCommentStart rubyComment
 hi def link rubyCommentEnd rubyCommentStart
 hi def link rubyTodo Todo
@@ -305,6 +306,8 @@ hi def link rubyShebang Special
 hi def link rubyOperator Operator
 hi def link rubyUnaryOperator rubyOperator
 hi def link rubyRangeOperator rubyOperator
+hi def link rubyMethodOperator rubyOperator
+hi def link rubyNamespaceOperator rubyOperator
 hi def link rubyDelimiter Delimiter
 hi def link rubyInstanceVariable Identifier
 hi def link rubyClassVariable Identifier
