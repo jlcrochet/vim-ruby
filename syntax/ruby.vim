@@ -80,7 +80,7 @@ syn match rubyGlobalVariable /\%#=1\$\%(\h\w*\|[!@~&`'+=/\\,;:.<>_*$?]\|-\w\|0\|
 syn match rubyConstant /\%#=1\u\w*/ nextgroup=@rubyPostfix skipwhite
 syn match rubyVariableOrMethod /\%#=1[[:lower:]_]\w*[?!]\=/ nextgroup=@rubyPostfix,@rubyArguments skipwhite
 
-syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained contains=rubySymbolStart nextgroup=rubyComma skipwhite
+syn match rubyHashKey /\%#=1\h\w*[?!]\=::\@!/ contained nextgroup=rubyComma skipwhite
 
 " Literals {{{2
 syn keyword rubyNil nil nextgroup=@rubyPostfix skipwhite
@@ -145,10 +145,8 @@ syn region rubyString matchgroup=rubyStringStart start=/\%#=1%w</ matchgroup=rub
 syn match rubyArrayAngleBracketEscape /\%#=1\\[<>[:space:]]/ contained
 
 " Symbols {{{3
-syn match rubySymbol /\%#=1:\h\w*[=?!]\=/ contains=rubySymbolStart nextgroup=@rubyPostfix skipwhite
-execute 'syn match rubySymbol /\%#=1:'.g:ruby#syntax#overloadable_operators.'/ contains=rubySymbolStart nextgroup=@rubyPostfix skipwhite'
-
-syn match rubySymbolStart /\%#=1:/ contained
+syn match rubySymbol /\%#=1:\h\w*[=?!]\=/ nextgroup=@rubyPostfix skipwhite
+execute 'syn match rubySymbol /\%#=1:'.g:ruby#syntax#overloadable_operators.'/ nextgroup=@rubyPostfix skipwhite'
 
 syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1:"/ matchgroup=rubySymbolEnd end=/\%#=1"/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
 syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1:'/ matchgroup=rubySymbolEnd end=/\%#=1'/ contains=rubyQuoteEscape nextgroup=@rubyPostfix skipwhite
