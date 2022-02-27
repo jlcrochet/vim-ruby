@@ -14,13 +14,16 @@ let s:fraction = '\.\d\+\%(_\d\+\)*' . s:choice(s:exponent_suffix, 'r\=i\=')
 let s:nonzero_re = '[1-9]\d*\%(_\d\+\)*' . s:choice(
       \ s:exponent_suffix,
       \ s:fraction,
-      \ 'r\=i\=',
-      \ )
+      \ 'ri\=',
+      \ 'i'
+      \ ) . '\='
 
 let s:zero_re = '0' . s:choice(
       \ s:exponent_suffix,
       \ s:fraction,
-      \ '\o\+\%(_\o\+\)*',
+      \ 'ri\=',
+      \ 'i',
+      \ '\o\+\%(_\o\+\)*r\=i\=',
       \ '[bB][01]\+\%(_[01]\+\)*r\=i\=',
       \ '[oO]\o\+\%(_\o\+\)*r\=i\=',
       \ '[dD]\d\+\%(_\d\+\)*r\=i\=',
