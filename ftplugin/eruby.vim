@@ -7,8 +7,6 @@ if get(b:, "did_ftplugin")
   finish
 endif
 
-let s:undo_ftplugin = ""
-
 setlocal suffixesadd=.erb
 let b:undo_ftplugins = "setl suffixesadd<"
 
