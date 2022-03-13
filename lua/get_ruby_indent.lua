@@ -5,10 +5,10 @@ local prevnonblank = fn.prevnonblank
 local shiftwidth = fn.shiftwidth
 local synID = fn.synID
 local synIDattr = fn.synIDattr
+local getline = fn.getline
 
 local api = vim.api
 local nvim_get_current_line = api.nvim_get_current_line
-local nvim_buf_get_lines = api.nvim_buf_get_lines
 
 -- Helpers {{{
 local MULTILINE_REGIONS = {
@@ -34,20 +34,8 @@ local MULTILINE_REGIONS = {
   rubyHeredocEnd = true
 }
 
-local SYNGROUPS = {}
-
 local function syngroup_at(lnum, col)
-  local synid = synID(lnum, col, false)
-  local syngroup = SYNGROUPS[synid]
-
-  if not syngroup then
-    local name = synIDattr(synid, "name")
-
-    SYNGROUPS[synid] = name
-    syngroup = name
-  end
-
-  return syngroup
+  return synIDattr(synID(lnum, col, false), "name")
 end
 
 local function is_boundary(b)
@@ -65,10 +53,6 @@ local function prev_non_multiline(lnum)
   end
 
   return lnum
-end
-
-local function get_line(lnum)
-  return nvim_buf_get_lines(0, lnum - 1, lnum, false)[1]
 end
 
 local function is_hanging_operator(byte, lnum, col)
@@ -1322,16 +1306,16 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
   local syngroup = syngroup_at(lnum, 1)
 
   if MULTILINE_REGIONS[syngroup] then
-    local prev_line = get_line(prev_lnum)
+    local prev_line = getline(prev_lnum)
     return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
   end
 
   -- It starts with `=end`.
-  local line = get_line(lnum)
+  local line = getline(lnum)
 
   if line:byte(1) == 61 and line:byte(2) == 101 and line:byte(3) == 110 and line:byte(4) == 100 and (#line == 4 or is_boundary(line:byte(5))) then  -- = e n d
     for i = lnum - 1, 1, -1 do
-      line = get_line(i)
+      line = getline(i)
 
       if line:byte(1) == 61 and  -- =
         line:byte(2) == 98 and  -- b
@@ -1342,7 +1326,7 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
         (#line == 6 or is_boundary(line:byte(7))) and
         syngroup_at(i, 1) == "rubyCommentStart" then
         local prev_lnum = prevnonblank(i - 1)
-        local prev_line = get_line(prev_lnum)
+        local prev_line = getline(prev_lnum)
         return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
       end
     end
@@ -1365,7 +1349,7 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
   local first_byte = line:byte(first_col)
 
   if first_byte == 46 and line:byte(first_col + 1) ~= 46 then  -- .
-    local prev_line = get_line(prev_lnum)
+    local prev_line = getline(prev_lnum)
     return get_msl(prev_lnum, prev_line, 1, #prev_line, skip_commas)
   end
 
@@ -1397,7 +1381,7 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
 
   if pairs < 0 then
     for i = prev_lnum, 1, -1 do
-      local line = get_line(i)
+      local line = getline(i)
 
       pairs = get_pairs(i, line, 1, #line, pairs)
 
@@ -1411,7 +1395,7 @@ local function get_msl(lnum, line, start, finish, skip_commas, pairs)
 
   -- The previous line ends with a comma, backslash, or hanging
   -- operator.
-  local prev_line = get_line(prev_lnum)
+  local prev_line = getline(prev_lnum)
   local last_byte, last_col = get_last_byte(prev_lnum, prev_line)
 
   if is_hanging_comma(last_byte, prev_lnum, last_col) then
@@ -1471,11 +1455,11 @@ if vim.g.ruby_simple_indent == 1 then
     end
 
     -- Retrieve indentation info for the previous line.
-    local prev_line = get_line(prev_lnum)
+    local prev_line = getline(prev_lnum)
 
     if prev_line:byte(1) == 61 and prev_line:byte(2) == 101 and prev_line:byte(3) == 110 and prev_line:byte(4) == 100 and (#prev_line == 4 or is_boundary(prev_line:byte(5))) then  -- = e n d
       for i = prev_lnum - 1, 1, -1 do
-        line = get_line(i)
+        line = getline(i)
 
         if line:byte(1) == 61 and  -- =
           line:byte(2) == 98 and  -- b
@@ -1486,7 +1470,7 @@ if vim.g.ruby_simple_indent == 1 then
           (#line == 6 or is_boundary(line:byte(7))) and
           syngroup_at(i, 1) == "rubyCommentStart" then
           prev_lnum = prevnonblank(i - 1)
-          prev_line = get_line(prev_lnum)
+          prev_line = getline(prev_lnum)
 
           break
         end
@@ -1512,7 +1496,7 @@ if vim.g.ruby_simple_indent == 1 then
 
       if MULTILINE_REGIONS[syngroup_at(prev_lnum, 1)] then
         start_lnum = prev_non_multiline(prevnonblank(prev_lnum - 1))
-        start_line = get_line(start_lnum)
+        start_line = getline(start_lnum)
       else
         start_lnum = prev_lnum
         start_line = prev_line
@@ -1537,7 +1521,7 @@ if vim.g.ruby_simple_indent == 1 then
         local lnum = prevnonblank(start_lnum - 1)
 
         if lnum ~= 0 then
-          local line = get_line(lnum)
+          local line = getline(lnum)
           local b, col = get_last_byte(lnum, line)
 
           if b then
@@ -1893,7 +1877,7 @@ else
     end
 
     -- Find the last non-comment byte of the previous line.
-    local prev_line = get_line(prev_lnum)
+    local prev_line = getline(prev_lnum)
     local last_byte, last_col = get_last_byte(prev_lnum, prev_line)
 
     -- Before we proceed, we need to determine which column we will use as
@@ -1935,7 +1919,7 @@ else
             goto exit
           end
 
-          prev_prev_line = get_line(prev_prev_lnum)
+          prev_prev_line = getline(prev_prev_lnum)
           prev_last_byte, prev_last_col = get_last_byte(prev_prev_lnum, prev_prev_line)
 
           -- If the next previous line also ends with a hanging operator or
@@ -2070,7 +2054,7 @@ else
             goto exit
           end
 
-          local prev_prev_line = get_line(prev_prev_lnum)
+          local prev_prev_line = getline(prev_prev_lnum)
           local prev_last_byte, prev_last_col = get_last_byte(prev_prev_lnum, prev_prev_line)
 
           if is_hanging_comma(prev_last_byte, prev_prev_lnum, prev_last_col) or is_hanging_bracket(prev_last_byte, prev_prev_lnum, prev_last_col) then
@@ -2122,7 +2106,7 @@ else
             goto exit
           end
 
-          prev_prev_line = get_line(prev_prev_lnum)
+          prev_prev_line = getline(prev_prev_lnum)
           prev_last_byte, prev_last_col = get_last_byte(prev_prev_lnum, prev_prev_line)
 
           -- If the next previous line also ends with a hanging operator keyword...
