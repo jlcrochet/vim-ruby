@@ -59,16 +59,16 @@ syn match rubyRangeOperator /\%#=1\.\.\.\=/ nextgroup=rubyOperator,rubyPostfixKe
 syn match rubyNamespaceOperator /\%#=1::/ nextgroup=rubyConstant
 
 " Delimiters {{{2
-syn match rubyDelimiter /\%#=1(/ nextgroup=rubyHashKey skipwhite skipnl
+syn match rubyDelimiter /\%#=1(/ nextgroup=rubyHashKey skipwhite skipempty
 syn match rubyDelimiter /\%#=1)/ nextgroup=@rubyPostfix skipwhite
 
 syn match rubyDelimiter /\%#=1\[/
 syn match rubyDelimiter /\%#=1]/ nextgroup=@rubyPostfix skipwhite
 
-syn match rubyDelimiter /\%#=1{/ nextgroup=rubyHashKey,rubyBlockParameters skipwhite skipnl
+syn match rubyDelimiter /\%#=1{/ nextgroup=rubyHashKey,rubyBlockParameters skipwhite skipempty
 syn match rubyDelimiter /\%#=1}/ nextgroup=@rubyPostfix skipwhite
 
-syn match rubyComma /\%#=1,/ contained nextgroup=rubyHashKey skipwhite skipnl
+syn match rubyComma /\%#=1,/ contained nextgroup=rubyHashKey skipwhite skipempty
 
 syn match rubyBackslash /\%#=1\\/
 
@@ -213,12 +213,12 @@ syn match rubyArrayEscape /\%#=1\\\s/ contained
 
 " Here Documents {{{3
 syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ transparent contains=rubyHeredocStartLine,rubyHeredocLine
-syn region rubyHeredocStartLine start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLine skipnl
-syn region rubyHeredocLine start=/\%#=1^/ end=/\%#=1$/ contained oneline contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=rubyHeredocLine skipnl
+syn region rubyHeredocStartLine start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLine skipempty
+syn region rubyHeredocLine start=/\%#=1^/ end=/\%#=1$/ contained oneline contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=rubyHeredocLine skipempty
 
 syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\='\z(\w\+\)'/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ transparent contains=rubyHeredocStartLineRaw,rubyHeredocLineRaw
-syn region rubyHeredocStartLineRaw start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLineRaw skipnl
-syn region rubyHeredocLineRaw start=/\%#=1^/ end=/\%#=1$/ contained oneline nextgroup=rubyHeredocLineRaw skipnl
+syn region rubyHeredocStartLineRaw start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLineRaw skipempty
+syn region rubyHeredocLineRaw start=/\%#=1^/ end=/\%#=1$/ contained oneline nextgroup=rubyHeredocLineRaw skipempty
 
 syn region rubyHeredocSkip matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\([`']\=\)\w\+\1/ end=/\%#=1\ze<<[-~]\=[`']\=\w/ transparent oneline nextgroup=rubyHeredoc,rubyHeredocSkip
 
