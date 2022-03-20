@@ -153,8 +153,8 @@ syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s</  matchgroup=rbsS
 syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsSymbolEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
 
 syn match rbsUnaryOperator /\%#=1[+-]/ contained nextgroup=rbsInteger
-syn match rbsInteger /\%#=1[1-9]\d*\%(_\d\+\)*/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsInteger /\%#=10\%([bB][01]\+\%(_[01]\+\)*\|[oO]\o\+\%(_\o\+\)*\|[dD]\d\+\%(_\d\+\)*\|\o*\%(_\o\+\)\+\)\=/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+syn match rbsInteger /\%#=1[1-9]\d*\%(_\d\+\)*\>/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+syn match rbsInteger /\%#=10\%([bB][01]\+\%(_[01]\+\)*\|[oO]\o\+\%(_\o\+\)*\|[dD]\d\+\%(_\d\+\)*\|\o*\%(_\o\+\)\+\)\=\>/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
 
 syn keyword rbsBoolean true false contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
 
