@@ -43,9 +43,10 @@ if exists("b:eruby_subtype")
 else
   let b:eruby_subtype_indentexpr = "-1"
 
-  setlocal shiftwidth=2
-  setlocal commentstring=<%#\ %s\ %>
-  setlocal indentkeys==end,=else,=elsif
+  setlocal
+        \ shiftwidth=2
+        \ commentstring=<%#\ %s\ %>
+        \ indentkeys==end,=else,=elsif
 
   let b:undo_ftplugin .= " setl shiftwidth< commentstring< indentkeys<"
 endif

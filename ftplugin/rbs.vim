@@ -7,10 +7,11 @@ if get(b:, 'did_ftplugin')
   finish
 endif
 
-setlocal shiftwidth=2
-setlocal comments=:#
-setlocal commentstring=#\ %s
-setlocal suffixesadd=.rbs
+setlocal
+      \ shiftwidth=2
+      \ comments=:#
+      \ commentstring=#\ %s
+      \ suffixesadd=.rbs
 
 if get(g:, "ruby_fold")
   setlocal foldmethod=syntax

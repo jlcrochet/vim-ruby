@@ -7,10 +7,11 @@ if get(b:, 'did_ftplugin')
   finish
 endif
 
-setlocal shiftwidth=2
-setlocal comments=:#
-setlocal commentstring=#\ %s
-setlocal suffixesadd=.rb
+setlocal
+      \ shiftwidth=2
+      \ comments=:#
+      \ commentstring=#\ %s
+      \ suffixesadd=.rb
 
 if get(g:, "ruby_fold")
   let g:ruby_simple_indent = 0
