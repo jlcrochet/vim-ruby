@@ -12,11 +12,11 @@ let b:did_indent = 1
 setlocal indentkeys=0),0],0},0.,0=..,0=&.,o,O,!^F
 let &indentkeys ..= "," .. g:ruby#indent#dedent_words
 
-" if has("nvim-0.5")
-"   lua require "get_ruby_indent"
-"   setlocal indentexpr=v:lua.get_ruby_indent()
-"   finish
-" endif
+if has("nvim-0.5")
+  lua require "get_ruby_indent"
+  setlocal indentexpr=v:lua.get_ruby_indent()
+  finish
+endif
 
 setlocal indentexpr=GetRubyIndent()
 
