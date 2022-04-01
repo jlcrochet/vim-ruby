@@ -244,9 +244,9 @@ else
   syn keyword rubyKeywordError and or then
 
   syn match rubyKeyword /\%#=1\<do\>/ nextgroup=rubyBlockParameters skipwhite contained containedin=rubyBlock
-  syn region rubyBlock start=/\%#=1\<do\>/ matchgroup=rubyKeyword end=/\%#=1\<\.\@1<!end\>/ contains=@rubyTop nextgroup=@rubyPostfix skipwhite
+  syn region rubyBlock start=/\%#=1\<do\>/ matchgroup=rubyKeyword end=/\%#=1\<\.\@1<!end\>/ contains=TOP nextgroup=@rubyPostfix skipwhite
 
-  syn region rubyBlock matchgroup=rubyKeyword start=/\%#=1\<\%(if\|unless\|case\|begin\|for\|while\|until\)\>/ end=/\%#=1\<\.\@1<!end\>/ contains=@rubyTop nextgroup=@rubyPostfix skipwhite
+  syn region rubyBlock matchgroup=rubyKeyword start=/\%#=1\<\%(if\|unless\|case\|begin\|for\|while\|until\)\>/ end=/\%#=1\<\.\@1<!end\>/ contains=TOP nextgroup=@rubyPostfix skipwhite
   syn keyword rubyKeyword else elsif when ensure contained containedin=rubyBlock
   syn keyword rubyKeyword in contained containedin=rubyBlock nextgroup=rubyHashKey skipwhite
   syn keyword rubyKeyword rescue contained containedin=rubyBlock nextgroup=rubyConstant,rubyOperator skipwhite
@@ -256,7 +256,7 @@ else
   syn match rubyDefine /\%#=1\<def\>/ nextgroup=rubyMethodDefinition,rubyMethodReceiver,rubyMethodSelf skipwhite
   syn match rubyDefine /\%#=1\<\%(class\|module\)\>/ nextgroup=rubyTypeDefinition skipwhite contained containedin=rubyDefineBlock
 
-  syn region rubyDefineBlock start=/\%#=1\<\%(def\|class\|module\)\>/ matchgroup=rubyDefine end=/\%#=1\<\.\@1<!end\>/ contains=@rubyTop fold
+  syn region rubyDefineBlock start=/\%#=1\<\%(def\|class\|module\)\>/ matchgroup=rubyDefine end=/\%#=1\<\.\@1<!end\>/ contains=TOP fold
   syn keyword rubyDefine else ensure contained containedin=rubyDefineBlock
   syn keyword rubyDefine rescue contained containedin=rubyDefineBlock nextgroup=rubyConstant,rubyOperator skipwhite
 
