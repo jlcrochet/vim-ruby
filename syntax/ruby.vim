@@ -213,15 +213,15 @@ syn region rubyCommand matchgroup=rubyCommandStart start=/\%#=1%x\z([~`!@#$%^&*_
 syn match rubyArrayEscape /\%#=1\\\s/ contained
 
 " Here Documents {{{3
-syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ transparent contains=rubyHeredocStartLine,rubyHeredocLine
-syn region rubyHeredocStartLine start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLine skipempty
-syn region rubyHeredocLine start=/\%#=1^/ end=/\%#=1$/ contained oneline contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=rubyHeredocLine skipempty
+syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\(`\=\)\z(\w\+\)\1/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ contains=rubyHeredocStartLine,rubyHeredocLine
+syn match rubyHeredocStartLine /\%#=1.*/ contained contains=@rubyPostfix,@rubyArguments nextgroup=rubyHeredocLine skipempty
+syn match rubyHeredocLine /\%#=1^.*/ contained contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=rubyHeredocLine skipempty
 
-syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\='\z(\w\+\)'/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ transparent contains=rubyHeredocStartLineRaw,rubyHeredocLineRaw
-syn region rubyHeredocStartLineRaw start=/\%#=1/ end=/\%#=1$/ contained oneline transparent keepend contains=TOP nextgroup=rubyHeredocLineRaw skipempty
-syn region rubyHeredocLineRaw start=/\%#=1^/ end=/\%#=1$/ contained oneline nextgroup=rubyHeredocLineRaw skipempty
+syn region rubyHeredoc matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\='\z(\w\+\)'/ matchgroup=rubyHeredocEnd end=/\%#=1^\s*\z1$/ contains=rubyHeredocStartLineRaw,rubyHeredocLineRaw
+syn match rubyHeredocStartLineRaw /\%#=1.*/ contained contains=@rubyPostfix,@rubyArguments nextgroup=rubyHeredocLineRaw skipempty
+syn match rubyHeredocLineRaw /\%#=1^.*/ contained nextgroup=rubyHeredocLineRaw skipempty
 
-syn region rubyHeredocSkip matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\([`']\=\)\w\+\1/ end=/\%#=1\ze<<[-~]\=[`']\=\w/ transparent oneline nextgroup=rubyHeredoc,rubyHeredocSkip
+syn region rubyHeredocSkip matchgroup=rubyHeredocStart start=/\%#=1<<[-~]\=\([`']\=\)\w\+\1/ end=/\%#=1\ze<<[-~]\=[`']\=\w/ contains=@rubyPostfix,@rubyArguments oneline nextgroup=rubyHeredoc,rubyHeredocSkip
 
 " Blocks {{{2
 if get(g:, "ruby_simple_indent") || get(b:, "is_eruby")
