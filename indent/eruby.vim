@@ -15,11 +15,11 @@ if exists("*GetErubyIndent")
   finish
 endif
 
-let s:start_re = '\<\%(if\|unless\|begin\|do\)\>'
-let s:middle_re = '\<\%(else\|elsif\)\>'
-let s:end_re = '\<end\>'
+let s:start_re = '[([{]\|\C\v<%(if|unless|begin|do)>'
+let s:middle_re = '\C\v<%(else|elsif)>'
+let s:end_re = '[)\]}]\|\C\<end\>'
 
-let s:skip_expr = 'synID(line("."), col("."), 0)->synIDattr("name") !=# "rubyKeyword"'
+let s:skip_expr = 'synID(line("."), col("."), 0)->synIDattr("name") !~# ''^ruby\%(Delimiter\|Keyword\)$'''
 
 function GetErubyIndent() abort
   call cursor(0, 1)
