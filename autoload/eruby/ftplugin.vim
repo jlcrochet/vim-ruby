@@ -3,14 +3,15 @@
 " Author: Jeffrey Crochet <jlcrochet@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-let g:eruby#ftplugin#extensions = {
-      \ "html": "html",
-      \ "js": "javascript",
-      \ "json": "json",
-      \ "xml": "xml",
-      \ "yml": "yaml",
-      \ "txt": "text",
-      \ "md": "markdown"
+let g:eruby#ftplugin#extensions = #{
+      \ html: "html",
+      \ turbo_stream: "html",
+      \ js: "javascript",
+      \ json: "json",
+      \ xml: "xml",
+      \ yml: "yaml",
+      \ txt: "text",
+      \ md: "markdown"
       \ }
 
 if exists("g:eruby_extensions")
