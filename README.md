@@ -119,6 +119,7 @@ The default recognized extensions are as follows:
 
 ```
 .html => html
+.turbo_stream => html
 .js => javascript
 .json => json
 .xml => xml
