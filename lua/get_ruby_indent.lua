@@ -209,6 +209,7 @@ end
 local function get_line_info(lnum)
   local line, first_byte, first_col = get_line_with_first_byte(lnum)
 
+  local last_col
   local pairs = 0
   local has_middle = false
   local brackets = 0
@@ -223,7 +224,9 @@ local function get_line_info(lnum)
   while i <= #line do
     local b = line:byte(i)
 
-    if b == 35 then  -- #
+    if b <= 32 then  -- %s
+      goto skip
+    elseif b == 35 then  -- #
       if syngroup_at(lnum, i) == "rubyLineComment" then
         break
       end
@@ -304,20 +307,14 @@ local function get_line_info(lnum)
       i = i + #word - 1
     end
 
+    last_col = i
+
+    ::skip::
+
     i = i + 1
   end
 
-  local last_byte, last_col
-
-  for j = i - 1, first_col, -1 do
-    local b = line:byte(j)
-
-    if b > 32 then  -- %S
-      last_byte = b
-      last_col = j
-      break
-    end
-  end
+  local last_byte = line:byte(last_col)
 
   return
     line,
@@ -332,6 +329,7 @@ end
 local function get_line_info_simple(lnum)
   local line, first_byte, first_col = get_line_with_first_byte(lnum)
 
+  local last_col
   local pairs = 0
   local has_middle = false
 
@@ -340,7 +338,9 @@ local function get_line_info_simple(lnum)
   while i <= #line do
     local b = line:byte(i)
 
-    if b == 35 then  -- #
+    if b <= 32 then  -- %s
+      goto skip
+    elseif b == 35 then  -- #
       if syngroup_at(lnum, i) == "rubyLineComment" then
         break
       end
@@ -390,20 +390,14 @@ local function get_line_info_simple(lnum)
       i = i + #word - 1
     end
 
+    last_col = i
+
+    ::skip::
+
     i = i + 1
   end
 
-  local last_byte, last_col
-
-  for j = i - 1, first_col, -1 do
-    local b = line:byte(j)
-
-    if b > 32 then  -- %S
-      last_byte = b
-      last_col = j
-      break
-    end
-  end
+  local last_byte = line:byte(last_col)
 
   return line, first_byte, first_col, last_byte, last_col, pairs, has_middle
 end
