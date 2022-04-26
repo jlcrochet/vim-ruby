@@ -1,6 +1,6 @@
 " Vim indent file
 " Language: Ruby
-" Author: Jeffrey Crochet <jlcrochet@pm.me>
+" Author: Jeffrey Crochet <jlcrochet@hey.com>
 " URL: https://github.com/jlcrochet/vim-ruby
 
 if get(b:, "did_indent")

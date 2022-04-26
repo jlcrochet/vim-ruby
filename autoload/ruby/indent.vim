@@ -1,6 +1,6 @@
 " Vim autoload file
 " Language: Ruby
-" Author: Jeffrey Crochet <jlcrochet@pm.me>
+" Author: Jeffrey Crochet <jlcrochet@hey.com>
 " URL: https://github.com/jlcrochet/vim-ruby
 
 " There are certain keywords that cause a dedent, but a dedent should
