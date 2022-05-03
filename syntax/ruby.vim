@@ -28,7 +28,7 @@ else
 endif
 
 syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
-syn match rubyTodo /\<\(BUG\|DEPRECATED\|FIXME\|NOTE\|WARNING\|OPTIMIZE\|TODO\|XXX\|TBD\)/ contained
+syn match rubyTodo /\%#=1\<\(BUG\|DEPRECATED\|FIXME\|NOTE\|WARNING\|OPTIMIZE\|TODO\|XXX\|TBD\)\u*/ contained
 
 syn match rubyShebang /\%#=1\%^#!.*/
 
