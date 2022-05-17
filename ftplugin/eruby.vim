@@ -7,6 +7,8 @@ if get(b:, "did_ftplugin")
   finish
 endif
 
+let b:did_ftplugin = 1
+
 setlocal suffixesadd=.erb
 let b:undo_ftplugins = "setl suffixesadd<"
 
@@ -50,5 +52,3 @@ else
 
   let b:undo_ftplugin .= " setl shiftwidth< commentstring< indentkeys<"
 endif
-
-let b:did_ftplugin = 1

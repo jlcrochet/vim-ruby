@@ -7,6 +7,8 @@ if get(b:, 'did_ftplugin')
   finish
 endif
 
+let b:did_ftplugin = 1
+
 setlocal
       \ shiftwidth=2
       \ comments=:#
@@ -22,5 +24,3 @@ let b:match_words = '\<\%(class\|module\|interface\)\>:\<end\>'
 let b:match_skip = 's:^rbs\%(String\|Symbol\|Comment\)$'
 
 let b:undo_ftplugin = "setl shiftwidth< comments< commentstring< suffixesadd<"
-
-let b:did_ftplugin = 1
