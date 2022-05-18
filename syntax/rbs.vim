@@ -202,7 +202,7 @@ hi def link rbsComment Comment
 hi def link rbsCommentStart rbsComment
 hi def link rbsInstanceVariable Identifier
 hi def link rbsMethod Define
-hi def link rbsMethodName Typedef
+hi def link rbsMethodName Function
 hi def link rbsMethodDeclarationOperator rbsDeclarationOperator
 hi def link rbsMethodUnaryOperator rbsUnaryOperator
 hi def link rbsMethodArrow Operator

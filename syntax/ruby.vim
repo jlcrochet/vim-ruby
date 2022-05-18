@@ -380,7 +380,7 @@ hi def link rubyPostfixKeyword rubyKeyword
 hi def link rubyDefine Define
 hi def link rubyDefineNoBlock rubyDefine
 hi def link rubyKeywordError Error
-hi def link rubyMethodDefinition Typedef
+hi def link rubyMethodDefinition Function
 hi def link rubyMethodReceiverConstant rubyConstant
 hi def link rubyMethodReceiverSelf rubySelf
 hi def link rubyMethodReceiverDot rubyOperator
