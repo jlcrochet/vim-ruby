@@ -15,12 +15,17 @@ setlocal
       \ commentstring=#\ %s
       \ suffixesadd=.rbs
 
+let b:undo_ftplugin = "setlocal shiftwidth< comments< commentstring< suffixesadd<"
+
 if get(g:, "ruby_fold")
   setlocal foldmethod=syntax
+  let b:undo_ftplugin ..= " foldmethod<"
 endif
 
 " matchit.vim
-let b:match_words = '\<\%(class\|module\|interface\)\>:\<end\>'
-let b:match_skip = 's:^rbs\%(String\|Symbol\|Comment\)$'
+if get(g:, "loaded_matchit")
+  let b:match_words = '\<\%(class\|module\|interface\)\>:\<end\>'
+  let b:match_skip = 's:^rbs\%(String\|Symbol\|Comment\)$'
 
-let b:undo_ftplugin = "setl shiftwidth< comments< commentstring< suffixesadd<"
+  let b:undo_ftplugin ..= " | unlet b:match_words b:match_skip"
+endif

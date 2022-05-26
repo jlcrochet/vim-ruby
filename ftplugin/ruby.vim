@@ -15,13 +15,18 @@ setlocal
       \ commentstring=#\ %s
       \ suffixesadd=.rb
 
+let b:undo_ftplugin = "setlocal shiftwidth< comments< commentstring< suffixesadd<"
+
 if get(g:, "ruby_fold")
   let g:ruby_simple_indent = 0
   setlocal foldmethod=syntax
+  let b:undo_ftplugin ..= " foldmethod<"
 endif
 
 " matchit.vim
-let b:match_words = '\<\%(def\|class\|module\|if\|unless\|case\|while\|until\|for\|begin\|do\)\:\@!\>:\<\%(else\|elsif\|when\|in\|rescue\|ensure\|break\|next\|yield\|return\|raise\|redo\|retry\)\:\@!\>:\<end\:\@!\>'
-let b:match_skip = 's:^ruby\%(String\|Symbol\|Regex\|Comment\|PostfixKeyword\|MethodDefinition\|VariableOrMethod\)$'
+if get(g:, "loaded_matchit")
+  let b:match_words = '\<\%(def\|class\|module\|if\|unless\|case\|while\|until\|for\|begin\|do\)\:\@!\>:\<\%(else\|elsif\|when\|in\|rescue\|ensure\|break\|next\|yield\|return\|raise\|redo\|retry\)\:\@!\>:\<end\:\@!\>'
+  let b:match_skip = 's:^ruby\%(String\|Symbol\|Regex\|Comment\|PostfixKeyword\|MethodDefinition\|VariableOrMethod\)$'
 
-let b:undo_ftplugin = "setl shiftwidth< comments< commentstring< suffixesadd<"
+  let b:undo_ftplugin ..= " | unlet b:match_words b:match_skip"
+endif

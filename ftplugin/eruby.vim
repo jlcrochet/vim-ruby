@@ -10,7 +10,7 @@ endif
 let b:did_ftplugin = 1
 
 setlocal suffixesadd=.erb
-let b:undo_ftplugins = "setl suffixesadd<"
+let b:undo_ftplugin = "setlocal suffixesadd<"
 
 " Determine the sub-filetype based on the file extension of the file
 " being opened.
@@ -50,5 +50,5 @@ else
         \ commentstring=<%#\ %s\ %>
         \ indentkeys==end,=else,=elsif
 
-  let b:undo_ftplugin .= " setl shiftwidth< commentstring< indentkeys<"
+  let b:undo_ftplugin ..= " shiftwidth< commentstring< indentkeys<"
 endif
