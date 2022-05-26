@@ -6,10 +6,10 @@ Contents					*vim-ruby-help*
 
 	Introduction				|vim-help-introduction|
 	Configuration				|vim-help-configuration|
-	  g:ruby_simple_indent			|g:ruby_simple_indent|
-	  g:ruby_fold				|g:ruby_fold|
-	  g:eruby_extensions			|g:eruby_extensions|
-	  g:eruby_default_subtype		|g:eruby_default_subtype|
+	  g:ruby_simple_indent			  |g:ruby_simple_indent|
+	  g:ruby_fold				  |g:ruby_fold|
+	  g:eruby_extensions			  |g:eruby_extensions|
+	  g:eruby_default_subtype		  |g:eruby_default_subtype|
 
 ==============================================================================
 Introduction					*vim-ruby-introduction*
