@@ -3,24 +3,19 @@
 " Author: Jeffrey Crochet <jlcrochet@hey.com>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-if exists("b:current_syntax")
-  finish
-endif
-
-if exists("b:eruby_subtype")
-  execute printf("runtime! syntax/%s.vim syntax/%s/*.vim", b:eruby_subtype, b:eruby_subtype)
-  unlet b:current_syntax
-endif
-
 let b:is_eruby = 1
+
+unlet! b:current_syntax
 
 syn include @ruby syntax/ruby.vim
 
 let b:current_syntax = "eruby"
 
-syn region erubyTag matchgroup=erubyDelimiter start=/\%#=1<%-\==\=/ end=/\%#=1-\=%>/ contains=@ruby containedin=ALLBUT,erubyTag,erubyComment,erubyTagEscape,@ruby
-syn region erubyComment matchgroup=erubyCommentStart start=/\%#=1<%#/ matchgroup=erubyCommentEnd end=/\%#=1%>/ containedin=ALLBUT,erubyTag,erubyComment,erubyTagEscape,@ruby
-syn match erubyTagEscape /\%#=1<%%/ containedin=ALLBUT,erubyTag,erubyComment,erubyTagEscape,@ruby
+syn cluster eruby contains=erubyTag,erubyComment,erubyTagEscape
+
+syn region erubyTag matchgroup=erubyDelimiter start=/\%#=1<%-\==\=/ end=/\%#=1-\=%>/ contains=@ruby containedin=ALLBUT,@ruby,@eruby
+syn region erubyComment matchgroup=erubyCommentStart start=/\%#=1<%#/ matchgroup=erubyCommentEnd end=/\%#=1%>/ containedin=ALLBUT,@ruby,@eruby
+syn match erubyTagEscape /\%#=1<%%/ containedin=ALLBUT,@ruby,@eruby
 
 hi def link erubyDelimiter PreProc
 hi def link erubyComment Comment

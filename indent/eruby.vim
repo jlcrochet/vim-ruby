@@ -3,13 +3,13 @@
 " Author: Jeffrey Crochet <jlcrochet@hey.com>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-if get(b:, "did_indent")
-  finish
-endif
-
 let b:did_indent = 1
 
-setlocal indentexpr=GetErubyIndent()
+let b:eruby_subtype_indentexpr = &indentexpr
+
+setlocal
+      \ indentexpr=GetErubyIndent()
+      \ indentkeys+==end,=else,=elsif
 
 if exists("*GetErubyIndent")
   finish
