@@ -22,15 +22,14 @@ syn cluster rubyArguments contains=rubyNumber,rubyString,rubyStringArray,rubyCha
 
 " Comments {{{2
 if get(b:, "is_eruby")
-  syn match rubyLineComment /\%#=1#.\{-}\ze\%(-\=%>\)\=/ contained contains=rubyTodo
+  syn match rubyLineComment /\%#=1#.\{-}\ze\%(-\=%>\)\=/ contains=rubyTodo
 else
   syn match rubyLineComment /\%#=1#.*/ contains=rubyTodo
+  syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
+  syn match rubyShebang /\%#=1\%^#!.*/
 endif
 
-syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
 syn match rubyTodo /\%#=1\<\(BUG\|DEPRECATED\|FIXME\|NOTE\|WARNING\|OPTIMIZE\|TODO\|XXX\|TBD\)\w*/ contained
-
-syn match rubyShebang /\%#=1\%^#!.*/
 
 " Operators {{{2
 syn match rubyUnaryOperator /\%#=1[+*!~&^]/
@@ -238,8 +237,6 @@ if get(g:, "ruby_simple_indent") || get(b:, "is_eruby")
 
   syn keyword rubyKeyword def nextgroup=rubyMethodDefinition,rubyMethodReceiver,rubyMethodSelf skipwhite
   syn keyword rubyKeyword class module nextgroup=rubyTypeDefinition skipwhite
-
-  syn keyword rubyKeyword public private protected nextgroup=rubySymbol skipwhite
 else
   " NOTE: When definition blocks are highlighted, the following keywords
   " have to be matched with :syn-match instead of :syn-keyword to
@@ -267,8 +264,6 @@ else
 
   " This is to handle "endless" definitions:
   syn region rubyDefineLine matchgroup=rubyDefineNoBlock start=/\%#=1\<def\>/ matchgroup=rubyMethodAssignmentOperator end=/\%#=1=/ skip=/\%#=1\%((.*)\|=\%([>~]\|==\=\)\|!=\|\[\]=\|[[:lower:]_]\w*=\=\)/ oneline contains=rubyMethodDefinition
-
-  syn keyword rubyDefine public private protected nextgroup=rubyDefineBlock,rubyDefineLine,rubySymbol skipwhite
 endif
 
 syn match rubyTypeDefinition /\%#=1\u\w*/ contained nextgroup=rubyTypeNamespace,rubyInheritanceOperator skipwhite
@@ -288,7 +283,6 @@ syn match rubyMethodAssignmentOperator /\%#=1=/ contained
 
 " Miscellaneous {{{2
 syn keyword rubyKeyword not undef
-syn keyword rubyKeyword include extend nextgroup=rubyConstant skipwhite
 syn keyword rubyKeyword return next break yield redo retry nextgroup=rubyPostfixKeyword skipwhite
 
 syn keyword rubyKeyword alias nextgroup=rubyAlias
@@ -304,8 +298,6 @@ syn match rubyMethodAlias /\%#=1\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=
 syn keyword rubyPostfixKeyword and or then if unless while until contained
 syn keyword rubyPostfixKeyword rescue contained nextgroup=rubyHashKey,rubyOperator skipwhite skipempty
 syn keyword rubyPostfixKeyword in contained nextgroup=rubyHashKey skipwhite
-
-syn keyword rubyKeyword require require_relative nextgroup=rubyString skipwhite
 
 syn keyword rubyKeyword BEGIN END
 
