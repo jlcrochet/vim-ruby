@@ -29,7 +29,7 @@ else
   syn match rubyShebang /\%#=1\%^#!.*/
 endif
 
-syn match rubyTodo /\%#=1\<\(BUG\|DEPRECATED\|FIXME\|NOTE\|WARNING\|OPTIMIZE\|TODO\|XXX\|TBD\)\w*/ contained
+syn match rubyTodo /\%#=1\<\(BUG\|DEPRECATED\|FIXME\|NOTE\|WARNING\|OPTIMIZE\|TODO\|XXX\|TBD\):\=/ contained
 
 " Operators {{{2
 syn match rubyUnaryOperator /\%#=1[+*!~&^]/
