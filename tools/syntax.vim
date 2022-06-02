@@ -4,14 +4,14 @@ endfunction
 
 " Number patterns:
 let s:exponent_suffix = '[eE][+-]\=\d\+\%(_\d\+\)*i\='
-let s:fraction = '\.\d\+\%(_\d\+\)*'..s:choice(s:exponent_suffix, 'r\=i\=')
+let s:fraction = '\.\d\+\%(_\d\+\)*'..s:choice(s:exponent_suffix, 'ri\=', 'i')..'\='
 
 let s:nonzero_re = '[1-9]\d*\%(_\d\+\)*'..s:choice(
       \ s:exponent_suffix,
       \ s:fraction,
       \ 'ri\=',
       \ 'i'
-      \ )..'\='
+      \ )..'\=\>'
 
 let s:zero_re = '0'..s:choice(
       \ s:exponent_suffix,
@@ -23,7 +23,7 @@ let s:zero_re = '0'..s:choice(
       \ '[oO]\o\+\%(_\o\+\)*r\=i\=',
       \ '[dD]\d\+\%(_\d\+\)*r\=i\=',
       \ '[xX]\x\+\%(_\x\+\)*r\=i\='
-      \ )..'\='
+      \ )..'\=\>'
 
 " This pattern matches all operators that can be used as methods; these
 " are also the only operators that can be referenced as symbols.
