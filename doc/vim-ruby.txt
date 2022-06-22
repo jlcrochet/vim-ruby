@@ -7,7 +7,6 @@ Contents					*vim-ruby-help*
 	Introduction				|vim-ruby-introduction|
 	Configuration				|vim-ruby-configuration|
 	  g:ruby_simple_indent			  |g:ruby_simple_indent|
-	  g:ruby_fold				  |g:ruby_fold|
 	  g:eruby_extensions			  |g:eruby_extensions|
 	  g:eruby_default_subtype		  |g:eruby_default_subtype|
 
@@ -128,20 +127,6 @@ above examples will now be indented thus:
 	  .bar
 	  .baz
 <
-
-------------------------------------------------------------------------------
-g:ruby_fold					*g:ruby_fold*
-
-Values:
-	`0`: No folding
-	`1`: Folding
-
-Default: `0`
-
-If `1`, definition blocks (`module`, `class`, `def`) will be folded.
-
-NOTE: If this is set, |g:ruby_simple_indent| will be disabled, since floating
-blocks have to be matched in order for folding to work properly.
 
 ------------------------------------------------------------------------------
 g:eruby_extensions				*g:eruby_extensions*

@@ -105,12 +105,6 @@ x = y
   .baz
 ```
 
-#### `g:ruby_fold`
-
-If `1`, definition blocks (`module`, `class`, `def`) will be folded.
-
-NOTE: If this is set, `g:ruby_simple_indent` will be disabled, since floating blocks have to be matched in order for folding to work properly.
-
 #### `g:eruby_extensions`
 
 A dictionary of filetype extensions is used to determine which filetype to use when loading ERB files. For example, opening a file named `foo.html.erb` will load HTML as the filetype with ERB syntax added on top.

@@ -17,12 +17,6 @@ setlocal
 
 let b:undo_ftplugin = "setlocal shiftwidth< comments< commentstring< suffixesadd<"
 
-if get(g:, "ruby_fold")
-  setlocal foldmethod=syntax
-
-  let b:undo_ftplugin ..= " foldmethod<"
-endif
-
 " matchit.vim
 if get(g:, "loaded_matchit")
   let b:match_words = '\<\%(class\|module\|interface\)\>:\<end\>'

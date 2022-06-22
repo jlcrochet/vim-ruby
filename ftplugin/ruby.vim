@@ -17,12 +17,6 @@ setlocal
 
 let b:undo_ftplugin = "setlocal shiftwidth< comments< commentstring< suffixesadd<"
 
-if get(g:, "ruby_fold")
-  let g:ruby_simple_indent = 0
-  setlocal foldmethod=syntax
-  let b:undo_ftplugin ..= " foldmethod<"
-endif
-
 " matchit.vim
 if get(g:, "loaded_matchit")
   let b:match_words = '\<\%(def\|class\|module\|if\|unless\|case\|while\|until\|for\|begin\|do\)\:\@!\>:\<\%(else\|elsif\|when\|in\|rescue\|ensure\|break\|next\|yield\|return\|raise\|redo\|retry\)\:\@!\>:\<end\:\@!\>'
