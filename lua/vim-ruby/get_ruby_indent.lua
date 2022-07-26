@@ -606,7 +606,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
         end
       end
     elseif continuation == 1 then
-      if prev_continuation == 1 or prev_continuation == 4 then
+      if prev_continuation == 1 or prev_continuation == 2 or prev_continuation == 4 then
         return start_first_col - 1
       end
 
@@ -811,7 +811,7 @@ else
 
       return start_first_col - 1 + shift * shiftwidth()
     elseif continuation == 1 then
-      if prev_continuation == 1 or prev_continuation == 4 then
+      if prev_continuation == 1 or prev_continuation == 2 or prev_continuation == 4 then
         return start_first_col - 1
       end
 
