@@ -7,6 +7,8 @@ if exists("b:current_syntax")
   finish
 endif
 
+let b:current_syntax = "rbs"
+
 " Syntax {{{1
 " Declarations {{{2
 syn cluster rbsDeclarations contains=rbsClass,rbsModule,rbsInterface,rbsTypeAlias,rbsConstant,rbsGlobal,rbsComment
