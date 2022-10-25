@@ -92,7 +92,7 @@ syn match rubyNumber /\%#=1[1-9]\d*\%(_\d\+\)*\%([eE][+-]\=\d\+\%(_\d\+\)*i\=\|\
 syn match rubyNumber /\%#=10\%([eE][+-]\=\d\+\%(_\d\+\)*i\=\|\.\d\+\%(_\d\+\)*\%([eE][+-]\=\d\+\%(_\d\+\)*i\=\|ri\=\|i\)\=\|ri\=\|i\|\o\+\%(_\o\+\)*r\=i\=\|[bB][01]\+\%(_[01]\+\)*r\=i\=\|[oO]\o\+\%(_\o\+\)*r\=i\=\|[dD]\d\+\%(_\d\+\)*r\=i\=\|[xX]\x\+\%(_\x\+\)*r\=i\=\)\=\>/ nextgroup=@rubyPostfix skipwhite
 
 " Strings {{{3
-syn match rubyCharacter /\%#=1?\%(\\\%(\o\{1,3}\|x\x\{,2}\|u\%(\x\{,4}\|{\x\{1,6}}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)\|.\)/ contains=rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
+syn match rubyCharacter /\%#=1?\%(\\\%(\o\{1,3}\|x\x\{,2}\|u\%(\x\{,4}\|{\x\{1,6}}\)\|\%(c\|C-\)\%(\\M-\)\=\S\|M-\%(\\c\|\\C-\)\=\S\|\_.\)\|\S\)/ contains=rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
 
 syn region rubyString matchgroup=rubyStringStart start=/\%#=1"/ matchgroup=rubyStringEnd end=/\%#=1"/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
 
