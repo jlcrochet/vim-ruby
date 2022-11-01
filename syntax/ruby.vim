@@ -104,7 +104,7 @@ syn region rubyNestedBraces start=/\%#=1{/ matchgroup=rubyDelimiter end=/\%#=1}/
 
 syn match rubyStringEscape /\%#=1\\\_./ contained
 syn match rubyStringEscapeError /\%#=1\\\%(x\|u\x\{,3}\)/ contained
-syn match rubyStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\s*\x\{1,6}\%(\s\+\x\{1,6}\)*\s*}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\)/ contained
+syn match rubyStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\s*\x\{1,6}\%(\s\+\x\{1,6}\)*\s*}\)\|\%(c\|C-\)\%(\\M-\)\=\p\|M-\%(\\c\|\\C-\)\=\p\)/ contained
 
 syn region rubyString matchgroup=rubyStringStart start=/\%#=1'/ matchgroup=rubyStringEnd end=/\%#=1'/ contains=rubyQuoteEscape nextgroup=@rubyPostfix skipwhite
 syn match rubyQuoteEscape /\%#=1\\[\\']/ contained
