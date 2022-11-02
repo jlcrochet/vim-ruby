@@ -206,13 +206,13 @@ syn region rubyCommand matchgroup=rubyCommandStart start=/\%#=1%x{/  matchgroup=
 syn region rubyCommand matchgroup=rubyCommandStart start=/\%#=1%x</  matchgroup=rubyCommandEnd end=/\%#=1>/ contains=rubyStringAngleBrackets,rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
 
 " Additional % Literals {{{3
-syn region rubyString matchgroup=rubyStringStart start=/\%#=1%Q\=\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
-syn region rubyString matchgroup=rubyStringStart start=/\%#=1%q\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ nextgroup=@rubyPostfix skipwhite
-syn region rubyStringArray matchgroup=rubyStringArrayDelimiter start=/\%#=1%w\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyArrayEscape nextgroup=@rubyPostfix skipwhite
-syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1%s\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubySymbolEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
-syn region rubySymbolArray matchgroup=rubySymbolArrayDelimiter start=/\%#=1%i\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyArrayEscape nextgroup=@rubyPostfix skipwhite
-syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyRegexEnd end=/\%#=1\z1[imx]*/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
-syn region rubyCommand matchgroup=rubyCommandStart start=/\%#=1%x\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyCommandEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
+syn region rubyString matchgroup=rubyStringStart start=/\%#=1%Q\=\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
+syn region rubyString matchgroup=rubyStringStart start=/\%#=1%q\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ nextgroup=@rubyPostfix skipwhite
+syn region rubyStringArray matchgroup=rubyStringArrayDelimiter start=/\%#=1%w\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyArrayEscape nextgroup=@rubyPostfix skipwhite
+syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1%s\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubySymbolEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
+syn region rubySymbolArray matchgroup=rubySymbolArrayDelimiter start=/\%#=1%i\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyArrayEscape nextgroup=@rubyPostfix skipwhite
+syn region rubyRegex matchgroup=rubyRegexStart start=/\%#=1%r\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyRegexEnd end=/\%#=1\z1[imx]*/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError,@rubyRegexSpecial nextgroup=@rubyPostfix skipwhite
+syn region rubyCommand matchgroup=rubyCommandStart start=/\%#=1%x\z([)\]}>~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rubyCommandEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
 
 syn match rubyArrayEscape /\%#=1\\\s/ contained
 
