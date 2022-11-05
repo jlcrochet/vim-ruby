@@ -262,7 +262,7 @@ local function get_line_info(lnum)
         operator_col = i
       end
     elseif b >= 97 and b <= 122 then  -- %l
-      local word = line:match("^%l+", i)
+      local word = line:match("^%l+[%w_?!:]?", i)
 
       if word == "def" or word == "class" or word == "module" then
         if syngroup_at(lnum, i) == "rubyDefine" then
@@ -345,7 +345,7 @@ local function get_line_info_simple(lnum)
         break
       end
     elseif b >= 97 and b <= 122 then  -- %l
-      local word = line:match("^%l+", i)
+      local word = line:match("^%l+[%w_?!:]?", i)
 
       if word == "def" then
         if syngroup_at(lnum, i) == "rubyKeyword" then
@@ -506,7 +506,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
         return 0
       end
     else
-      local word = line:match("^%l+[%u%d_?!:]?", first_col)
+      local word = line:match("^%l+[%w_?!:]?", first_col)
 
       if word == "end" or word == "else" or word == "elsif" or word == "when" or word == "in" or word == "rescue" or word == "ensure" then
         shift = shift - 1
@@ -601,7 +601,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
       if prev_continuation == 1 or prev_continuation == 2 or prev_continuation == 5 then
         shift = shift - 1
       elseif prev_continuation == 3 then
-        if not has_dedent and prev_first_byte ~= 41 and prev_first_byte ~= 93 and prev_first_byte ~= 125 and prev_line:match("^%l+[%u%d_?!:]?", prev_first_col) ~= "end" then  -- ) ] }
+        if not has_dedent and prev_first_byte ~= 41 and prev_first_byte ~= 93 and prev_first_byte ~= 125 and prev_line:match("^end[%w_?!:]?", prev_first_col) ~= "end" then  -- ) ] }
           shift = shift - 1
         end
       end
@@ -624,7 +624,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
         shift = shift - 2
       elseif prev_continuation == 3 then
         shift = shift - 1
-      elseif prev_first_byte == 41 or prev_first_byte == 93 or prev_first_byte == 125 or prev_line:match("^%l+[%u%d_?!:]?", prev_first_col) == "end" then  -- ) ] }
+      elseif prev_first_byte == 41 or prev_first_byte == 93 or prev_first_byte == 125 or prev_line:match("^end[%w_?!:]?", prev_first_col) == "end" then  -- ) ] }
         shift = shift - 1
       end
 
@@ -682,7 +682,7 @@ else
         return 0
       end
     else
-      local word = line:match("^%l+[%u%d_?!:]?", first_col)
+      local word = line:match("^%l+[%w_?!:]?", first_col)
 
       if word == "end" or word == "else" or word == "elsif" or word == "when" or word == "in" or word == "rescue" or word == "ensure" then
         shift = shift - 1
