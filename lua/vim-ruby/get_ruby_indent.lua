@@ -233,14 +233,14 @@ local function get_line_info(lnum)
     elseif b == 40 or b == 91 or b == 123 then  -- ( [ {
       local syngroup = syngroup_at(lnum, i)
 
-      if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" then
+      if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" or syngroup == "rubyStringInterpolationDelimiter" then
         brackets = brackets + 1
         bracket_cols[brackets] = i
       end
     elseif b == 41 or b == 93 or b == 125 then  -- ) ] }
       local syngroup = syngroup_at(lnum, i)
 
-      if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" then
+      if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" or syngroup == "rubyStringInterpolationDelimiter" then
         brackets = brackets - 1
       end
     elseif b == 38 then  -- &
@@ -537,7 +537,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
     if prev_last_byte == 40 or prev_last_byte == 91 or prev_last_byte == 123 then  -- ( [ {
       local syngroup = syngroup_at(prev_lnum, prev_last_col)
 
-      if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" then
+      if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" or syngroup == "rubyStringInterpolationDelimiter" then
         shift = shift + 1
         return start_first_col - 1 + shift * shiftwidth()
       end
