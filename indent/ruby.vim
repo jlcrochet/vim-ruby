@@ -64,7 +64,7 @@ let s:define_block_middle_re = '\C\v<%(else|ensure|rescue)>'
 
 let s:all_start_re = '\C\v<%(if|unless|case|begin|for|while|until|do|def|class|module)>'
 
-let s:skip_bracket = 'synID(line("."), col("."), 0)->synIDattr("name") !~# ''^ruby\%(StringArray\|SymbolArray\)\=Delimiter$'''
+let s:skip_bracket = 'synID(line("."), col("."), 0)->synIDattr("name") !~# ''^ruby\a\{-}Delimiter$'''
 let s:skip_keyword = 'synID(line("."), col("."), 0)->synIDattr("name") !=# "rubyKeyword"'
 let s:skip_define = 'synID(line("."), col("."), 0)->synIDattr("name") !=# "rubyDefine"'
 let s:skip_all = 'synID(line("."), col("."), 0)->synIDattr("name") !~# ''^ruby\%(Keyword\|Define\)$'''
@@ -149,7 +149,7 @@ function s:ends_with_line_continuator(lnum)
       return 5
     endif
   elseif last_char ==# "(" || last_char ==# "[" || last_char ==# "{"
-    if synID(a:lnum, last_idx + 1, 0)->synIDattr("name") =~# '^ruby\%(StringArray\|SymbolArray\)\=Delimiter$'
+    if synID(a:lnum, last_idx + 1, 0)->synIDattr("name") =~# '^ruby\a\{-}Delimiter$'
       return 4
     endif
   elseif last_char ==# "|"
@@ -500,7 +500,7 @@ else
           else
             return idx
           endif
-        elseif syngroup ==# "rubyStringArrayDelimiter" || syngroup ==# "rubySymbolArrayDelimiter"
+        elseif syngroup =~# '^ruby\a\{-}Delimiter$'
           if search('\S', "z", l)
             return col(".") - 1
           else
@@ -508,7 +508,7 @@ else
           endif
         endif
       elseif p == 3
-        if syngroup ==# "rubyDelimiter" || syngroup ==# "rubyStringArrayDelimiter" || syngroup ==# "rubySymbolArrayDelimiter"
+        if syngroup =~# '^ruby\a\{-}Delimiter$'
           let start_lnum = searchpair('[(\[{]', '', '[)\]}]', "bW", s:skip_bracket)
 
           while s:multiline_regions->get(synID(start_lnum, 1, 0)->synIDattr("name"))
