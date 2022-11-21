@@ -340,7 +340,7 @@ if get(g:, "ruby_simple_indent")
 
       if continuation == 4
         let shift += 1
-        return indent(start_lnum) + shift * shiftwidth()
+        return indent(start_lnum) + shift * &shiftwidth
       endif
     endif
 
@@ -348,7 +348,7 @@ if get(g:, "ruby_simple_indent")
 
     if searchpair(s:all_start_re, s:block_middle_re, '\C\<end\>', "b", s:skip_keyword_simple, start_lnum)
       let shift += 1
-      return indent(start_lnum) + shift * shiftwidth()
+      return indent(start_lnum) + shift * &shiftwidth
     endif
 
     " Check for line continuations:
@@ -387,32 +387,32 @@ if get(g:, "ruby_simple_indent")
       if prev_continuation == 1 || prev_continuation == 2 || prev_continuation == 5 || prev_continuation == 6
         return start_first_idx
       else
-        return start_first_idx + shiftwidth()
+        return start_first_idx + &shiftwidth
       endif
     elseif continuation == 3
       if prev_continuation == 1 || prev_continuation == 2
         let shift -= 1
       elseif prev_continuation == 3
         if has_dedent
-          return start_first_idx - shiftwidth()
+          return start_first_idx - &shiftwidth
         else
           return start_first_idx
         endif
       elseif prev_continuation == 4
         return start_first_idx
       elseif prev_continuation == 5
-        return start_first_idx - shiftwidth()
+        return start_first_idx - &shiftwidth
       else
         if start_line->match('\C^\%([)\]}]\|end[[:alnum:]_?!:]\@!\)', start_first_idx) == -1
-          return start_first_idx + shiftwidth()
+          return start_first_idx + &shiftwidth
         endif
       endif
     elseif continuation == 5
-      return start_first_idx + shiftwidth()
+      return start_first_idx + &shiftwidth
     endif
 
     " Default:
-    return start_first_idx + shift * shiftwidth()
+    return start_first_idx + shift * &shiftwidth
   endfunction
   " }}}
 else
@@ -474,7 +474,7 @@ else
           let shift += 1
         endif
 
-        return indent(msl) + shift * shiftwidth()
+        return indent(msl) + shift * &shiftwidth
       endif
     endif
 
@@ -496,7 +496,7 @@ else
           let [char, idx, _] = line->matchstrpos('\S', c)
 
           if char ==# "|" || char ==# "#"
-            return indent(l) + shiftwidth()
+            return indent(l) + &shiftwidth
           else
             return idx
           endif
@@ -504,7 +504,7 @@ else
           if search('\S', "z", l)
             return col(".") - 1
           else
-            return indent(l) + shiftwidth()
+            return indent(l) + &shiftwidth
           endif
         endif
       elseif p == 3
@@ -517,19 +517,19 @@ else
         endif
       elseif p == 4
         if syngroup ==# "rubyDefine"
-          return indent(l) + shiftwidth()
+          return indent(l) + &shiftwidth
         endif
       elseif p == 5
         if syngroup ==# "rubyKeyword"
           if expand("<cword>") ==# "do"
-            return indent(l) + shiftwidth()
+            return indent(l) + &shiftwidth
           else
-            return c - 1 + shiftwidth()
+            return c - 1 + &shiftwidth
           endif
         endif
       elseif p == 6
         if syngroup ==# "rubyKeyword" || syngroup ==# "rubyDefine"
-          return c - 1 + shiftwidth()
+          return c - 1 + &shiftwidth
         endif
       elseif p == 7
         if syngroup ==# "rubyKeyword"
@@ -601,7 +601,7 @@ else
       if prev_continuation == 1 || prev_continuation == 3 || prev_continuation == 6
         return indent(s:get_msl(start_lnum))
       elseif prev_continuation == 2
-        return start_first_idx - shiftwidth()
+        return start_first_idx - &shiftwidth
       endif
     elseif continuation == 1
       if prev_continuation == 1 || prev_continuation == 5
@@ -635,26 +635,26 @@ else
           endif
         endfor
 
-        return start_first_idx + shiftwidth()
+        return start_first_idx + &shiftwidth
       endif
     elseif continuation == 2
       if prev_continuation == 1 || prev_continuation == 2 || prev_continuation == 5
         return start_first_idx
       else
-        return start_first_idx + shiftwidth()
+        return start_first_idx + &shiftwidth
       endif
     elseif continuation == 3
       if prev_continuation == 1
         return indent(s:get_msl(start_lnum))
       elseif prev_continuation == 2 || prev_continuation == 5
-        return start_first_idx - shiftwidth()
+        return start_first_idx - &shiftwidth
       elseif prev_continuation == 3 || prev_continuation == 4
         return start_first_idx
       else
-        return start_first_idx + shiftwidth()
+        return start_first_idx + &shiftwidth
       endif
     elseif continuation == 5
-      return start_first_idx + shiftwidth()
+      return start_first_idx + &shiftwidth
     elseif continuation == 6
       if prev_continuation == 6
         return start_first_idx
@@ -674,7 +674,7 @@ else
           let idx = stridx(start_line, ".", idx + 2)
         endwhile
 
-        return start_first_idx + shiftwidth()
+        return start_first_idx + &shiftwidth
       endif
     endif
 

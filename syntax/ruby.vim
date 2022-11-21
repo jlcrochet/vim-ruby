@@ -9,7 +9,7 @@ endif
 
 " Syntax {{{1
 syn sync fromstart
-syn iskeyword @,48-57,_,?,!,:
+syn iskeyword @,48-57,_,?,!,:,128-255
 
 if get(b:, "is_eruby")
   syn cluster rubyTop contains=@ruby
@@ -235,7 +235,7 @@ if get(g:, "ruby_simple_indent") || get(b:, "is_eruby")
   syn keyword rubyKeyword end nextgroup=@rubyPostfix skipwhite
   syn keyword rubyKeyword do nextgroup=rubyBlockParameters skipwhite
 
-  syn keyword rubyKeyword def nextgroup=rubyMethodDefinition,rubyMethodSelf skipwhite
+  syn keyword rubyKeyword def nextgroup=rubyMethodDefinition skipwhite
   syn keyword rubyKeyword class module nextgroup=rubyTypeDefinition skipwhite
 else
   " NOTE: When definition blocks are highlighted, the following keywords
@@ -255,7 +255,7 @@ else
 
   syn region rubyBlockSkip matchgroup=rubyKeywordNoBlock start=/\%#=1\<\%(while\|until\|for\)\>/ end=/\%#=1\ze\<\.\@1<!do\>/ transparent oneline nextgroup=rubyBlock
 
-  syn match rubyDefine /\%#=1\<def\>/ nextgroup=rubyMethodDefinition,rubyMethodSelf skipwhite
+  syn match rubyDefine /\%#=1\<def\>/ nextgroup=rubyMethodDefinition skipwhite
   syn match rubyDefine /\%#=1\<\%(class\|module\)\>/ nextgroup=rubyTypeDefinition skipwhite contained containedin=rubyDefineBlock
 
   syn region rubyDefineBlock start=/\%#=1\<\%(def\|class\|module\)\>/ matchgroup=rubyDefine end=/\%#=1\<\.\@1<!end\>/ contains=TOP fold

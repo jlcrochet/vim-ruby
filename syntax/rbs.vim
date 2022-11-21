@@ -9,240 +9,362 @@ endif
 
 let b:current_syntax = "rbs"
 
-" Syntax {{{1
-" Declarations {{{2
-syn cluster rbsDeclarations contains=rbsClass,rbsModule,rbsInterface,rbsTypeAlias,rbsConstant,rbsGlobal,rbsComment
+" Syntax
+syn sync fromstart
+syn iskeyword @,48-57,_,128-255
 
-syn match rbsDefine /\%#=1\<class\>/ contained containedin=rbsClass nextgroup=rbsClassNameDefinition skipwhite
-syn region rbsClass start=/\%#=1\<class\>/ matchgroup=rbsDefine end=/\%#=1\<end\>/ contains=@rbsDeclarations,@rbsMembers fold
-syn match rbsClassNameDefinition /\%#=1\u\w*/ contained nextgroup=rbsClassTypeParameters,rbsInheritanceOperator skipwhite
-syn region rbsClassTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeVariable nextgroup=rbsInheritanceOperator skipwhite
-syn match rbsTypeVariable /\%#=1\u\w*/ contained
-syn match rbsInheritanceOperator /\%#=1</ contained nextgroup=rbsSuperclassName skipwhite
-syn match rbsSuperclassName /\%#=1\u\w*/ contained nextgroup=rbsTypeArguments
+syn match rbsComment /\%#=1#.*/
+
+" Declarations
+syn keyword rbsDeclaration class nextgroup=rbsClassName skipwhite
+syn match rbsClassName /\%#=1\u\k*/ contained nextgroup=rbsTypeBlock,rbsTypeBlockEnd,rbsClassTypeParameters,rbsClassInheritanceOperator skipwhite skipnl
+syn region rbsClassTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeParameter nextgroup=rbsTypeBlock,rbsTypeBlockEnd,rbsClassInheritanceOperator skipwhite skipnl
+syn match rbsTypeParameter /\%#=1\u\k*/ contained
+syn match rbsClassInheritanceOperator /\%#=1</ contained nextgroup=rbsSuperclass skipwhite
+syn match rbsSuperclass /\%#=1\u\k*/ contained nextgroup=rbsSuperclassTypeParameters,rbsTypeBlock,rbsTypeBlockEnd skipwhite skipnl
+syn region rbsSuperclassTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeParameter nextgroup=rbsTypeBlock,rbsTypeBlockEnd skipwhite skipnl
+
+syn keyword rbsDeclaration module nextgroup=rbsModuleName skipwhite
+syn match rbsModuleName /\%#=1\u\k*/ contained nextgroup=rbsTypeBlock,rbsTypeBlockEnd,rbsModuleTypeParameters skipwhite skipnl
+syn region rbsModuleTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeParameter nextgroup=rbsTypeBlock,rbsTypeBlockEnd,rbsModuleInheritanceOperator skipwhite skipnl
+syn match rbsModuleInheritanceOperator /\%#=1:/ contained nextgroup=rbsMixin skipwhite
+syn match rbsMixin /\%#=1\u\k*/ contained nextgroup=rbsTypeBlock,rbsTypeBlockEnd,rbsMixinTypeParameters,rbsMixinComma skipwhite skipnl
+syn match rbsMixinComma /\%#=1,/ contained nextgroup=rbsMixin skipwhite skipempty
+
+syn keyword rbsDeclaration interface nextgroup=rbsInterfaceName skipwhite
+syn match rbsInterfaceName /\%#=1\u\k*/ contained nextgroup=rbsTypeBlock,rbsTypeBlockEnd,rbsInterfaceTypeParameters skipwhite skipnl
+syn region rbsInterfaceTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeParameter nextgroup=rbsTypeBlock,rbsTypeBlockEnd skipwhite skipnl
+
+syn keyword rbsDeclaration type nextgroup=rbsAliasName,rbsAliasNamespace,rbsAliasNamespaceSeparator skipwhite
+syn match rbsAliasName /\%#=1\l\k*/ contained nextgroup=rbsAliasOperator,rbsAliasTypeParameters skipwhite
+syn region rbsAliasTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsAliasOperator skipwhite
+syn match rbsAliasNamespace /\%#=1\u\k*/ contained nextgroup=rbsAliasNamespaceSeparator skipwhite
+syn match rbsAliasNamespaceSeparator /\%#=1::/ contained nextgroup=rbsAliasName,rbsAliasNamespace skipwhite
+syn match rbsAliasOperator /\%#=1=/ contained nextgroup=@rbsTypes skipwhite skipempty
+
+syn region rbsTypeBlock start=/\%#=1/ matchgroup=rbsTypeBlockEnd end=/\%#=1\<end\>[?!=:]\@!/ contained contains=@rbsMembers fold
+syn keyword rbsTypeBlockEnd end contained
+
+syn match rbsTypeDeclarationOperator /\%#=1:/ contained nextgroup=@rbsTypes skipwhite skipempty
+
+syn match rbsConstant /\%#=1\u\k*/ nextgroup=rbsTypeDeclarationOperator,rbsNamespaceSeparator skipwhite
+syn match rbsNamespaceSeparator /\%#=1::/ nextgroup=rbsConstant skipwhite
+
+syn match rbsGlobalVariable /\%#=1\$\a\k*/ nextgroup=rbsTypeDeclarationOperator skipwhite
+
+hi def link rbsComment Comment
+hi def link rbsDeclaration Define
+hi def link rbsTypeBlockEnd rbsDeclaration
+hi def link rbsClassName Typedef
+hi def link rbsDelimiter Delimiter
+hi def link rbsTypeParameter Identifier
+hi def link rbsClassInheritanceOperator rbsOperator
+hi def link rbsOperator Operator
+hi def link rbsSuperclass rbsConstant
+hi def link rbsModuleName Typedef
+hi def link rbsMixin rbsConstant
+hi def link rbsModuleInheritanceOperator rbsOperator
+hi def link rbsInterfaceName Typedef
+hi def link rbsAliasName Typedef
+hi def link rbsAliasOperator rbsOperator
+
+" Members
+syn cluster rbsMembers=rbsInstanceVariable,rbsMethodDeclaration,rbsAttribute,rbsMixinStatement,rbsAlias,rbsVisibilityModifier
+
+syn match rbsInstanceVariable /\%#=1@\w\+/ contained nextgroup=rbsTypeDeclarationOperator skipwhite
+
+syn keyword rbsMethodDeclaration def contained nextgroup=rbsMethodName,rbsMethodSelf skipwhite
+syn match rbsMethodName /\%#=1\w\+/ contained nextgroup=rbsTypeDeclarationOperator,rbsMethodParameters skipwhite
+syn region rbsMethodParameters matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=rbsMethodParameter,rbsInstanceVariable nextgroup=rbsTypeDeclarationOperator skipwhite
+syn match rbsMethodParameter /\%#=1\w\+/ contained nextgroup=rbsTypeDeclarationOperator skipwhite
+syn keyword rbsMethodSelf self contained nextgroup=rbsMethodSelfModule,rbsMethodDot skipwhite
+syn match rbsMethodSelfModule /\%#=1?/ contained nextgroup=rbsMethodDot skipwhite
+syn match rbsMethodDot /\%#=1\./ contained nextgroup=rbsTypeDeclarationOperator skipwhite
+
+syn keyword rbsAttribute attr_reader attr_writer attr_accessor contained nextgroup=rbsMethodName skipwhite
+
+syn keyword rbsMixinStatement include extend prepend contained nextgroup=rbsMixinMember skipwhite
+syn match rbsMixinMember /\%#=1\w\+/ contained nextgroup=rbsMixinMemberTypeParameters skipwhite
+syn region rbsMixinMemberTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeParameter
+
+syn keyword rbsVisibilityModifier public private contained
+
+syn keyword rbsAlias alias contained nextgroup=rbsAliasName
+
+hi def link rbsInstanceVariable Identifier
+hi def link rbsMethodDeclaration rbsDeclaration
+hi def link rbsMethodName Function
+hi def link rbsMethodSelf Constant
+hi def link rbsMethodSelfModule rbsOperator
+hi def link rbsMethodDot rbsOperator
+hi def link rbsAttribute Statement
+hi def link rbsMixinStatement Statement
+hi def link rbsMixinMember rbsConstant
+
+" Types
+syn cluster rbsTypes contains=
+      \ rbsTypeName,rbsTypeNamespaceSeparator,rbsTypeSingleton,rbsStringType,rbsSymbolType,rbsIntegerType,rbsBooleanType,
+      \ rbsBaseType,rbsRecordType,rbsTupleType,rbsProcType,rbsTypeAliasName
+
+syn match rbsTypeName /\%#=1\u\k*/ contained nextgroup=rbsTypeArguments,rbsTypeNamespaceSeparator,rbsTypeOperator skipwhite skipempty
 syn region rbsTypeArguments matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsTypeOperator skipwhite skipempty
 
-syn match rbsDefine /\%#=1\<module\>/ contained containedin=rbsModule nextgroup=rbsModuleNameDefinition skipwhite
-syn region rbsModule start=/\%#=1\<module\>/ matchgroup=rbsDefine end=/\%#=1\<end\>/ contains=@rbsDeclarations,@rbsMembers fold
-syn match rbsModuleNameDefinition /\%#=1\u\w*/ contained nextgroup=rbsModuleTypeParameters,rbsInclusionOperator skipwhite
-syn region rbsModuleTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeVariable nextgroup=rbsInclusionOperator skipwhite
-syn match rbsInclusionOperator /\%#=1:/ contained nextgroup=rbsModuleSelfType skipwhite
-syn match rbsModuleSelfType /\%#=1_\=\u\w*/ contained nextgroup=rbsModuleSelfTypeArguments,rbsModuleSelfTypeComma skipwhite
-syn region rbsModuleSelfTypeArguments matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsModuleSelfTypeComma skipwhite
-syn match rbsModuleSelfTypeComma /\%#=1,/ contained nextgroup=rbsModuleSelfType skipwhite
+syn match rbsTypeAliasName /\%#=1\l\k*/ contained nextgroup=rbsTypeArguments skipwhite
 
-syn match rbsDefine /\%#=1\<interface\>/ contained containedin=rbsInterface nextgroup=rbsInterfaceNameDefinition skipwhite
-syn region rbsInterface start=/\%#=1\<interface\>/ matchgroup=rbsDefine end=/\%#=1\<end\>/ contains=rbsMethod,rbsInclude,rbsMethodAlias fold
-syn match rbsInterfaceNameDefinition /\%#=1_\u\w*/ contained nextgroup=rbsInterfaceTypeParameters skipwhite
-syn region rbsInterfaceTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeVariable
+syn match rbsTypeNamespaceSeparator /\%#=1::/ contained nextgroup=rbsTypeName,rbsTypeAliasName skipwhite
 
-syn keyword rbsKeyword out in unchecked contained containedin=rbsClassTypeParameters,rbsModuleTypeParameters,rbsInterfaceTypeParameters
+syn keyword rbsTypeSingleton singleton contained nextgroup=rbsTypeSingletonArgument skipwhite
+syn region rbsTypeSingletonArgument matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=rbsTypeName nextgroup=rbsTypeOperator skipwhite skipempty
 
-syn keyword rbsTypeAlias type nextgroup=rbsAliasNameDefinition,rbsAliasNamespace,rbsAliasNamespaceSeparator skipwhite
-syn match rbsAliasNameDefinition /\%#=1\l\w*/ contained nextgroup=rbsAliasOperator skipwhite
-syn match rbsAliasOperator /\%#=1=/ contained nextgroup=@rbsTypes skipwhite
-syn match rbsAliasNamespace /\%#=1\u\w*/ contained nextgroup=rbsAliasNamespaceSeparator skipwhite
-syn match rbsAliasNamespaceSeparator /\%#=1::/ contained nextgroup=rbsAliasNamespace,rbsAliasNameDefinition skipwhite
-
-syn match rbsConstant /\%#=1\u\w*/ nextgroup=rbsDeclarationOperator,rbsNamespaceSeparator skipwhite
-syn match rbsDeclarationOperator /\%#=1:/ contained nextgroup=@rbsTypes skipwhite
-
-syn match rbsGlobal /\%#=1\$\h\w*/ nextgroup=rbsDeclarationOperator skipwhite
-
-syn region rbsComment matchgroup=rbsCommentStart start=/\%#=1#/ end=/\%#=1$/ contains=rbsTodo containedin=ALLBUT,rbsString,rbsSymbol,rbsComment
-syn keyword rbsTodo BUG DEPRECATED FIXME NOTE OPTIMIZE TODO contained
-
-" Members {{{2
-syn cluster rbsMembers contains=rbsInstanceVariable,rbsMethod,rbsAttribute,rbsInclude,rbsExtend,rbsPrepend,rbsMethodAlias,rbsVisibility
-
-syn match rbsInstanceVariable /\%#=1@\h\w*/ contained nextgroup=rbsDeclarationOperator skipwhite
-
-syn keyword rbsMethod def contained nextgroup=rbsMethodName skipwhite
-syn match rbsMethodName /\%#=1\%(\<self\>?\=\.\)\=[[:lower:]_]\w*[=?!]\=/ contained contains=rbsMethodSelf nextgroup=rbsMethodDeclarationOperator skipwhite
-" Generated by scripts/syntax.vim:
-syn match rbsMethodName /\%#=1\%(\<self\>?\=\.\)\=\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)/ contained nextgroup=rbsMethodDeclarationOperator skipwhite
-syn match rbsMethodDeclarationOperator /\%#=1:/ contained nextgroup=rbsMethodType,rbsMethodParameters,rbsMethodTypeParameters,rbsMethodBlock skipwhite
-syn region rbsMethodParameters matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=@rbsTypes,rbsMethodUnaryOperator nextgroup=rbsMethodArrow,rbsMethodBlock,rbsTypeOperator skipwhite skipempty
-syn match rbsMethodUnaryOperator /\%#=1[?*]/ contained
-syn match rbsMethodArrow /\%#=1->/ contained nextgroup=@rbsTypes skipwhite
-syn region rbsMethodBlock matchgroup=rbsDelimiter start=/\%#=1?\={/ end=/\%#=1}/ contained contains=rbsMethodParameters nextgroup=rbsMethodArrow skipwhite
-syn keyword rbsMethodType super contained
-syn match rbsMethodType /\%#=1\.\.\./ contained
-syn region rbsMethodTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsClassName nextgroup=rbsMethodType,rbsMethodParameters,rbsMethodBlock skipwhite
-
-syn keyword rbsAttribute attr_reader attr_writer attr_accessor contained nextgroup=rbsAttributeName skipwhite
-syn match rbsAttributeName /\%#=1[[:lower:]_]\w*[=?!]\=/ contained nextgroup=rbsDeclarationOperator,rbsAttributeVariable skipwhite
-" Generated by scripts/syntax.vim:
-syn match rbsAttributeName /\%#=1\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)/ contained nextgroup=rbsAttributeDeclarationOperator skipwhite
-syn region rbsAttributeVariable matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=rbsAttributeVariableName nextgroup=rbsDeclarationOperator skipwhite
-syn match rbsAttributeVariableName /\%#=1@\h\w*/ contained
-
-syn keyword rbsInclude include contained nextgroup=rbsClassName,rbsInterfaceName,rbsNamespaceSeparator skipwhite
-syn keyword rbsExtend extend contained nextgroup=rbsClassName,rbsInterfaceName,rbsNamespaceSeparator skipwhite
-syn keyword rbsPrepend prepend contained nextgroup=rbsClassName,rbsNamespaceSeparator skipwhite
-
-syn keyword rbsMethodAlias alias contained nextgroup=rbsMethodAliasName skipwhite
-syn match rbsMethodAliasName /\%#=1\%(\<self\>\.\)\=[[:lower:]_]\w*[=?!]\=/ contained contains=rbsMethodSelf nextgroup=rbsMethodAliasName skipwhite
-" Generated by scripts/syntax.vim:
-syn match rbsMethodAliasName /\%#=1\%(\<self\>\.\)\=\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)/ contained nextgroup=rbsMethodAliasName skipwhite
-
-syn keyword rbsMethodSelf self contained nextgroup=rbsMethodSelfModifier,rbsMethodDot
-syn match rbsMethodSelfModifier /\%#=1?/ contained
-syn match rbsMethodDot /\%#=1\./ contained
-
-" Types {{{2
-syn cluster rbsTypes contains=
-      \ rbsNamespaceSeparator,rbsClassName,rbsInterfaceName,rbsSingleton,rbsAliasName,
-      \ @rbsLiterals,rbsRecord,rbsMethodParameters,rbsTuple,rbsProc,rbsType
-
-syn match rbsNamespaceSeparator /\%#=1::/ contained nextgroup=rbsClassName,rbsInterfaceName,rbsAliasName
-
-syn match rbsClassName /\%#=1\u\w*/ contained nextgroup=rbsTypeArguments,rbsNamespaceSeparator,rbsDeclarationOperator,rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsInterfaceName /\%#=1_\u\w*/ contained nextgroup=rbsTypeArguments,rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn keyword rbsSingleton singleton contained nextgroup=rbsSingletonArgument
-syn region rbsSingletonArgument matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=rbsClassName,rbsNamespaceSeparator nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn match rbsAliasName /\%#=1\l\w*/ contained nextgroup=rbsDeclarationOperator,rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn cluster rbsLiterals contains=rbsString,rbsSymbol,rbsUnaryOperator,rbsInteger,rbsBoolean
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1"/ matchgroup=rbsStringEnd end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}\%(\s\x\{1,6}\)*}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)/ contained
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1'/ matchgroup=rbsStringEnd end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsQuoteEscape /\%#=1\\[\\']/ contained
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=(/ matchgroup=rbsStringEnd end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsStringParentheses matchgroup=rbsString start=/\%#=1(/ end=/\%#=1)/ transparent contained contains=rbsStringParentheses,rbsStringEscape
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=\[/ matchgroup=rbsStringEnd end=/\%#=1]/ contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsStringSquareBrackets matchgroup=rbsString start=/\%#=1\[/ end=/\%#=1]/ transparent contained contains=rbsStringSquareBrackets,rbsStringEscape
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\={/ matchgroup=rbsStringEnd end=/\%#=1}/ contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsStringCurlyBraces matchgroup=rbsString start=/\%#=1{/ end=/\%#=1}/ transparent contained contains=rbsStringCurlyBraces,rbsStringEscape
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=</ matchgroup=rbsStringEnd end=/\%#=1>/ contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsStringAngleBrackets matchgroup=rbsString start=/\%#=1</ end=/\%#=1>/ transparent contained contains=rbsStringAngleBrackets,rbsStringEscape
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q(/ matchgroup=rbsStringEnd end=/\%#=1)/ contains=rbsRawStringParentheses,rbsParenthesisEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsRawStringParentheses matchgroup=rbsString start=/\%#=1(/ end=/\%#=1)/ transparent contained contains=rbsRawStringParentheses,rbsParenthesisEscape
-syn match rbsParenthesisEscape /\%#=1\\[\\()]/ contained
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q\[/ matchgroup=rbsStringEnd end=/\%#=1]/ contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsRawStringSquareBrackets matchgroup=rbsString start=/\%#=1\[/ end=/\%#=1]/ transparent contained contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape
-syn match rbsSquareBracketEscape /\%#=1\\[\\\[\]]/ contained
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q{/ matchgroup=rbsStringEnd end=/\%#=1}/ contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsRawStringCurlyBraces matchgroup=rbsString start=/\%#=1{/ end=/\%#=1}/ transparent contained contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape
-syn match rbsCurlyBraceEscape /\%#=1\\[\\{}]/ contained
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q</ matchgroup=rbsStringEnd end=/\%#=1>/ contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsRawStringAngleBrackets matchgroup=rbsString start=/\%#=1</ end=/\%#=1>/ transparent contained contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape
-syn match rbsAngleBracketEscape /\%#=1\\[\\<>]/ contained
-
-syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn match rbsSymbol /\%#=1:\h\w*[=?!]\=/ contained contains=rbsSymbolStart nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsSymbolStart /\%#=1:/ contained
-
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1:"/ matchgroup=rbsSymbolEnd end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1:'/ matchgroup=rbsSymbolEnd end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s(/  matchgroup=rbsSymbolEnd end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\[/ matchgroup=rbsSymbolEnd end=/\%#=1]/ contained contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s{/  matchgroup=rbsSymbolEnd end=/\%#=1}/ contained contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s</  matchgroup=rbsSymbolEnd end=/\%#=1>/ contained contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsSymbolEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn match rbsUnaryOperator /\%#=1[+-]/ contained nextgroup=rbsInteger
-syn match rbsInteger /\%#=1[1-9]\d*\%(_\d\+\)*\>/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsInteger /\%#=10\%([bB][01]\+\%(_[01]\+\)*\|[oO]\o\+\%(_\o\+\)*\|[dD]\d\+\%(_\d\+\)*\|\o*\%(_\o\+\)\+\)\=\>/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn keyword rbsBoolean true false contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn region rbsRecord matchgroup=rbsDelimiter start=/\%#=1{/ end=/\%#=1}/ contained contains=rbsRecordName nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-syn match rbsRecordName /\%#=1\h\w*[?!]\=:/ contained contains=rbsSymbolStart nextgroup=@rbsTypes skipwhite
-syn region rbsRecordName matchgroup=rbsSymbolStart start=/\%#=1"/ matchgroup=rbsSymbolEnd end=/\%#=1":/ contained contains=rbsStringEscape nextgroup=@rbsTypes skipwhite
-syn region rbsRecordName matchgroup=rbsSymbolStart start=/\%#=1'/ matchgroup=rbsSymbolEnd end=/\%#=1':/ contained contains=rbsQuoteEscape nextgroup=@rbsTypes skipwhite
-
-syn region rbsTuple matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
-
-syn region rbsProc matchgroup=rbsDelimiter start=/\%#=1\^(/ end=/\%#=1)/ contained contains=@rbsTypes,rbsMethodUnaryOperator nextgroup=rbsMethodArrow skipwhite
-
-syn keyword rbsType self instance class bool boolish untyped nil top bot void contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+syn region rbsStringType matchgroup=rbsStringDelimiter start=/\%#=1"/ end=/\%#=1"/ contained nextgroup=rbsTypeOperator skipwhite skipempty
+syn match rbsSymbolType /\%#=1:\K\k*/ contained nextgroup=rbsTypeOperator skipwhite skipempty
+syn match rbsIntegerType /\%#=1\d\+/ contained nextgroup=rbsTypeOperator skipwhite skipempty
+syn keyword rbsBooleanType true false contained nextgroup=rbsTypeOperator skipwhite skipempty
 
 syn match rbsTypeOperator /\%#=1[|&]/ contained nextgroup=@rbsTypes skipwhite skipempty
-syn match rbsOptionalTypeOperator /\%#=1?/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+syn match rbsTypeOperator /\%#=1?/ contained nextgroup=rbsTypeOperator skipwhite skipempty
 
-" Synchronization {{{1
-syn sync fromstart
+syn keyword rbsBaseType self instance class bool untyped nil top bot void contained nextgroup=rbsTypeOperator skipwhite skipempty
+
+syn region rbsRecordType matchgroup=rbsDelimiter start=/\%#=1{/ end=/\%#=1}/ contained contains=rbsMember nextgroup=rbsTypeOperator skipwhite skipempty
+
+syn region rbsTupleType matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsTypeOperator skipwhite skipempty
+
+syn region rbsProcType matchgroup=rbsDelimiter start=/\%#=1\^(/ end=/\%#=1)/ contained contains=@rbsTypes,rbsMember nextgroup=rbsProcOperator skipwhite
+syn match rbsProcOperator /\%#=1->/ contained nextgroup=@rbsTypes skipwhite skipempty
+
+" Highlighting
+
+" " Declarations {{{2
+" syn cluster rbsDeclarations contains=rbsClass,rbsModule,rbsInterface,rbsTypeAlias,rbsConstant,rbsGlobal,rbsComment
+
+" syn match rbsDefine /\%#=1\<class\>/ contained containedin=rbsClass nextgroup=rbsClassNameDefinition skipwhite
+" syn region rbsClass start=/\%#=1\<class\>/ matchgroup=rbsDefine end=/\%#=1\<end\>/ contains=@rbsDeclarations,@rbsMembers fold
+" syn match rbsClassNameDefinition /\%#=1\u\w*/ contained nextgroup=rbsClassTypeParameters,rbsInheritanceOperator skipwhite
+" syn region rbsClassTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeVariable nextgroup=rbsInheritanceOperator skipwhite
+" syn match rbsTypeVariable /\%#=1\u\w*/ contained
+" syn match rbsInheritanceOperator /\%#=1</ contained nextgroup=rbsSuperclassName skipwhite
+" syn match rbsSuperclassName /\%#=1\u\w*/ contained nextgroup=rbsTypeArguments
+" syn region rbsTypeArguments matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsTypeOperator skipwhite skipempty
+
+" syn match rbsDefine /\%#=1\<module\>/ contained containedin=rbsModule nextgroup=rbsModuleNameDefinition skipwhite
+" syn region rbsModule start=/\%#=1\<module\>/ matchgroup=rbsDefine end=/\%#=1\<end\>/ contains=@rbsDeclarations,@rbsMembers fold
+" syn match rbsModuleNameDefinition /\%#=1\u\w*/ contained nextgroup=rbsModuleTypeParameters,rbsInclusionOperator skipwhite
+" syn region rbsModuleTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeVariable nextgroup=rbsInclusionOperator skipwhite
+" syn match rbsInclusionOperator /\%#=1:/ contained nextgroup=rbsModuleSelfType skipwhite
+" syn match rbsModuleSelfType /\%#=1_\=\u\w*/ contained nextgroup=rbsModuleSelfTypeArguments,rbsModuleSelfTypeComma skipwhite
+" syn region rbsModuleSelfTypeArguments matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsModuleSelfTypeComma skipwhite
+" syn match rbsModuleSelfTypeComma /\%#=1,/ contained nextgroup=rbsModuleSelfType skipwhite
+
+" syn match rbsDefine /\%#=1\<interface\>/ contained containedin=rbsInterface nextgroup=rbsInterfaceNameDefinition skipwhite
+" syn region rbsInterface start=/\%#=1\<interface\>/ matchgroup=rbsDefine end=/\%#=1\<end\>/ contains=rbsMethod,rbsInclude,rbsMethodAlias fold
+" syn match rbsInterfaceNameDefinition /\%#=1_\u\w*/ contained nextgroup=rbsInterfaceTypeParameters skipwhite
+" syn region rbsInterfaceTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsTypeVariable
+
+" syn keyword rbsKeyword out in unchecked contained containedin=rbsClassTypeParameters,rbsModuleTypeParameters,rbsInterfaceTypeParameters
+
+" syn keyword rbsTypeAlias type nextgroup=rbsAliasNameDefinition,rbsAliasNamespace,rbsAliasNamespaceSeparator skipwhite
+" syn match rbsAliasNameDefinition /\%#=1\l\w*/ contained nextgroup=rbsAliasOperator skipwhite
+" syn match rbsAliasOperator /\%#=1=/ contained nextgroup=@rbsTypes skipwhite
+" syn match rbsAliasNamespace /\%#=1\u\w*/ contained nextgroup=rbsAliasNamespaceSeparator skipwhite
+" syn match rbsAliasNamespaceSeparator /\%#=1::/ contained nextgroup=rbsAliasNamespace,rbsAliasNameDefinition skipwhite
+
+" syn match rbsConstant /\%#=1\u\w*/ nextgroup=rbsDeclarationOperator,rbsNamespaceSeparator skipwhite
+" syn match rbsDeclarationOperator /\%#=1:/ contained nextgroup=@rbsTypes skipwhite
+
+" syn match rbsGlobal /\%#=1\$\h\w*/ nextgroup=rbsDeclarationOperator skipwhite
+
+" syn region rbsComment matchgroup=rbsCommentStart start=/\%#=1#/ end=/\%#=1$/ contains=rbsTodo containedin=ALLBUT,rbsString,rbsSymbol,rbsComment
+" syn keyword rbsTodo BUG DEPRECATED FIXME NOTE OPTIMIZE TODO contained
+
+" " Members {{{2
+" syn cluster rbsMembers contains=rbsInstanceVariable,rbsMethod,rbsAttribute,rbsInclude,rbsExtend,rbsPrepend,rbsMethodAlias,rbsVisibility
+
+" syn match rbsInstanceVariable /\%#=1@\h\w*/ contained nextgroup=rbsDeclarationOperator skipwhite
+
+" syn keyword rbsMethod def contained nextgroup=rbsMethodName skipwhite
+" syn match rbsMethodName /\%#=1\%(\<self\>?\=\.\)\=[[:lower:]_]\w*[=?!]\=/ contained contains=rbsMethodSelf nextgroup=rbsMethodDeclarationOperator skipwhite
+" " Generated by scripts/syntax.vim:
+" syn match rbsMethodName /\%#=1\%(\<self\>?\=\.\)\=\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)/ contained nextgroup=rbsMethodDeclarationOperator skipwhite
+" syn match rbsMethodDeclarationOperator /\%#=1:/ contained nextgroup=rbsMethodType,rbsMethodParameters,rbsMethodTypeParameters,rbsMethodBlock skipwhite
+" syn region rbsMethodParameters matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=@rbsTypes,rbsMethodUnaryOperator nextgroup=rbsMethodArrow,rbsMethodBlock,rbsTypeOperator skipwhite skipempty
+" syn match rbsMethodUnaryOperator /\%#=1[?*]/ contained
+" syn match rbsMethodArrow /\%#=1->/ contained nextgroup=@rbsTypes skipwhite
+" syn region rbsMethodBlock matchgroup=rbsDelimiter start=/\%#=1?\={/ end=/\%#=1}/ contained contains=rbsMethodParameters nextgroup=rbsMethodArrow skipwhite
+" syn keyword rbsMethodType super contained
+" syn match rbsMethodType /\%#=1\.\.\./ contained
+" syn region rbsMethodTypeParameters matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=rbsClassName nextgroup=rbsMethodType,rbsMethodParameters,rbsMethodBlock skipwhite
+
+" syn keyword rbsAttribute attr_reader attr_writer attr_accessor contained nextgroup=rbsAttributeName skipwhite
+" syn match rbsAttributeName /\%#=1[[:lower:]_]\w*[=?!]\=/ contained nextgroup=rbsDeclarationOperator,rbsAttributeVariable skipwhite
+" " Generated by scripts/syntax.vim:
+" syn match rbsAttributeName /\%#=1\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)/ contained nextgroup=rbsAttributeDeclarationOperator skipwhite
+" syn region rbsAttributeVariable matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=rbsAttributeVariableName nextgroup=rbsDeclarationOperator skipwhite
+" syn match rbsAttributeVariableName /\%#=1@\h\w*/ contained
+
+" syn keyword rbsInclude include contained nextgroup=rbsClassName,rbsInterfaceName,rbsNamespaceSeparator skipwhite
+" syn keyword rbsExtend extend contained nextgroup=rbsClassName,rbsInterfaceName,rbsNamespaceSeparator skipwhite
+" syn keyword rbsPrepend prepend contained nextgroup=rbsClassName,rbsNamespaceSeparator skipwhite
+
+" syn keyword rbsMethodAlias alias contained nextgroup=rbsMethodAliasName skipwhite
+" syn match rbsMethodAliasName /\%#=1\%(\<self\>\.\)\=[[:lower:]_]\w*[=?!]\=/ contained contains=rbsMethodSelf nextgroup=rbsMethodAliasName skipwhite
+" " Generated by scripts/syntax.vim:
+" syn match rbsMethodAliasName /\%#=1\%(\<self\>\.\)\=\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)/ contained nextgroup=rbsMethodAliasName skipwhite
+
+" syn keyword rbsMethodSelf self contained nextgroup=rbsMethodSelfModifier,rbsMethodDot
+" syn match rbsMethodSelfModifier /\%#=1?/ contained
+" syn match rbsMethodDot /\%#=1\./ contained
+
+" " Types {{{2
+" syn cluster rbsTypes contains=
+"       \ rbsNamespaceSeparator,rbsClassName,rbsInterfaceName,rbsSingleton,rbsAliasName,
+"       \ @rbsLiterals,rbsRecord,rbsMethodParameters,rbsTuple,rbsProc,rbsType
+
+" syn match rbsNamespaceSeparator /\%#=1::/ contained nextgroup=rbsClassName,rbsInterfaceName,rbsAliasName
+
+" syn match rbsClassName /\%#=1\u\w*/ contained nextgroup=rbsTypeArguments,rbsNamespaceSeparator,rbsDeclarationOperator,rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn match rbsInterfaceName /\%#=1_\u\w*/ contained nextgroup=rbsTypeArguments,rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn keyword rbsSingleton singleton contained nextgroup=rbsSingletonArgument
+" syn region rbsSingletonArgument matchgroup=rbsDelimiter start=/\%#=1(/ end=/\%#=1)/ contained contains=rbsClassName,rbsNamespaceSeparator nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn match rbsAliasName /\%#=1\l\w*/ contained nextgroup=rbsDeclarationOperator,rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn cluster rbsLiterals contains=rbsString,rbsSymbol,rbsUnaryOperator,rbsInteger,rbsBoolean
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1"/ matchgroup=rbsStringEnd end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn match rbsStringEscape /\%#=1\\\%(\o\{1,3}\|x\x\x\=\|u\%(\x\{4}\|{\x\{1,6}\%(\s\x\{1,6}\)*}\)\|\%(c\|C-\)\%(\\M-\)\=.\|M-\%(\\c\|\\C-\)\=.\|\_.\)/ contained
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1'/ matchgroup=rbsStringEnd end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn match rbsQuoteEscape /\%#=1\\[\\']/ contained
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=(/ matchgroup=rbsStringEnd end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsStringParentheses matchgroup=rbsString start=/\%#=1(/ end=/\%#=1)/ transparent contained contains=rbsStringParentheses,rbsStringEscape
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=\[/ matchgroup=rbsStringEnd end=/\%#=1]/ contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsStringSquareBrackets matchgroup=rbsString start=/\%#=1\[/ end=/\%#=1]/ transparent contained contains=rbsStringSquareBrackets,rbsStringEscape
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\={/ matchgroup=rbsStringEnd end=/\%#=1}/ contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsStringCurlyBraces matchgroup=rbsString start=/\%#=1{/ end=/\%#=1}/ transparent contained contains=rbsStringCurlyBraces,rbsStringEscape
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=</ matchgroup=rbsStringEnd end=/\%#=1>/ contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsStringAngleBrackets matchgroup=rbsString start=/\%#=1</ end=/\%#=1>/ transparent contained contains=rbsStringAngleBrackets,rbsStringEscape
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%Q\=\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q(/ matchgroup=rbsStringEnd end=/\%#=1)/ contains=rbsRawStringParentheses,rbsParenthesisEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsRawStringParentheses matchgroup=rbsString start=/\%#=1(/ end=/\%#=1)/ transparent contained contains=rbsRawStringParentheses,rbsParenthesisEscape
+" syn match rbsParenthesisEscape /\%#=1\\[\\()]/ contained
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q\[/ matchgroup=rbsStringEnd end=/\%#=1]/ contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsRawStringSquareBrackets matchgroup=rbsString start=/\%#=1\[/ end=/\%#=1]/ transparent contained contains=rbsRawStringSquareBrackets,rbsSquareBracketEscape
+" syn match rbsSquareBracketEscape /\%#=1\\[\\\[\]]/ contained
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q{/ matchgroup=rbsStringEnd end=/\%#=1}/ contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsRawStringCurlyBraces matchgroup=rbsString start=/\%#=1{/ end=/\%#=1}/ transparent contained contains=rbsRawStringCurlyBraces,rbsCurlyBraceEscape
+" syn match rbsCurlyBraceEscape /\%#=1\\[\\{}]/ contained
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q</ matchgroup=rbsStringEnd end=/\%#=1>/ contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsRawStringAngleBrackets matchgroup=rbsString start=/\%#=1</ end=/\%#=1>/ transparent contained contains=rbsRawStringAngleBrackets,rbsAngleBracketEscape
+" syn match rbsAngleBracketEscape /\%#=1\\[\\<>]/ contained
+
+" syn region rbsString matchgroup=rbsStringStart start=/\%#=1%q\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsStringEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn match rbsSymbol /\%#=1:\h\w*[=?!]\=/ contained contains=rbsSymbolStart nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn match rbsSymbolStart /\%#=1:/ contained
+
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1:"/ matchgroup=rbsSymbolEnd end=/\%#=1"/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1:'/ matchgroup=rbsSymbolEnd end=/\%#=1'/ contained contains=rbsQuoteEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s(/  matchgroup=rbsSymbolEnd end=/\%#=1)/ contained contains=rbsStringParentheses,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\[/ matchgroup=rbsSymbolEnd end=/\%#=1]/ contained contains=rbsStringSquareBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s{/  matchgroup=rbsSymbolEnd end=/\%#=1}/ contained contains=rbsStringCurlyBraces,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s</  matchgroup=rbsSymbolEnd end=/\%#=1>/ contained contains=rbsStringAngleBrackets,rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn region rbsSymbol matchgroup=rbsSymbolStart start=/\%#=1%s\z([~`!@#$%^&*_\-+=|\\:;"',.?/]\)/ matchgroup=rbsSymbolEnd end=/\%#=1\z1/ skip=/\%#=1\\\\\|\\\z1/ contained contains=rbsStringEscape nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn match rbsUnaryOperator /\%#=1[+-]/ contained nextgroup=rbsInteger
+" syn match rbsInteger /\%#=1[1-9]\d*\%(_\d\+\)*\>/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn match rbsInteger /\%#=10\%([bB][01]\+\%(_[01]\+\)*\|[oO]\o\+\%(_\o\+\)*\|[dD]\d\+\%(_\d\+\)*\|\o*\%(_\o\+\)\+\)\=\>/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn keyword rbsBoolean true false contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn region rbsRecord matchgroup=rbsDelimiter start=/\%#=1{/ end=/\%#=1}/ contained contains=rbsRecordName nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+" syn match rbsRecordName /\%#=1\h\w*[?!]\=:/ contained contains=rbsSymbolStart nextgroup=@rbsTypes skipwhite
+" syn region rbsRecordName matchgroup=rbsSymbolStart start=/\%#=1"/ matchgroup=rbsSymbolEnd end=/\%#=1":/ contained contains=rbsStringEscape nextgroup=@rbsTypes skipwhite
+" syn region rbsRecordName matchgroup=rbsSymbolStart start=/\%#=1'/ matchgroup=rbsSymbolEnd end=/\%#=1':/ contained contains=rbsQuoteEscape nextgroup=@rbsTypes skipwhite
+
+" syn region rbsTuple matchgroup=rbsDelimiter start=/\%#=1\[/ end=/\%#=1]/ contained contains=@rbsTypes nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn region rbsProc matchgroup=rbsDelimiter start=/\%#=1\^(/ end=/\%#=1)/ contained contains=@rbsTypes,rbsMethodUnaryOperator nextgroup=rbsMethodArrow skipwhite
+
+" syn keyword rbsType self instance class bool boolish untyped nil top bot void contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
+
+" syn match rbsTypeOperator /\%#=1[|&]/ contained nextgroup=@rbsTypes skipwhite skipempty
+" syn match rbsOptionalTypeOperator /\%#=1?/ contained nextgroup=rbsTypeOperator,rbsOptionalTypeOperator skipwhite skipempty
 
 " Highlighting {{{1
-hi def link rbsDefine Define
-hi def link rbsClassNameDefinition Typedef
-hi def link rbsDelimiter Delimiter
-hi def link rbsTypeVariable Identifier
-hi def link rbsInheritanceOperator Operator
-hi def link rbsSuperclassName rbsClassName
-hi def link rbsModuleNameDefinition Typedef
-hi def link rbsInclusionOperator Operator
-hi def link rbsModuleSelfType rbsClassName
-hi def link rbsInterfaceNameDefinition Typedef
-hi def link rbsKeyword Keyword
-hi def link rbsTypeAlias Define
-hi def link rbsAliasNameDefinition Typedef
-hi def link rbsAliasOperator Operator
-hi def link rbsAliasNamespace rbsClassName
-hi def link rbsAliasNamespaceSeparator rbsNamespaceSeparator
-hi def link rbsConstant Identifier
-hi def link rbsDeclarationOperator Operator
-hi def link rbsGlobal Identifier
-hi def link rbsComment Comment
-hi def link rbsCommentStart rbsComment
-hi def link rbsInstanceVariable Identifier
-hi def link rbsMethod Define
-hi def link rbsMethodName Function
-hi def link rbsMethodDeclarationOperator rbsDeclarationOperator
-hi def link rbsMethodUnaryOperator rbsUnaryOperator
-hi def link rbsMethodArrow Operator
-hi def link rbsMethodType Type
-hi def link rbsAttribute Define
-hi def link rbsAttributeName Typedef
-hi def link rbsAttributeVariableName rbsInstanceVariable
-hi def link rbsInclude Statement
-hi def link rbsExtend Statement
-hi def link rbsPrepend Statement
-hi def link rbsMethodAlias Define
-hi def link rbsMethodAliasName rbsMethodName
-hi def link rbsMethodSelf Constant
-hi def link rbsMethodSelfModifier rbsMethodSelf
-hi def link rbsMethodDot Operator
-hi def link rbsNamespaceSeparator Operator
-hi def link rbsClassName Type
-hi def link rbsInterfaceName Type
-hi def link rbsSingleton Type
-hi def link rbsString String
-hi def link rbsStringStart rbsString
-hi def link rbsStringEnd rbsStringStart
-hi def link rbsStringEscape PreProc
-hi def link rbsQuoteEscape rbsStringEscape
-hi def link rbsParenthesisEscape rbsStringEscape
-hi def link rbsSquareBracketEscape rbsStringEscape
-hi def link rbsCurlyBraceEscape rbsStringEscape
-hi def link rbsAngleBracketEscape rbsStringEscape
-hi def link rbsSymbol String
-hi def link rbsSymbolStart rbsSymbol
-hi def link rbsSymbolEnd rbsSymbolStart
-hi def link rbsUnaryOperator Operator
-hi def link rbsInteger Number
-hi def link rbsBoolean Boolean
-hi def link rbsRecordName rbsSymbol
-hi def link rbsType Type
-hi def link rbsTypeOperator Operator
-hi def link rbsOptionalTypeOperator rbsTypeOperator
+" hi def link rbsDefine Define
+" hi def link rbsClassNameDefinition Typedef
+" hi def link rbsDelimiter Delimiter
+" hi def link rbsTypeVariable Identifier
+" hi def link rbsInheritanceOperator Operator
+" hi def link rbsSuperclassName rbsClassName
+" hi def link rbsModuleNameDefinition Typedef
+" hi def link rbsInclusionOperator Operator
+" hi def link rbsModuleSelfType rbsClassName
+" hi def link rbsInterfaceNameDefinition Typedef
+" hi def link rbsKeyword Keyword
+" hi def link rbsTypeAlias Define
+" hi def link rbsAliasNameDefinition Typedef
+" hi def link rbsAliasOperator Operator
+" hi def link rbsAliasNamespace rbsClassName
+" hi def link rbsAliasNamespaceSeparator rbsNamespaceSeparator
+" hi def link rbsConstant Identifier
+" hi def link rbsDeclarationOperator Operator
+" hi def link rbsGlobal Identifier
+" hi def link rbsComment Comment
+" hi def link rbsCommentStart rbsComment
+" hi def link rbsInstanceVariable Identifier
+" hi def link rbsMethod Define
+" hi def link rbsMethodName Function
+" hi def link rbsMethodDeclarationOperator rbsDeclarationOperator
+" hi def link rbsMethodUnaryOperator rbsUnaryOperator
+" hi def link rbsMethodArrow Operator
+" hi def link rbsMethodType Type
+" hi def link rbsAttribute Define
+" hi def link rbsAttributeName Typedef
+" hi def link rbsAttributeVariableName rbsInstanceVariable
+" hi def link rbsInclude Statement
+" hi def link rbsExtend Statement
+" hi def link rbsPrepend Statement
+" hi def link rbsMethodAlias Define
+" hi def link rbsMethodAliasName rbsMethodName
+" hi def link rbsMethodSelf Constant
+" hi def link rbsMethodSelfModifier rbsMethodSelf
+" hi def link rbsMethodDot Operator
+" hi def link rbsNamespaceSeparator Operator
+" hi def link rbsClassName Type
+" hi def link rbsInterfaceName Type
+" hi def link rbsSingleton Type
+" hi def link rbsString String
+" hi def link rbsStringStart rbsString
+" hi def link rbsStringEnd rbsStringStart
+" hi def link rbsStringEscape PreProc
+" hi def link rbsQuoteEscape rbsStringEscape
+" hi def link rbsParenthesisEscape rbsStringEscape
+" hi def link rbsSquareBracketEscape rbsStringEscape
+" hi def link rbsCurlyBraceEscape rbsStringEscape
+" hi def link rbsAngleBracketEscape rbsStringEscape
+" hi def link rbsSymbol String
+" hi def link rbsSymbolStart rbsSymbol
+" hi def link rbsSymbolEnd rbsSymbolStart
+" hi def link rbsUnaryOperator Operator
+" hi def link rbsInteger Number
+" hi def link rbsBoolean Boolean
+" hi def link rbsRecordName rbsSymbol
+" hi def link rbsType Type
+" hi def link rbsTypeOperator Operator
+" hi def link rbsOptionalTypeOperator rbsTypeOperator
 " }}}1
 
 " vim:fdm=marker

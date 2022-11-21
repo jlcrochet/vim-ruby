@@ -3,7 +3,6 @@ local g = vim.g
 
 local fn = vim.fn
 local prevnonblank = fn.prevnonblank
-local shiftwidth = fn.shiftwidth
 local synID = fn.synID
 local synIDattr = fn.synIDattr
 local getline = fn.getline
@@ -539,23 +538,23 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
 
       if syngroup == "rubyDelimiter" or syngroup == "rubyStringArrayDelimiter" or syngroup == "rubySymbolArrayDelimiter" or syngroup == "rubyStringInterpolationDelimiter" then
         shift = shift + 1
-        return start_first_col - 1 + shift * shiftwidth()
+        return start_first_col - 1 + shift * bo.shiftwidth
       end
     elseif prev_last_byte == 124 then  -- |
       if syngroup_at(prev_lnum, prev_last_col) == "rubyDelimiter" then
         shift = shift + 1
-        return start_first_col - 1 + shift * shiftwidth()
+        return start_first_col - 1 + shift * bo.shiftwidth
       end
     end
 
     if total_pairs > 0 then
       shift = shift + 1
-      return start_first_col - 1 + shift * shiftwidth()
+      return start_first_col - 1 + shift * bo.shiftwidth
     end
 
     if start_has_middle or prev_has_middle then
       shift = shift + 1
-      return start_first_col - 1 + shift * shiftwidth()
+      return start_first_col - 1 + shift * bo.shiftwidth
     end
 
     -- Check for a line continuation:
@@ -630,7 +629,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
 
       shift = shift + 1
     elseif continuation == 4 then
-      return start_first_col - 1 + shiftwidth()
+      return start_first_col - 1 + bo.shiftwidth
     elseif continuation == 5 then
       if prev_continuation == 5 then
         return start_first_col - 1
@@ -639,7 +638,7 @@ if g.ruby_simple_indent and g.ruby_simple_indent ~= 0 then
       shift = shift + 1
     end
 
-    return start_first_col - 1 + shift * shiftwidth()
+    return start_first_col - 1 + shift * bo.shiftwidth
   end
   -- }}}
 else
@@ -697,7 +696,7 @@ else
     if prev_bracket_col then
       if prev_bracket_col == prev_last_col then
         shift = shift + 1
-        return prev_first_col - 1 + shift * shiftwidth()
+        return prev_first_col - 1 + shift * bo.shiftwidth
       else
         -- Align with the first non-whitespace character after the
         -- bracket:
@@ -707,7 +706,7 @@ else
           if b > 32 then
             if b == 124 then  -- |
               shift = shift + 1
-              return prev_first_col - 1 + shift * shiftwidth()
+              return prev_first_col - 1 + shift * bo.shiftwidth
             else
               return i - 1
             end
@@ -718,12 +717,12 @@ else
 
     if prev_floats > 0 then
       shift = shift + 1
-      return prev_float_col - 1 + shift * shiftwidth()
+      return prev_float_col - 1 + shift * bo.shiftwidth
     end
 
     if prev_pairs > 0 or prev_has_middle then
       shift = shift + 1
-      return prev_first_col - 1 + shift * shiftwidth()
+      return prev_first_col - 1 + shift * bo.shiftwidth
     end
 
     -- Check the starting line:
@@ -734,7 +733,7 @@ else
       if start_brackets > 0 then
         if start_bracket_col == start_last_col then
           shift = shift + 1
-          return start_first_col - 1 + shift * shiftwidth()
+          return start_first_col - 1 + shift * bo.shiftwidth
         else
           -- Align with the first non-whitespace character after the
           -- bracket:
@@ -744,7 +743,7 @@ else
             if b > 32 then
               if b == 124 then  -- |
                 shift = shift + 1
-                return start_first_col - 1 + shift * shiftwidth()
+                return start_first_col - 1 + shift * bo.shiftwidth
               else
                 return i - 1
               end
@@ -755,12 +754,12 @@ else
 
       if start_floats > 0 then
         shift = shift + 1
-        return start_float_col - 1 + shift * shiftwidth()
+        return start_float_col - 1 + shift * bo.shiftwidth
       end
 
       if start_pairs > 0 or start_has_middle then
         shift = shift + 1
-        return start_first_col - 1 + shift * shiftwidth()
+        return start_first_col - 1 + shift * bo.shiftwidth
       end
     end
 
@@ -809,7 +808,7 @@ else
         shift = shift - 1
       end
 
-      return start_first_col - 1 + shift * shiftwidth()
+      return start_first_col - 1 + shift * bo.shiftwidth
     elseif continuation == 1 then
       if prev_continuation == 1 or prev_continuation == 2 or prev_continuation == 4 then
         return start_first_col - 1
@@ -833,7 +832,7 @@ else
         end
       end
 
-      return start_first_col - 1 + shiftwidth()
+      return start_first_col - 1 + bo.shiftwidth
     elseif continuation == 2 then
       if prev_continuation == 1 or prev_continuation == 5 then
         goto msl
@@ -844,7 +843,7 @@ else
       end
 
       shift = shift + 1
-      return start_first_col - 1 + shift * shiftwidth()
+      return start_first_col - 1 + shift * bo.shiftwidth
     elseif continuation == 3 then
       if prev_continuation == 1 or prev_continuation == 2 or prev_continuation == 4 or prev_continuation == 5 then
         goto msl
@@ -853,9 +852,9 @@ else
       end
 
       shift = shift + 1
-      return start_first_col - 1 + shift * shiftwidth()
+      return start_first_col - 1 + shift * bo.shiftwidth
     elseif continuation == 4 then
-      return start_first_col - 1 + shiftwidth()
+      return start_first_col - 1 + bo.shiftwidth
     elseif continuation == 5 then
       if prev_continuation == 5 then
         return start_first_col - 1
@@ -867,7 +866,7 @@ else
         return prev_dot_col - 1
       end
 
-      return start_first_col - 1 + shiftwidth()
+      return start_first_col - 1 + bo.shiftwidth
     end
 
     ::msl::
@@ -922,7 +921,7 @@ else
 
     ::exit::
 
-    return start_first_col - 1 + shift * shiftwidth()
+    return start_first_col - 1 + shift * bo.shiftwidth
   end
   -- }}}
 end

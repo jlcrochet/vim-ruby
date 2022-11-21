@@ -116,6 +116,4 @@ let g:ruby_define_line = printf('syn region rubyDefineLine matchgroup=rubyDefine
 let g:ruby_method_receiver_variable = printf('syn match rubyMethodReceiverVariable /\%%#=1%s\.\@=/ contained nextgroup=rubyMethodReceiverDot', s:variable)
 let g:ruby_method_receiver_constant = printf('syn match rubyMethodReceiverConstant /\%%#=1%s\.\@=/ contained nextgroup=rubyMethodReceiverDot', s:constant)
 
-delfunction s:choice
-unlet s:word_character s:head_character s:variable_start s:identifier s:variable_or_method s:constant s:instance_variable s:global_variable s:hash_key s:symbol
-unlet s:exponent_suffix s:fraction s:nonzero_re s:zero_re s:overloadable_operators s:onigmo_escape s:onigmo_group_modifier
+let g:rbs_class_name = printf('syn match rbsClassName ')
