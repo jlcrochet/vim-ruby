@@ -2,7 +2,7 @@
 
 This is intended to be a drop-in replacement for [vim-ruby](https://github.com/vim-ruby/vim-ruby). I wrote it because the original vim-ruby is known for having many accuracy and performance issues related to syntax highlighting and indentation. After perusing the code for the original plugin, I decided that a complete rewrite was necessary.
 
-In addition to regular Ruby files (`*.rb`), this plugin also supports eRuby (`*.erb`) and [Ruby Signature](https://github.com/ruby/rbs) (`*.rbs`) files.
+In addition to regular Ruby files (`*.rb`), this plugin also supports eRuby (`*.erb`). If you want support for Ruby Signature files (`*.rbs`), check out my [vim-rbs](https://github.com/jlcrochet/vim-rbs) plugin.
 
 ## Installation
 

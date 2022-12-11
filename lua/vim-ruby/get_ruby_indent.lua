@@ -1,5 +1,6 @@
 local v = vim.v
 local g = vim.g
+local bo = vim.bo
 
 local fn = vim.fn
 local prevnonblank = fn.prevnonblank

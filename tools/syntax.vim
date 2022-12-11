@@ -115,5 +115,3 @@ let g:ruby_heredoc_skip = printf('syn region rubyHeredocSkip matchgroup=rubyHere
 let g:ruby_define_line = printf('syn region rubyDefineLine matchgroup=rubyDefineNoBlock start=/\%%#=1\<def\>/ matchgroup=rubyMethodAssignmentOperator end=/\%%#=1=/ skip=/\%%#=1\%%((.*)\|=\%%([>~]\|==\=\)\|!=\|\[\]=\|%s=\=\)/ oneline contains=rubyMethodDefinition', s:variable)
 let g:ruby_method_receiver_variable = printf('syn match rubyMethodReceiverVariable /\%%#=1%s\.\@=/ contained nextgroup=rubyMethodReceiverDot', s:variable)
 let g:ruby_method_receiver_constant = printf('syn match rubyMethodReceiverConstant /\%%#=1%s\.\@=/ contained nextgroup=rubyMethodReceiverDot', s:constant)
-
-let g:rbs_class_name = printf('syn match rbsClassName ')

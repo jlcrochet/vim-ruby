@@ -10,9 +10,5 @@ if get(g:, "loaded_endwise")
           \ let b:endwise_addition = "end" |
           \ let b:endwise_words = "def,class,module,if,unless,case,while,until,for,begin,do" |
           \ let b:endwise_syngroups = "rubyKeyword,rubyDefine"
-    autocmd! FileType rbs
-          \ let b:endwise_addition = "end" |
-          \ let b:endwise_words = "class,module,interface" |
-          \ let b:endwise_syngroups = "rbsDefine"
   augroup END
 endif

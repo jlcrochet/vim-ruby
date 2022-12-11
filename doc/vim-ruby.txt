@@ -13,11 +13,11 @@ Contents					*vim-ruby-help*
 ==============================================================================
 Introduction					*vim-ruby-introduction*
 
-This plugin provides syntax highlighting and indentation for Ruby (`*.rb`),
-eRuby (`*.erb`), and Ruby Signature (`*.rbs`) files. It is intended to be a
-drop-in replacement for the default scripts provided by Vim. Emphasis was
-placed on providing (much) better performance and also handling some edge
-cases that the default scripts don't handle properly.
+This plugin provides syntax highlighting and indentation for Ruby (`*.rb`) and
+eRuby (`*.erb`). It is intended to be a drop-in replacement for the default
+scripts provided by Vim. Emphasis was placed on providing (much) better
+performance and also handling some edge cases that the default scripts don't
+handle properly.
 
 ==============================================================================
 Configuration					*vim-ruby-configuration*
