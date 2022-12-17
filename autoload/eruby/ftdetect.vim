@@ -1,6 +1,6 @@
 " Vim autoload file
 " Language: Embedded Ruby
-" Author: Jeffrey Crochet <jlcrochet@hey.com>
+" Author: Jeffrey Crochet <jlcrochet91@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
 let s:extensions = #{
