@@ -146,7 +146,7 @@ local function is_line_continuator(byte, col, line, lnum)
 
     if syngroup == "rubyOperator" then
       return 1
-    elseif syngroup == "rubySymbolStart" then
+    elseif syngroup == "rubyHashKeyDelimiter" then
       return 4
     end
   elseif byte == 100 then  -- d

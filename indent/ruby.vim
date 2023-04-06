@@ -93,10 +93,12 @@ endfunction
 let s:skip_keyword_simple = function("s:skip_keyword_simple_func")
 
 function s:is_operator(char, idx, lnum)
-  if a:char =~# '[%&*+\-/:<>?^|~]'
+  if a:char =~# '[%&*+\-/<>?^|~]'
     return synID(a:lnum, a:idx + 1, 0)->synIDattr("name") ==# "rubyOperator"
   elseif a:char ==# "="
     return synID(a:lnum, a:idx + 1, 0)->synIDattr("name") =~# '^ruby\%(MethodAssignment\)\=Operator$'
+  elseif a:char ==# ":"
+    return synID(a:lnum, a:idx + 1, 0)->synIDattr("name") =~# '^ruby\%(HashKeyDelimiter\|Operator\)$'
   endif
 endfunction
 
@@ -145,7 +147,7 @@ function s:ends_with_line_continuator(lnum)
 
     if syngroup ==# "rubyOperator"
       return 1
-    elseif syngroup ==# "rubySymbolStart"
+    elseif syngroup ==# "rubyHashKeyDelimiter"
       return 5
     endif
   elseif last_char ==# "(" || last_char ==# "[" || last_char ==# "{"
