@@ -23,7 +23,6 @@ syn cluster rubyKeywordArguments contains=rubyHashKey,rubyVariableOrMethod,rubyC
 
 syn match rubyHashKey /\%#=1[^\x00-\x5E`\x7B-\x7F][^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!]\=/ contained nextgroup=rubyHashKeyDelimiter
 syn match rubyHashKey /\%#=1\u[^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!]\=/ contained nextgroup=rubyHashKeyDelimiter
-syn match rubyHashKeyDelimiter /\%#=1:/ contained nextgroup=rubyComma skipwhite
 
 " Comments {{{2
 if get(b:, "is_eruby")
@@ -151,6 +150,7 @@ syn match rubyArrayAngleBracketEscape /\%#=1\\[<>[:space:]]/ contained
 syn match rubySymbol /\%#=1:\%([^\x00-\x40\x5B-\x5E`\x7B-\x7F][^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!=]\=\|\%([&|^/%]\|=\%(==\=\|\~\)\|>[=>]\=\|<\%(<\|=>\=\)\=\|[+\-~]@\=\|\*\*\=\|\[]=\=\|![@=~]\=\)\)/ contains=rubySymbolStart nextgroup=@rubyPostfix skipwhite
 
 syn match rubySymbolStart /\%#=1:/ contained
+syn match rubyHashKeyDelimiter /\%#=1:/ contained nextgroup=rubyComma skipwhite
 
 syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1:"/ matchgroup=rubySymbolEnd end=/\%#=1"/ contains=rubyStringInterpolation,rubyStringEscape,rubyStringEscapeError nextgroup=@rubyPostfix skipwhite
 syn region rubySymbol matchgroup=rubySymbolStart start=/\%#=1:'/ matchgroup=rubySymbolEnd end=/\%#=1'/ contains=rubyQuoteEscape nextgroup=@rubyPostfix skipwhite
@@ -388,6 +388,8 @@ hi def link rubySymbolAlias rubySymbol
 hi def link rubyGlobalVariableAlias rubyGlobalVariable
 hi def link rubyMethodAlias rubyMethodDefinition
 hi def link rubyHashKeyDelimiter rubyOperator
+hi def link rubyComma rubyDelimiter
+hi def link rubyBackslash rubyDelimiter
 " }}}1
 
 let b:current_syntax = "ruby"
