@@ -3,20 +3,11 @@
 " Author: Jeffrey Crochet <jlcrochet91@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-let s:extensions = #{
+let s:extensions = get(g:, "eruby_extensions", #{
       \ html: "html",
       \ turbo_stream: "html",
-      \ js: "javascript",
-      \ json: "json",
-      \ xml: "xml",
-      \ yml: "yaml",
-      \ txt: "text",
-      \ md: "markdown"
-      \ }
-
-if exists("g:eruby_extensions")
-  call extend(s:extensions, g:eruby_extensions)
-endif
+      \ js: "javascript"
+      \ })
 
 let s:default_subtype = get(g:, "eruby_default_subtype", "html")
 

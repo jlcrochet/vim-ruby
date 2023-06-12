@@ -346,9 +346,7 @@ if get(g:, "ruby_simple_indent")
       endif
     endif
 
-    call cursor(0, 1)
-
-    if searchpair(s:all_start_re, s:block_middle_re, '\C\<end\>', "b", s:skip_keyword_simple, start_lnum)
+    if searchpair(s:all_start_re, s:block_middle_re, '\C\<end\>', "bn", s:skip_keyword_simple, start_lnum)
       let shift += 1
       return indent(start_lnum) + shift * &shiftwidth
     endif
@@ -503,8 +501,10 @@ else
             return idx
           endif
         elseif syngroup =~# '^ruby\a\{-}Delimiter$'
-          if search('\S', "z", l)
-            return col(".") - 1
+          let [_, col] = searchpos('\S', "z", l)
+
+          if col
+            return col - 1
           else
             return indent(l) + &shiftwidth
           endif
