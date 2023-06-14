@@ -30,7 +30,6 @@ if get(b:, "is_eruby")
 else
   syn match rubyLineComment /\%#=1#.*/ contains=rubyTodo
   syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo
-  syn match rubyShebang /\%#=1\%^#!.*/
 endif
 
 syn match rubyTodo /\%#=1\<\(BUG\|DEPRECATED\|FIXME\|NOTE\|WARNING\|OPTIMIZE\|TODO\|XXX\|TBD\):\=\>/ contained
@@ -319,7 +318,6 @@ syn region rubyBlockParameters matchgroup=rubyDelimiter start=/\%#=1|/ end=/\%#=
 hi def link rubyComment Comment
 hi def link rubyLineComment rubyComment
 hi def link rubyTodo Todo
-hi def link rubyShebang Special
 hi def link rubyOperator Operator
 hi def link rubyUnaryOperator rubyOperator
 hi def link rubyRangeOperator rubyOperator
