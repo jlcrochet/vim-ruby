@@ -136,20 +136,20 @@ let b:current_syntax = "haml"
 " Highlighting
 hi def link hamlComment Comment
 hi def link hamlEscape PreProc
-hi def link hamlRubyStart PreProc
+hi def link hamlRubyStart hamlDelimiter
 hi def link hamlAttribute Keyword
 hi def link hamlAttributeAssignmentOperator Operator
-hi def link hamlDelimiter PreProc
+hi def link hamlDelimiter Delimiter
 hi def link hamlLineComment hamlComment
 hi def link hamlDoctype PreProc
 hi def link hamlTodo Todo
-hi def link hamlCommentTagStart PreProc
-hi def link hamlTagStart PreProc
+hi def link hamlCommentTagStart hamlDelimiter
+hi def link hamlTagStart hamlDelimiter
 hi def link hamlTag Identifier
-hi def link hamlIdStart PreProc
+hi def link hamlIdStart hamlDelimiter
 hi def link hamlId Special
-hi def link hamlClassStart PreProc
+hi def link hamlClassStart hamlDelimiter
 hi def link hamlClass Special
 hi def link hamlTagModifier PreProc
-hi def link hamlFilterStart PreProc
+hi def link hamlFilterStart hamlDelimiter
 hi def link hamlCommentStart hamlComment

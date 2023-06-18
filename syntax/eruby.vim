@@ -17,7 +17,7 @@ syn region erubyTag matchgroup=erubyDelimiter start=/\%#=1<%-\==\=/ end=/\%#=1-\
 syn region erubyComment matchgroup=erubyCommentStart start=/\%#=1<%#/ matchgroup=erubyCommentEnd end=/\%#=1%>/ containedin=ALLBUT,@ruby,@eruby
 syn match erubyTagEscape /\%#=1<%%/ containedin=ALLBUT,@ruby,@eruby
 
-hi def link erubyDelimiter PreProc
+hi def link erubyDelimiter Delimiter
 hi def link erubyComment Comment
 hi def link erubyCommentStart erubyComment
 hi def link erubyCommentEnd erubyCommentStart
