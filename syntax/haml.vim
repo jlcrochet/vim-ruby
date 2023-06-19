@@ -150,6 +150,6 @@ hi def link hamlIdStart hamlDelimiter
 hi def link hamlId Special
 hi def link hamlClassStart hamlDelimiter
 hi def link hamlClass Special
-hi def link hamlTagModifier PreProc
-hi def link hamlFilterStart hamlDelimiter
+hi def link hamlTagModifier hamlDelimiter
+hi def link hamlFilterStart PreProc
 hi def link hamlCommentStart hamlComment
