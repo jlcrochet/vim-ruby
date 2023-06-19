@@ -360,12 +360,12 @@ hi def link rubyHeredocLineRaw rubyHeredocLine
 hi def link rubyHeredocStart rubyHeredocLine
 hi def link rubyHeredocEnd rubyHeredocStart
 hi def link rubySymbol String
-hi def link rubySymbolStart rubySymbol
+hi def link rubySymbolStart rubyDelimiter
 hi def link rubySymbolEnd rubySymbolStart
 hi def link rubySymbolArray rubySymbol
 hi def link rubySymbolArrayDelimiter rubyDelimiter
 hi def link rubyRegex String
-hi def link rubyRegexStart rubyRegex
+hi def link rubyRegexStart rubyDelimiter
 hi def link rubyRegexEnd rubyRegexStart
 hi def link rubyOnigmoMetaCharacter SpecialChar
 hi def link rubyOnigmoEscape rubyOnigmoMetaCharacter
@@ -375,7 +375,7 @@ hi def link rubyOnigmoPOSIXClass rubyOnigmoMetaCharacter
 hi def link rubyOnigmoIntersection rubyOnigmoMetaCharacter
 hi def link rubyRegexSlashEscape rubyStringEscape
 hi def link rubyCommand String
-hi def link rubyCommandStart rubyCommand
+hi def link rubyCommandStart rubyDelimiter
 hi def link rubyCommandEnd rubyCommandStart
 hi def link rubyKeyword Keyword
 hi def link rubyKeywordNoBlock rubyKeyword
