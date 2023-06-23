@@ -21,13 +21,14 @@ syn match hamlRubyStart /\%#=1\%(-\|[&!]\=[=~]\)/ contained nextgroup=hamlRubyLi
 syn match hamlRubyLine /\%#=1\%(,\_s*\|.\)*/ contained contains=@hamlruby
 
 syn match hamlTagStart /\%#=1%/ contained nextgroup=hamlTag
-syn match hamlTag /\%#=1\a[^[:space:]%#./<>([{&!=~]*/ contained nextgroup=hamlRubyStart,hamlIdStart,hamlClassStart,hamlTagModifier,hamlAttributes,hamlAttributeHash,hamlObjectReference
+syn match hamlTag /\%#=1\a[^[:space:]%#./<>([{&!=~]*/ contained nextgroup=hamlRubyStart,hamlIdContinuation,hamlClassStart,hamlTagModifier,hamlAttributes,hamlAttributeHash,hamlObjectReference
 
-syn match hamlIdStart /\%#=1#/ contained nextgroup=hamlId
-syn match hamlId /\%#=1[^[:space:]%#./<>([{&!=~]\+/ contained nextgroup=hamlRubyStart,hamlClassStart,hamlTagModifier,hamlAttributes,hamlAttributeHash,hamlObjectReference
+syn match hamlIdStart /\%#=1#[@${]\@!/ contained nextgroup=hamlId
+syn match hamlIdContinuation /\%#=1#/ contained nextgroup=hamlId
+syn match hamlId /\%#=1[^[:space:]%#./<>([{&!=~]\+/ contained nextgroup=hamlRubyStart,hamlIdContinuation,hamlClassStart,hamlTagModifier,hamlAttributes,hamlAttributeHash,hamlObjectReference
 
 syn match hamlClassStart /\%#=1\./ contained nextgroup=hamlClass
-syn match hamlClass /\%#=1[^[:space:]%#./<>([{&!=~]\+/ contained nextgroup=hamlRubyStart,hamlIdStart,hamlClassStart,hamlTagModifier,hamlAttributes,hamlAttributeHash,hamlObjectReference
+syn match hamlClass /\%#=1[^[:space:]%#./<>([{&!=~]\+/ contained nextgroup=hamlRubyStart,hamlIdContinuation,hamlClassStart,hamlTagModifier,hamlAttributes,hamlAttributeHash,hamlObjectReference
 
 syn match hamlTagModifier /\%#=1\%(\/\|<>\=\/\=\|><\=\/\=\)/ contained nextgroup=hamlRubyStart
 
@@ -153,3 +154,4 @@ hi def link hamlClass Special
 hi def link hamlTagModifier hamlDelimiter
 hi def link hamlFilterStart PreProc
 hi def link hamlCommentStart hamlComment
+hi def link hamlIdContinuation hamlIdStart
