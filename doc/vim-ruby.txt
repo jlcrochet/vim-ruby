@@ -156,6 +156,7 @@ g:eruby_extensions				*g:eruby_extensions*
     .html => html
     .turbo_stream => html
     .js => javascript
+    .yml => yaml
     <
 
     Each extension maps to the name of the filetype that you want to load for

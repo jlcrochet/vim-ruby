@@ -6,7 +6,8 @@
 let s:extensions = get(g:, "eruby_extensions", #{
       \ html: "html",
       \ turbo_stream: "html",
-      \ js: "javascript"
+      \ js: "javascript",
+      \ yml: "yaml"
       \ })
 
 let s:default_subtype = get(g:, "eruby_default_subtype", "html")

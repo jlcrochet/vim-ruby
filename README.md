@@ -124,6 +124,7 @@ The default recognized extensions are as follows:
 .html => html
 .turbo_stream => html
 .js => javascript
+.yml => yaml
 ```
 
 Each extension maps to the name of the file type that you want to load for that extension.
