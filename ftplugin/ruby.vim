@@ -22,5 +22,5 @@ if get(g:, "loaded_matchit")
   let b:match_words = '\<\%(def\|class\|module\|if\|unless\|case\|while\|until\|for\|begin\|do\)\:\@!\>:\<\%(else\|elsif\|when\|in\|rescue\|ensure\|break\|next\|yield\|return\|raise\|redo\|retry\)\:\@!\>:\<end\:\@!\>'
   let b:match_skip = 'S:^ruby\%(Keyword\|Define\)$'
 
-  let b:undo_ftplugin ..= " | unlet b:match_words b:match_skip"
+  let b:undo_ftplugin ..= " | unlet! b:match_words b:match_skip"
 endif
