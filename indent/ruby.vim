@@ -494,6 +494,10 @@ else
           let line = getline(l)
           let [char, idx, _] = line->matchstrpos('\S', c)
 
+          if idx == -1
+            return indent(l) + &shiftwidth
+          endif
+
           if char ==# "|" || char ==# "#"
             return indent(l) + &shiftwidth
           else

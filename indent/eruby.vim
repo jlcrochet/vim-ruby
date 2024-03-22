@@ -3,16 +3,22 @@
 " Author: Jeffrey Crochet <jlcrochet91@pm.me>
 " URL: https://github.com/jlcrochet/vim-ruby
 
-if get(b:, "did_indent")
+if get(b:, 'did_indent')
+  finish
+endif
+
+if b:eruby_subtype !=# ''
+  call ruby#subtype#source_indent(b:eruby_subtype)
   let b:eruby_subtype_indentexpr = &indentexpr
 else
-  let b:eruby_subtype_indentexpr = "-1"
-  let b:did_indent = 1
+  let b:eruby_subtype_indentexpr = '-1'
 endif
 
 setlocal
       \ indentexpr=GetErubyIndent()
       \ indentkeys+==end,=else,=elsif
+
+let b:did_indent = 1
 
 if exists("*GetErubyIndent")
   finish
@@ -36,7 +42,7 @@ function GetErubyIndent() abort
   endif
 
   if searchpair(s:start_re, s:middle_re, s:end_re, "b", s:skip_expr, prev_lnum)
-    return indent(prev_lnum) + &shiftwidth
+    return indent(prev_lnum) + shiftwidth()
   endif
 
   return eval(b:eruby_subtype_indentexpr)

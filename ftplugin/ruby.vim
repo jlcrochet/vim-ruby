@@ -10,12 +10,13 @@ endif
 let b:did_ftplugin = 1
 
 setlocal
-      \ shiftwidth=2
-      \ comments=:#
-      \ commentstring=#\ %s
-      \ suffixesadd=.rb
+    \ shiftwidth=2
+    \ expandtab
+    \ comments=:#
+    \ commentstring=#\ %s
+    \ suffixesadd=.rb
 
-let b:undo_ftplugin = "setlocal shiftwidth< comments< commentstring< suffixesadd<"
+let b:undo_ftplugin = "setlocal shiftwidth< expandtab< comments< commentstring< suffixesadd<"
 
 " matchit.vim
 if get(g:, "loaded_matchit")

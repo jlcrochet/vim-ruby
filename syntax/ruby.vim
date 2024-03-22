@@ -21,12 +21,12 @@ syn cluster rubyPostfix contains=rubyOperator,rubyMethodOperator,rubyRangeOperat
 syn cluster rubyArguments contains=rubyNumber,rubyCharacter,rubyString,rubyStringArray,rubySymbol,rubySymbolArray,rubyRegex,rubyCommand,rubyHeredoc,rubyHeredocSkip
 syn cluster rubyKeywordArguments contains=rubyHashKey,rubyVariableOrMethod,rubyConstant,rubyInstanceVariable,rubySelf,rubyNil,rubyBoolean,rubySuper,rubyKeyword,rubyBlock,rubyDefine,rubyDefineLine,rubyDefineBlock,rubyBlockSkip
 
-syn match rubyHashKey /\%#=1[^\x00-\x5E`\x7B-\x7F][^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!]\=/ contained nextgroup=rubyHashKeyDelimiter
-syn match rubyHashKey /\%#=1\u[^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!]\=/ contained nextgroup=rubyHashKeyDelimiter
+syn match rubyHashKey /\%#=1[^\x00-\x5E`\x7B-\x7F][^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!]\=:/ contained contains=rubyHashKeyDelimiter nextgroup=rubyComma skipwhite
+syn match rubyHashKey /\%#=1\u[^\x00-\x2F\x3A-\x40\x5B-\x5E`\x7B-\x7F]*[?!]\=:/ contained contains=rubyHashKeyDelimiter nextgroup=rubyComma skipwhite
 
 " Comments {{{2
 if get(b:, "is_eruby")
-  syn match rubyLineComment /\%#=1#.\{-}\ze\%(-\=%>\)\=/ contains=rubyTodo
+  syn match rubyLineComment /\%#=1#.\{-}\ze\%(-\=%>\)/ contains=rubyTodo
 else
   syn match rubyLineComment /\%#=1#.*/ contains=rubyTodo
   syn region rubyComment start=/\%#=1^=begin\>.*/ end=/\%#=1^=end\>.*/ contains=rubyTodo

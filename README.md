@@ -110,42 +110,6 @@ x = y
   .baz
 ```
 
-### ERB
-
-#### `g:eruby_extensions`
-
-* Type: dictionary
-
-A dictionary of file type extensions is used to determine which file type to use when loading ERB files. For example, opening a file named `foo.html.erb` will load HTML as the file type with ERB syntax added on top.
-
-The default recognized extensions are as follows:
-
-```
-.html => html
-.turbo_stream => html
-.js => javascript
-.yml => yaml
-```
-
-Each extension maps to the name of the file type that you want to load for that extension.
-
-To add or overwrite entries in the dictionary, set `g:eruby_extensions` to a dictionary with the entries that you want to inject. For example, the following would allow the plugin to recognize `*.md` files as Markdown:
-
-``` vim
-let g:eruby_extensions = #{ md: "markdown" }
-```
-
-If no subtype is specified in the file name itself (e.g., `foo.erb`), the value of `g:eruby_default_subtype` is used as the subtype.
-
-#### `g:eruby_default_subtype`
-
-* Type: string
-* Default: `"html"`
-
-Determines the default subtype to use for ERB files when no subtype is specified in the file name itself (e.g., `foo.erb`).
-
-The default value is `html`. Setting this to nothing (`let g:eruby_default_subtype = ""`) will cause no subtype to be used.
-
 ### HAML
 
 The following variables enable syntax highlighting and indentation for code inside of HAML filters.

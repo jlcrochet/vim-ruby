@@ -8,9 +8,6 @@ Introduction					|vim-ruby-introduction|
 Configuration					|vim-ruby-configuration|
 	Ruby
 		|g:ruby_simple_indent|
-	ERB
-		|g:eruby_extensions|
-		|g:eruby_default_subtype|
 	HAML
 		|g:haml_filter_css|
 		|g:haml_filter_erb|
@@ -137,52 +134,6 @@ g:ruby_simple_indent				*g:ruby_simple_indent*
       .bar
       .baz
     <
-
-------------------------------------------------------------------------------
-ERB
-
-g:eruby_extensions				*g:eruby_extensions*
-
-    Type: dictionary
-
-    A dictionary of filetype extensions is used to determine which filetype to
-    use when loading ERB files. For example, opening a file named
-    "foo.html.erb" will load HTML as the filetype with ERB syntax added on
-    top.
-
-    The default recognized extensions are as follows:
-
-    >
-    .html => html
-    .turbo_stream => html
-    .js => javascript
-    .yml => yaml
-    <
-
-    Each extension maps to the name of the filetype that you want to load for
-    that extension.
-
-    To add or overwrite entries in the dictionary, set this variable to a
-    dictionary with the entries that you want to inject. For example, the
-    following would allow the plugin to recognize `*.md` files as Markdown:
-
-    >
-    let g:eruby_extensions = #{ md: "markdown" }
-    <
-
-    If no subtype is specified in the file name itself (e.g., `foo.erb`), the
-    value of |g:eruby_default_subtype| is used as the subtype.
-
-g:eruby_default_subtype				*g:eruby_default_subtype*
-
-    Type: string
-    Default: "html"
-
-    Determines the default subtype to use for ERB files when no subtype is
-    specified in the file name itself (e.g., `foo.erb`).
-
-    The default value is `html`. Setting this to nothing (`let
-    g:eruby_default_subtype = ""`) will cause no subtype to be used.
 
 ------------------------------------------------------------------------------
 HAML
