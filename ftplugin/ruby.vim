@@ -13,7 +13,7 @@ setlocal
     \ shiftwidth=2
     \ expandtab
     \ comments=:#
-    \ commentstring=#\ %s
+    \ commentstring=#%s
     \ suffixesadd=.rb
 
 let b:undo_ftplugin = "setlocal shiftwidth< expandtab< comments< commentstring< suffixesadd<"
