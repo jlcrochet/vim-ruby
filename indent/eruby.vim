@@ -7,7 +7,7 @@ if get(b:, 'did_indent')
   finish
 endif
 
-if b:eruby_subtype !=# ''
+if exists(b:eruby_subtype)
   call ruby#subtype#source_indent(b:eruby_subtype)
   let b:eruby_subtype_indentexpr = &indentexpr
 else
