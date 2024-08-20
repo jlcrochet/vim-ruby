@@ -7,7 +7,7 @@ if exists('b:current_syntax')
   finish
 endif
 
-if b:eruby_subtype !=# ''
+if exists('b:eruby_subtype') && b:eruby_subtype !=# ''
   call ruby#subtype#source_syntax(b:eruby_subtype)
 endif
 
